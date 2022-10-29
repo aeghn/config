@@ -1,0 +1,53 @@
+@namespace url(http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul);
+
+#sidebar-header {
+  display: none;
+}
+
+#TabsToolbar {
+  visibility: collapse !important;
+}
+#TabsToolbar .tabbrowser-tab {
+  display: none !important;
+}
+
+#nav-bar[inFullscreen],
+#TabsToolbar[inFullscreen] {
+  display: none;
+}
+
+#TabsToolbar > .titlebar-buttonbox-container {
+  display: none !important;
+}
+
+#urlbar #urlbar-background,
+#urlbar, #urlbar-input-container,
+#searchbar, .searchbar-textbox {
+  border-radius: 1px !important;
+  box-shadow: none !important;
+  background: #ffffff !important;
+}
+
+#nav-bar,
+#TabsToolbar,
+#navigator-toolbox {
+  background: #ffffff !important;
+}
+
+@media (prefers-color-scheme:dark) {
+  #urlbar #urlbar-background,
+  #urlbar, #urlbar-input-container,
+  #searchbar, .searchbar-textbox {
+    border-radius: 1px !important;
+    box-shadow: none !important;
+    background: #282828 !important;
+    color: #ffffff !important;
+  }
+
+  #nav-bar,
+  #TabsToolbar,
+  #navigator-toolbox {
+    background: #282828 !important;
+    color: #ffffff !important;
+  }
+}
