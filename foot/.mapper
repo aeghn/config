@@ -1,0 +1,3 @@
+#!/usr/bin/env bash
+
+df_ln_all "$HOME/.config/foot"
