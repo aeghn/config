@@ -1,0 +1,6 @@
+export PASSWORD_STORE_DIR=~/.files/box0/password-store
+export CHIN_REPOS_DIR="$HOME/Repos"
+export TEXMFHOME=~/Repos/tex_config/texmfhome
+
+export FZF_DEFAULT_OPTS="$FZF_DEFAULT_OPTS --color=hl:#4169e1 --color=fg+:#cc8800,hl+:#4169e1 --color=info:#888888,prompt:#8822aa,pointer:#007700 --color=marker:#bb4422,spinner:#bb4422,header:#005555"
+

@@ -1,0 +1,162 @@
+autoload -U add-zsh-hook
+
+## Aliases
+alias ls='ls --color=auto'
+alias rga="rg --no-ignore-files --no-ignore --hidden -i"
+alias rm='rm -I'
+alias mpa='mpv --no-video'
+alias aria2n='aria2c --no-conf=true -j4 -x4 -s4'
+
+alias pc='proxychains -q'
+alias hpx='export HTTP_PROXY=http://127.0.0.1:7890; export HTTPS_PROXY=http://127.0.0.1:7890'
+
+## Editor
+# Finally, make sure the terminal is in application mode, when zle is
+# active. Only then are the values from $terminfo valid.
+if (( ${+terminfo[smkx]} )) && (( ${+terminfo[rmkx]} )); then
+    function zle-line-init () {
+        echoti smkx
+    }
+    function zle-line-finish () {
+        echoti rmkx
+    }
+    zle -N zle-line-init
+    zle -N zle-line-finish
+fi
+
+
+bindkey -e # use Emacs keybindings
+
+[[ -n "${terminfo[kend]}" ]] && bindkey -- "${terminfo[kend]}" end-of-line
+[[ -n "${terminfo[khome]}" ]] && bindkey -- "${terminfo[khome]}" beginning-of-line
+
+
+## Completion
+autoload -Uz compinit
+
+compinit
+
+export EDITOR=vim
+
+## Autocompletion with an arrow-key driven interface
+zstyle ':completion:*' menu select
+
+## Case insensitive
+zstyle ':completion:*' matcher-list 'm:{a-zA-Z}={A-Za-z}' 'r:|[._-]=* r:|=* l:|=*'
+
+## For autocompletion of command line switches for aliases
+setopt COMPLETE_ALIASES
+
+
+## COMMAND HISTORY
+HISTFILE="${XDG_CACHE_HOME:-$HOME/.cache}/zsh/cmd_hist"
+HISTSIZE=10000
+SAVEHIST=100000
+
+setopt EXTENDED_HISTORY
+setopt HIST_EXPIRE_DUPS_FIRST
+setopt HIST_IGNORE_DUPS # ignore duplication command history list
+setopt HIST_IGNORE_SPACE
+setopt HIST_IGNORE_SPACE # 在命令前添加空格，不将此命令添加到记录文件中
+setopt HIST_SAVE_NO_DUPS
+setopt HIST_VERIFY
+setopt INC_APPEND_HISTORY
+setopt SHARE_HISTORY # share command history data
+
+autoload -Uz up-line-or-beginning-search down-line-or-beginning-search
+zle -N up-line-or-beginning-search
+zle -N down-line-or-beginning-search
+
+[[ -n "${terminfo[kcuu1]}" ]] && bindkey -- "${terminfo[kcuu1]}" up-line-or-beginning-search
+[[ -n "${terminfo[kcud1]}" ]] && bindkey -- "${terminfo[kcud1]}" down-line-or-beginning-search
+
+
+## DIRECTORY NAVI
+export DIR_HISTORY_FILE="$HOME/.hist-files"
+
+function chin-chpwd-append-dir() {
+    echo "$PWD" >> "$DIR_HISTORY_FILE"
+}
+add-zsh-hook -Uz chpwd chin-chpwd-append-dir
+
+function osc7 {
+    local LC_ALL=C
+    export LC_ALL
+
+    setopt localoptions extendedglob
+    input=( ${(s::)PWD} )
+    uri=${(j::)input/(#b)([^A-Za-z0-9_.\!~*\'\(\)-\/])/%${(l:2::0:)$(([##16]#match))}}
+    print -n "\e]7;file://${HOSTNAME}${uri}\e\\"
+}
+add-zsh-hook -Uz chpwd osc7
+
+
+chin_get_history_pwd_file() {
+    (tac "${DIR_HISTORY_FILE}"; printf "$PWD/%s\n" *) \
+        | awk 'arr[$0]++ == 0' \
+        | FZF_DEFAULT_OPTS="--height ${FZF_TMUX_HEIGHT:-40%} --reverse $FZF_DEFAULT_OPTS $FZF_ALT_C_OPTS $CHIN_FZF_DIR_OPTS" fzf +m
+}
+
+j() {
+    local dir
+    local opt="$(chin_get_history_pwd_file | sed -r 's/\r?\n?$//g')"
+
+    if [[ -z "$opt" ]]; then
+        return 0
+    fi
+
+    if [ -d "${opt}" ]; then
+        dir="$opt"
+    elif [ -e "${opt}" ]; then
+        printf "Open its parent dir: \n\t%s\033[31m/%s\033[0m\n" "${opt%/*}" "${opt##*/}"
+        dir="${opt%/*}"
+    else
+        printf "Unknown opt: \`$opt'\n"
+        return
+    fi
+
+    cd "$dir"
+    unset dir opt
+}
+
+## FRAME
+autoload -Uz promptinit
+promptinit
+
+## To list all available prompt themes by: prompt -l
+if [ -f $HOME/.config/zsh/functions/prompt_chin_setup ]; then
+    prompt chin
+else
+    export PROMPT="%(?..%F{red}[%?]%f )%(1j.%F{cyan}(%j)%f .)%B%F{yellow}%n%f%b at %B%F{blue}%m%f%b in %B%F{green}%~%f%b${prompt_newline}> "
+fi
+
+# Clear Buffer
+function chin-clear-scrollback-buffer {
+    clear
+    # clear buffer. The following sequence code is available for xterm.
+    printf '\e[3J'
+    # .reset-prompt: bypass the zsh-syntax-highlighting wrapper
+    # https://github.com/sorin-ionescu/prezto/issues/1026
+    # https://github.com/zsh-users/zsh-autosuggestions/issues/107#issuecomment-183824034
+    # -R: redisplay the prompt to avoid old prompts being eaten up
+    # https://github.com/Powerlevel9k/powerlevel9k/pull/1176#discussion_r299303453
+    zle .reset-prompt && zle -R
+}
+zle -N chin-clear-scrollback-buffer
+bindkey '^L' chin-clear-scrollback-buffer
+
+# Title
+function xterm_title_precmd () {
+    print -Pn -- '\e]2;%n@%m %~\a'
+    [[ "$TERM" == 'screen'* ]] && print -Pn -- '\e_\005{g}%n\005{-}@\005{m}%m\005{-} \005{B}%~\005{-}\e\\'
+}
+
+function xterm_title_preexec () {
+    print -Pn -- '\e]2;%n@%m %~ %# ' && print -n -- "${(q)1}\a"
+    [[ "$TERM" == 'screen'* ]] && { print -Pn -- '\e_\005{g}%n\005{-}@\005{m}%m\005{-} \005{B}%~\005{-} %# ' && print -n -- "${(q)1}\e\\"; }
+}
+
+if [[ "$TERM" == (alacritty|screen*|xterm*|rxvt*|tmux*|putty*|konsole*|gnome*) ]]; then
+    add-zsh-hook -Uz precmd xterm_title_precmd
+    add-zsh-hook -Uz preexec xterm_title_preexec
+fi
