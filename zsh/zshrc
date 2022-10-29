@@ -1,0 +1,15 @@
+ZSH_DIR="$HOME/.config/zsh"
+ZSH_FUNCTION_DIR="$ZSH_DIR/functions"
+
+# fpath
+fpath=("$ZSH_FUNCTION_DIR" "$fpath[@]")
+
+if [ -f $HOME/.profile ]; then
+    source $HOME/.profile
+fi
+
+if [ -f "$ZSH_DIR/environment" ]; then
+    source "$ZSH_DIR/environment"
+fi
+
+source "$ZSH_DIR/onefile"

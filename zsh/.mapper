@@ -1,0 +1,6 @@
+#!/usr/bin/env bash
+
+df_ln_all "$HOME/.config/zsh"
+
+cd $HOME/.config/zsh
+df_ln "zshrc" "$HOME/.zshrc"
