@@ -27,12 +27,15 @@ _die() {
     exit 1
 }
 
+
+
 # make symbolic link for file {SOURCE} to {DESTINATION}.
 # if any one of them or the {DESTINATION} is already linked
 # to another file, die.
 df_ln() {
-    local src="$(realpath "$1")"
-    local des="$(realpath "$2")"
+    local src="$1"
+    local des="$2"
+    local rsrc="$(realpath "$src")"
 
     # Detect if source file is existed?
     if [ ! -e "$src" ]; then
@@ -41,7 +44,7 @@ df_ln() {
 
     # Detect if destination file is existed?
     if [ -e "$des" ]; then
-        if [ "x$(realpath "$src")" = "x$(realpath "$des")" ]; then
+        if [ "x$rsrc" = "x$(realpath "$des")" ]; then
             return
         else
             _die "des: $des existed."
@@ -54,8 +57,8 @@ df_ln() {
         mkdir -p "$parent"
     fi
 
-    if ! ln -s "$src" "$des"; then
-        _die "Unable to make symbolic links from \`$src' to \`$des'"
+    if ! ln -s "$rsrc" "$des"; then
+        _die "Unable to make symbolic links from \`$rsrc' to \`$des'"
     fi
 }
 
