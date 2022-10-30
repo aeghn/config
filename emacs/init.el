@@ -428,6 +428,7 @@ If popup is focused, kill it."
 
 ;; Eglot
 (require 'eglot)
+(define-key eglot-mode-map (kbd "M-RET") 'eglot-code-actions)
 (add-hook 'rust-mode-hook 'eglot-ensure)
 
 (require 'corfu)
