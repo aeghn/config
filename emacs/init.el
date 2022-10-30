@@ -263,6 +263,12 @@
 (setq org-todo-keywords
       '((sequence "TODO(t)" "STARTED(s)" "WAIT(w)" "|" "DONE(d)" "CANCELED(c)")))
 
+(global-set-key
+ (kbd "M-5")
+ (lambda ()
+   (interactive)
+   (find-file "/home/chin/files/docs/todo.org")))
+
 ;; Set tab width
 (setq-default tab-width 4)
 ;; use space to indent by default
