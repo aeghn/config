@@ -248,6 +248,10 @@ N in the table of contents. "
           (integer :tag "TOC to level"))
   :safe t)
 
+(defvar org-static-blog-latex-pic-directory
+  (make-temp-file (expand-file-name "org-ltx-" temporary-file-directory) t)
+  "The dir which we store the temporary LaTeX previews.")
+
 ;; localization support
 (defconst org-static-blog-texts
   '((other-posts
@@ -686,27 +690,45 @@ The index, archive, tags, and RSS feed are not updated."
      (org-static-blog-post-postamble post-filename))
     (org-static-blog-get-description post-filename))))
 
+(defun org-static-blog--embed-latex-previews ()
+  "Embed the latex preview images into the webpage by using BASE64."
+  (let* ((f (make-symbol "org-static-blog--pic-to-base64"))
+         (ltx-dir (concat "<img src=\"file://\\("
+                          (regexp-quote org-static-blog-latex-pic-directory)
+                          "/[^\"]*\\)\"")))
+    (fset f (lambda (filename)
+              (base64-encode-string
+               (with-temp-buffer
+                 (insert-file-contents filename)
+                 (buffer-string)))))
+    (goto-char (point-min))
+    (while (re-search-forward ltx-dir nil t)
+      (let* ((ltx-filename (match-string 1))
+             (from (match-beginning 0))
+             (end (match-end 0))
+             (ltx-base64 (save-excursion (funcall f ltx-filename)))
+             (ltx-str (format "<img src=\"data:image/svg+xml;base64,%s\"" ltx-base64)))
+        ;; Because we used another with-temp-buffer here, so we can not use
+        ;; replace-match normally
+        (delete-region from end)
+        (goto-char from)
+        (insert ltx-str)))))
 
 (defun org-static-blog-render-post-content (post-filename)
   "Render blog content as bare HTML without header."
   (let ((org-html-doctype "html5")
-        (org-html-html5-fancy t))
+        (org-html-html5-fancy t)
+        (org-export-with-toc org-static-blog-toc-depth)
+
+        ;; LaTeX related settings.
+        (org-html-with-latex 'dvisvgm)
+        (org-preview-latex-default-process 'dvisvgm)
+        (org-export-with-latex t)
+        (org-preview-latex-image-directory org-static-blog-latex-pic-directory))
     (save-excursion
-      (setq org-export-with-toc org-static-blog-toc-depth)
       (let* ((current-buffer (current-buffer))
              (buffer-exists (org-static-blog-file-buffer post-filename))
-             (org-preview-latex-image-directory
-              (concat-to-dir
-               "ltximg"
-               (file-name-sans-extension
-                (file-name-nondirectory post-filename))))
-             (blog-latex-image-directory (expand-file-name
-                                          org-preview-latex-image-directory
-                                          org-static-blog-publish-directory))
-             (abs-org-ltx-image-directory (expand-file-name
-                           org-preview-latex-image-directory
-                           temporary-file-directory))
-             (result nil))
+             result)
         (with-temp-buffer
           (if buffer-exists
               (insert-buffer-substring buffer-exists)
@@ -719,17 +741,12 @@ The index, archive, tags, and RSS feed are not updated."
              (setq org-map-continue-from (point))
              (org-cut-subtree))
            org-static-blog-no-post-tag)
-          (delete-directory org-preview-latex-image-directory t)
-          (setq result
-                (org-export-as 'org-static-blog-post-bare nil nil nil nil))
-          (delete-directory blog-latex-image-directory t)
-          (when (file-exists-p abs-org-ltx-image-directory)
-            (unless (file-exists-p (file-parent-directory blog-latex-image-directory))
-              (make-directory (file-parent-directory blog-latex-image-directory)))
-            (rename-file abs-org-ltx-image-directory
-                         blog-latex-image-directory))
-          (switch-to-buffer current-buffer)
-          result)))))
+          (setq result (org-export-as 'org-static-blog-post-bare nil nil nil nil))
+          (switch-to-buffer current-buffer))
+        (with-temp-buffer
+          (insert result)
+          (org-static-blog--embed-latex-previews)
+          (buffer-string))))))
 
 (org-export-define-derived-backend 'org-static-blog-post-bare 'html
   :translate-alist '((template . (lambda (contents info) contents))))
