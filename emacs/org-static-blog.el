@@ -371,7 +371,7 @@ N in the table of contents. "
     '()))
 
 (defun copy-to-file-even-mkdir (filepath target)
-  (let ((target-dir (file-parent-directory target)))
+  (let ((target-dir (file-name-parent-directory target)))
     (when (file-exists-p filepath)
       (unless (file-directory-p target-dir)
         (make-directory target-dir))
@@ -791,7 +791,7 @@ Posts are sorted in descending time."
           (attach-file-path)
           (attach-file-pure-name)
           (attach-file-format-name)
-          (post-filedir (file-parent-directory post-filename)))
+          (post-filedir (file-name-parent-directory post-filename)))
       (setq match (replace-regexp-in-string "^file:" "" match))
       (setq attach-file-path
             (cond ((file-exists-p match) match)
