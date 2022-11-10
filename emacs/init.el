@@ -42,6 +42,7 @@
 (chin/load-other-file "ibuffer-sidebar.el")
 (chin/load-other-file "speed-sidebar.el")
 (chin/load-other-file "envir.el")
+(chin/load-other-file "cangjie.el")
 
 ;;; Platform Settings
 (defconst chin/is-linux   (eq system-type 'gnu/linux))
@@ -54,6 +55,7 @@
     (setenv "WENV" "D:\\wenv")
     (setenv "PATH" (concat
                     ;; Remember to install `mingw-w64-x86_64-gnupg'
+                    "d:\\wenv\\bin;"
                     msys2root "mingw64\\bin" ";"
                     msys2root "mingw64\\x86_64-w64-mingw32\\bin" ";"
                     msys2root "usr\\bin" ";"
@@ -96,8 +98,8 @@
 ;; Font settings
 (defun chin/set-fonts ()
   (when (display-graphic-p)
-    (let ((prefered-mono-font-list '("IBM Plex Mono Text" "Jetbrains Mono"))
-          (prefered-chinese-font-list '("Source Han Serif CN" "LXGW Bright"))
+    (let ((prefered-mono-font-list '("Sarasa Mono SC" "IBM Plex Mono Text" "Jetbrains Mono"))
+          (prefered-chinese-font-list '("Noto Serif CJK CN"))
           (prefered-serif-font-list (list "Literata 7pt" "Charter" "Roboto"))
           prefered-mono-font prefered-chinese-font prefered-serif-font first-font-fun)
       (setf first-font-fun
@@ -125,7 +127,7 @@
       (set-face-attribute 'mode-line nil
                           :family prefered-serif-font :height 120 :weight 'Bold)
       (set-face-attribute 'mode-line-inactive nil
-                          :family prefered-serif-font :height 120 :weight 'Medium)
+                          :family prefered-serif-font :height 120 :weight 'Regular)
       (setq ibuffer-sidebar-use-custom-font t)
       (setq ibuffer-sidebar-face `(:family "nrss" :height 120))
       (setq speed-sidebar-face `(:family "nrss" :height 120)))))
@@ -141,7 +143,8 @@
         (fh (frame-native-height))
         (tp (frame-parameter (selected-frame) 'tool-bar-position))
         (pos))
-    (when not-show (setq chin/show-tool-bar nil))
+    (when (or not-show (not chin/is-linux))
+      (setq chin/show-tool-bar nil))
     (cond ((not chin/show-tool-bar) (when tool-bar-mode (tool-bar-mode -1)))
           ((< fh 500) (when tool-bar-mode (tool-bar-mode -1)))
           ((< (* fh 5) (* fw 3))
@@ -263,6 +266,23 @@
 (setq org-todo-keywords
       '((sequence "TODO(t)" "STARTED(s)" "WAIT(w)" "|" "DONE(d)" "CANCELED(c)")))
 
+(defun chin/insert-image-from-clipboard ()
+  (interactive)
+  (let* ((pure-filename (file-name-sans-extension
+                        (file-name-nondirectory
+                         (buffer-file-name))))
+        (time (format-time-string "%y%m%d-%H%M%S"))
+        (image-dir-name "images")
+        (image-dir (expand-file-name image-dir-name))
+        (filename (concat pure-filename "-" time ".png")))
+    (unless (file-exists-p image-dir)
+      (make-directory image-dir))
+    (if (process-file "convert" nil nil nil "clipboard:myimage"
+                           (expand-file-name filename image-dir))
+        (insert  (concat "[[file:./" image-dir-name "/" filename "]]"))
+      (message "Unable to create image"))))
+(define-key org-mode-map (kbd "C-c p") 'chin/insert-image-from-clipboard)
+
 (global-set-key
  (kbd "M-5")
  (lambda ()
@@ -319,19 +339,20 @@
               t))
     (recentf-add-file f)))
 
-(chin/read-visited-files)
+(ignore-errors
+  (chin/read-visited-files))
 (add-hook 'find-file-hook 'chin/add-visited-file)
 
 ;; Comment Settings
 (global-set-key (kbd "M-;") 'comment-dwim-2)
 
 ;; Dired Settings
-(defadvice dired-find-file (around dired-find-file-single-buffer activate)
-  "Replace current buffer if file is a directory."
-  (interactive)
-  (let ((orig (current-buffer)) (filename (dired-get-file-for-visit)))
-    ad-do-it (when (and (file-directory-p filename) (not (eq (current-buffer) orig)))
-               (kill-buffer orig))))
+;; (defadvice dired-find-file (around dired-find-file-single-buffer activate)
+;;   "Replace current buffer if file is a directory."
+;;   (interactive)
+;;   (let ((orig (current-buffer)) (filename (dired-get-file-for-visit)))
+;;     ad-do-it (when (and (file-directory-p filename) (not (eq (current-buffer) orig)))
+;;                (kill-buffer orig))))
 
 ;; Power Settings
 (defun chin/server-shutdown ()
@@ -423,13 +444,26 @@ If popup is focused, kill it."
 (global-set-key (kbd "M-2") 'point-stack-forward-stack-pop)
 
 ;; Chinese
-(require 'pyim)
-(require 'pyim-basedict)
-(pyim-basedict-enable)
-(setq-default pyim-punctuation-translate-p '(auto no yes))
-(set-input-method 'pyim)
-(deactivate-input-method)
-(put 'erase-buffer 'disabled nil)
+;; (require 'pyim)
+;; (require 'pyim-basedict)
+;; (pyim-basedict-enable)
+;; (setq-default pyim-punctuation-translate-p '(auto no yes))
+;; (set-input-method 'pyim)
+;; (deactivate-input-method)
+;; (put 'erase-buffer 'disabled nil)
+
+(defvar chin/cangjie-fancha-file "/home/chin/files/docs/cangjie.fancha")
+(when chin/is-windows
+  (setq chin/cangjie-fancha-file "e:/files/docs/cangjie.fancha"))
+(defun chin/cangjie-fancha ()
+  (interactive)
+  (let ((list (split-string
+               (with-temp-buffer
+                 (insert-file-contents chin/cangjie-fancha-file)
+                 (buffer-substring-no-properties (point-min) (point-max)))
+               "\r?\n"
+               t)))
+    (completing-read "Cangjie Fancha: " list)))
 
 
 ;; Eglot
@@ -441,5 +475,3 @@ If popup is focused, kill it."
 (setq corfu-auto t)
 (setq corfu-quit-at-boundary t)
 (global-corfu-mode)
-
-(speed-sidebar-show-sidebar)
