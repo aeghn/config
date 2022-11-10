@@ -66,8 +66,8 @@ Copy the file to $HOME/.config/openbox/ instead. -->
       <!-- 'italic' or 'normal' -->
     </font>
     <font place="InactiveWindow">
-      <name>Roboto</name>
-      <size>16</size>
+      <name>Literata 7pt</name>
+      <size>12</size>
       <!-- font size in points -->
       <weight>Normal</weight>
       <!-- 'bold' or 'normal' -->
@@ -93,8 +93,8 @@ Copy the file to $HOME/.config/openbox/ instead. -->
       <!-- 'italic' or 'normal' -->
     </font>
     <font place="ActiveOnScreenDisplay">
-      <name>Sans</name>
-      <size>16</size>
+      <name>Literata 7pt</name>
+      <size>12</size>
       <!-- font size in points -->
       <weight>Bold</weight>
       <!-- 'bold' or 'normal' -->
@@ -102,8 +102,8 @@ Copy the file to $HOME/.config/openbox/ instead. -->
       <!-- 'italic' or 'normal' -->
     </font>
     <font place="InactiveOnScreenDisplay">
-      <name>Sans</name>
-      <size>16</size>
+      <name>Literata 7pt</name>
+      <size>12</size>
       <!-- font size in points -->
       <weight>Bold</weight>
       <!-- 'bold' or 'normal' -->
