@@ -5,6 +5,9 @@
   "Dired with preview and some other features"
   :group 'convenience)
 
+(defvar mdired-mode-toolbar-map nil
+  "The variable which holds the toolbar buttons")
+
 (defvar-local mdired-object-vector nil
   "The variable which saves the infomation")
 
@@ -141,6 +144,7 @@ else we will jump into its parent and goto this file."
           (dired-goto-file file))))
     ;; Todo: is there any better method for us to set this vector?
     (setq-local mdired-object-vector old-vector)
+    (mdired--set-toolbar-buttons)
     (mdired--set-directory-buffer mdired-object-vector (current-buffer))
     (mdired--set-directory-window mdired-object-vector (selected-window))
     (mdired-mode)))
@@ -236,7 +240,8 @@ and dired header lines."
        (with-current-buffer buffer
          (setq-local mode-line-format nil
                      buffer-read-only t
-                     truncate-lines t))
+                     truncate-lines t)
+         (mdired--set-toolbar-buttons))
        buffer))))
 
 (defun mdired-jump-by-path-button (button)
@@ -257,8 +262,7 @@ and dired header lines."
                             mdired-object-vector))))
     (if-let ((window (mdired--check-live-window (mdired--get-parent-window vector))))
         (delete-window window)
-        (mdired--refresh-parent vector t))))
-
+      (mdired--refresh-parent vector t))))
 
 (defun mdired--make-other-path-buttons (vector)
   (let ((button-list '(;; lighter function echo
@@ -304,7 +308,8 @@ and dired header lines."
                        'help-echo path)
           (setq bs (point)))
         (goto-char (line-end-position))
-        (mdired--make-other-path-buttons vector))
+        ;; (mdired--make-other-path-buttons vector)
+        )
       (goto-char (point-max)))))
 
 ;;; Parent Window Functions
@@ -328,8 +333,9 @@ and dired header lines."
        vector
        (let ((buffer (generate-new-buffer "mdired-parent-buffer")))
          (with-current-buffer buffer
-           (setq mode-line-format "Mdired Parent")
-           (setq buffer-read-only t))
+           (setq mode-line-format "Mdired Parent"
+                 buffer-read-only t)
+           (mdired--set-toolbar-buttons))
          buffer))))
 
 (defun mdired--refresh-parent (vector &optional build)
@@ -357,3 +363,33 @@ and dired header lines."
                 ;; TODO: remove unused overlays
                 (overlay-put overlay 'face '((:inherit highlight :extend t)))))
             (setq-local default-directory item-path)))))))
+
+
+;;; Tool Bar Related Functions
+(defun mdired--make-toolbar-buttons ()
+  (unless mdired-mode-toolbar-map
+    (add-to-list
+     'image-load-path
+     (expand-file-name "lib/images" user-emacs-directory))
+    (setq mdired-mode-toolbar-map
+          (let ((map (make-sparse-keymap)))
+                        (define-key map [mdired-toggle-info]
+                        `(menu-item "Info" mdired-toggle-info
+                                    :enable t
+                                    :help "Toggle Info Window"
+                                    :image ,(find-image '((:type svg :file "emacs-info.svg")))))                                    
+            (define-key map [mdired-toggle-preview]
+                        `(menu-item "Preview" mdired-toggle-preview
+                                    :enable t
+                                    :help "Toggle Preview Window"
+                                    :image ,(find-image '((:type svg :file "emacs-mdired-preview-button.svg")))))
+            (define-key map [mdired-toggle-parent]
+                        `(menu-item "Parent" mdired-toggle-parent
+                                    :enable t
+                                    :help "Toggle Parent Window"
+                                    :image ,(find-image '((:type svg :file "emacs-mdired-parent-button.svg")))))
+            map)))
+  mdired-mode-toolbar-map)
+
+(defun mdired--set-toolbar-buttons ()
+  (setq-local tool-bar-map (mdired--make-toolbar-buttons)))
