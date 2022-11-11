@@ -14,6 +14,17 @@
 (defvar-local mdired-main-buffer nil)
 (defvar-local mdired--hl-overlay nil)
 
+(defcustom mdired-ls-switchs
+  '(("-alh"  . "name-asc")
+    ("-alhr" . "name-desc")
+    ("-lhX"  . "ext-asc")
+    ("-lhXr" . "ext-desc")
+    ("-lhS"  . "size-asc")
+    ("-lhSr" . "size-desc")
+    ("-lht"  . "time-asc")
+    ("-lhtr" . "time-desc"))
+  "")
+
 (defcustom mdired-conponments
   '(filename
     directory-window directory-buffer
@@ -28,6 +39,7 @@
   (interactive "f")
   (let ((dired-hide-details-mode t)
         (dired-free-space nil)
+        (dired-listing-switches (car (car mdired-ls-switchs)))
         (directory (if (file-directory-p filename)
                        filename
                      (file-name-parent-directory filename))))
@@ -102,6 +114,17 @@ Maybe nil."
 
 (defun mdired--check-live-window (window)
   (when (window-live-p window) window))
+
+(defun mdired--try-get-vector ()
+  (cond (mdired-object-vector mdired-object-vector)
+        (mdired-main-buffer (with-current-buffer mdired-main-buffer
+                              mdired-object-vector))
+        (t nil)))
+
+(defun mdired--try-get-dired-buffer ()
+  (cond (mdired-object-vector (current-buffer))
+        (mdired-main-buffer mdired-main-buffer)
+        (t nil)))
 
 ;;; Dired Window Functions
 (defvar-keymap mdired-mode-map
@@ -189,32 +212,52 @@ but for child."
 and dired header lines."
   (if show-all
       (revert-buffer)
-    (let ((dired-hide-details-mode t)
-          (dired-free-space nil))
+    (let ((dired-free-space nil))
       (mdired-hide-header)
+      (setq-default dired-hide-details-mode t)
       (dired-hide-details-update-invisibility-spec))))
 
 (defun mdired-hide-header ()
-  "Delete the header line and the `.' and the `..'"
+  "Hide the header line and remove the `.' and the `..'"
   (let ((buffer-read-only nil))
     (save-excursion
       (goto-char (point-min))
-      (while (or (string-match-p
-                  (concat "^  "
-                          (regexp-quote
-                           (directory-file-name
-                            (expand-file-name default-directory)))
-                          ":.*")
-                  (buffer-substring-no-properties
-                   (line-beginning-position)
-                   (line-end-position)))
-                 (string-match-p
-                  "^\\.\\.?"
-                  (if-let* ((begin (dired-move-to-filename nil))
-                            (end (dired-move-to-end-of-filename t))
-                            (str (buffer-substring-no-properties begin end)))
-                      str "")))
-        (delete-region (line-beginning-position) (1+ (line-end-position)))))))
+      (while
+          (or
+           (when-let* ((regex-dir (regexp-quote
+                                   (directory-file-name
+                                    (expand-file-name default-directory))))
+                       (line (buffer-substring-no-properties
+                              (line-beginning-position)
+                              (line-end-position)))
+                       (match (string-match
+                               (concat "^  " regex-dir ":\\(.*\\)") line))
+                       (mstr (match-string 1)))
+             (put-text-property (line-beginning-position) (1+ (line-end-position)) 'display mstr)
+             (forward-line)
+             t)
+           (when-let* ((begin (dired-move-to-filename nil))
+                       (end (dired-move-to-end-of-filename t))
+                       (str (buffer-substring-no-properties begin end))
+                       (match (string-match-p "^\\.\\.?" str)))
+             (delete-region (line-beginning-position) (1+ (line-end-position)))
+             t))))))
+
+(defun mdired-toggle-detail ()
+  (interactive)
+  (if-let ((buffer (mdired--try-get-dired-buffer)))
+      (with-current-buffer buffer
+        (setq-local dired-hide-details-mode (not dired-hide-details-mode))
+        (dired-hide-details-mode
+         (if dired-hide-details-mode 1 -1)))
+    (message "Unable to toggle dired detail")))
+
+(defun mdired-toggle-sort ()
+  (interactive)
+  (if-let ((buffer (mdired--try-get-dired-buffer)))
+      (with-current-buffer buffer
+        )
+    (message "Unable to toggle dired sort method")))
 
 ;;; Path window functions
 (defun mdired--get-or-build-path-window (vector)
@@ -225,6 +268,8 @@ and dired header lines."
       (mdired--set-directory-window
        vector
        (split-window-vertically 2 (mdired--get-directory-window vector)))
+      ;; So the window won't change its height
+      (setq window-size-fixed 'height)
       (setq path-window (mdired--set-path-window vector (selected-window)))
       (select-window (mdired--get-directory-window vector))
       path-window)))
@@ -238,7 +283,9 @@ and dired header lines."
      (let ((buffer (generate-new-buffer "mdired-path-buffer")))
        ;; we don't want any modeline in the path window
        (with-current-buffer buffer
-         (setq-local mode-line-format nil
+         (setq-local window-safe-min-height 0 ; We just need one line to display
+                     window-min-height 0
+                     mode-line-format nil
                      buffer-read-only t
                      truncate-lines t)
          (mdired--set-toolbar-buttons))
@@ -366,30 +413,39 @@ and dired header lines."
 
 
 ;;; Tool Bar Related Functions
-(defun mdired--make-toolbar-buttons ()
-  (unless mdired-mode-toolbar-map
+(defun mdired--make-toolbar-buttons (&optional force)
+  (when (or force (null mdired-mode-toolbar-map))
     (add-to-list
      'image-load-path
      (expand-file-name "lib/images" user-emacs-directory))
-    (setq mdired-mode-toolbar-map
-          (let ((map (make-sparse-keymap)))
-                        (define-key map [mdired-toggle-info]
-                        `(menu-item "Info" mdired-toggle-info
-                                    :enable t
-                                    :help "Toggle Info Window"
-                                    :image ,(find-image '((:type svg :file "emacs-info.svg")))))                                    
-            (define-key map [mdired-toggle-preview]
-                        `(menu-item "Preview" mdired-toggle-preview
-                                    :enable t
-                                    :help "Toggle Preview Window"
-                                    :image ,(find-image '((:type svg :file "emacs-mdired-preview-button.svg")))))
-            (define-key map [mdired-toggle-parent]
-                        `(menu-item "Parent" mdired-toggle-parent
-                                    :enable t
-                                    :help "Toggle Parent Window"
-                                    :image ,(find-image '((:type svg :file "emacs-mdired-parent-button.svg")))))
-            map)))
+    (let ((map (make-sparse-keymap)))
+      (define-key map [mdired-toggle-sort]
+                  `(menu-item "Switches" mdired-toggle-sort
+                              :enable t
+                              :help "Toggle Dired Listing Switches"
+                              :image ,(find-image '((:type svg :file "dired-sort-ext-asc.svg")))))
+      (define-key map [mdired-show-detail]
+                  `(menu-item "Detail" mdired-toggle-detail
+                              :enable t
+                              :help "Toggle Dired Detail"
+                              :image ,(find-image '((:type svg :file "dired-show-detail.svg")))))
+      (define-key map [mdired-toggle-info]
+                  `(menu-item "Info" mdired-toggle-info
+                              :enable t
+                              :help "Toggle Info Window"
+                              :image ,(find-image '((:type svg :file "emacs-info.svg")))))
+      (define-key map [mdired-toggle-preview]
+                  `(menu-item "Preview" mdired-toggle-preview
+                              :enable t
+                              :help "Toggle Preview Window"
+                              :image ,(find-image '((:type svg :file "emacs-mdired-preview-button.svg")))))
+      (define-key map [mdired-toggle-parent]
+                  `(menu-item "Parent" mdired-toggle-parent
+                              :enable t
+                              :help "Toggle Parent Window"
+                              :image ,(find-image '((:type svg :file "emacs-mdired-parent-button.svg")))))
+      (setq mdired-mode-toolbar-map map)))
   mdired-mode-toolbar-map)
 
-(defun mdired--set-toolbar-buttons ()
-  (setq-local tool-bar-map (mdired--make-toolbar-buttons)))
+(defun mdired--set-toolbar-buttons (&optional force)
+  (setq-local tool-bar-map (mdired--make-toolbar-buttons force)))

@@ -1,6 +1,62 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="32" height="32" viewBox="0 0 32 32">
-<path fill-rule="nonzero" fill="rgb(97.254902%, 97.254902%, 97.254902%)" fill-opacity="1" stroke-width="1" stroke-linecap="butt" stroke-linejoin="miter" stroke="rgb(50.196081%, 50.196081%, 50.196081%)" stroke-opacity="1" stroke-miterlimit="4" d="M 0.5 2.5 L 0.5 13.5 L 15.5 13.5 L 15.5 2.5 Z M 0.5 2.5 " transform="matrix(2, 0, 0, 2, 0, 0)"/>
-<path fill-rule="nonzero" fill="rgb(75.294119%, 75.294119%, 75.294119%)" fill-opacity="1" d="M 4 8 L 4 24 L 15 24 L 15 8 Z M 4 8 "/>
-<path fill-rule="nonzero" fill="rgb(75.294119%, 75.294119%, 75.294119%)" fill-opacity="1" d="M 17 8 L 17 24 L 28 24 L 28 8 Z M 17 8 "/>
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<svg
+   width="32"
+   height="32"
+   viewBox="0 0 32 32"
+   version="1.1"
+   id="svg8"
+   sodipodi:docname="emacs-mdired-parent-button.svg"
+   inkscape:version="1.2.1 (9c6d41e410, 2022-07-14, custom)"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:svg="http://www.w3.org/2000/svg">
+  <defs
+     id="defs12" />
+  <sodipodi:namedview
+     id="namedview10"
+     pagecolor="#505050"
+     bordercolor="#eeeeee"
+     borderopacity="1"
+     inkscape:showpageshadow="0"
+     inkscape:pageopacity="0"
+     inkscape:pagecheckerboard="0"
+     inkscape:deskcolor="#505050"
+     showgrid="false"
+     inkscape:zoom="22.9375"
+     inkscape:cx="16.021798"
+     inkscape:cy="16"
+     inkscape:window-width="2558"
+     inkscape:window-height="1412"
+     inkscape:window-x="0"
+     inkscape:window-y="0"
+     inkscape:window-maximized="1"
+     inkscape:current-layer="svg8" />
+  <path
+     fill-rule="nonzero"
+     fill="rgb(97.254902%, 97.254902%, 97.254902%)"
+     fill-opacity="1"
+     stroke-width="1"
+     stroke-linecap="butt"
+     stroke-linejoin="miter"
+     stroke="rgb(50.196081%, 50.196081%, 50.196081%)"
+     stroke-opacity="1"
+     stroke-miterlimit="4"
+     d="M 0.5 2.5 L 0.5 13.5 L 15.5 13.5 L 15.5 2.5 Z M 0.5 2.5 "
+     transform="matrix(2, 0, 0, 2, 0, 0)"
+     id="path2" />
+  <path
+     fill-rule="nonzero"
+     fill="#c0c0c0"
+     fill-opacity="1"
+     d="m 4,8 v 16 h 7.101499 V 8 Z m 0,0"
+     id="path4"
+     style="stroke-width:0.803487;fill:#aa0000;fill-opacity:1" />
+  <path
+     fill-rule="nonzero"
+     fill="#c0c0c0"
+     fill-opacity="1"
+     d="M 13.82374,8 V 24 H 28 V 8 Z m 0,0"
+     id="path6"
+     style="stroke-width:1.13523" />
 </svg>
