@@ -14,15 +14,15 @@
 (defvar-local mdired-main-buffer nil)
 (defvar-local mdired--hl-overlay nil)
 
-(defcustom mdired-ls-switchs
+(defcustom mdired-listing-switches
   '(("-alh"  . "name-asc")
     ("-alhr" . "name-desc")
-    ("-lhX"  . "ext-asc")
-    ("-lhXr" . "ext-desc")
-    ("-lhS"  . "size-asc")
-    ("-lhSr" . "size-desc")
-    ("-lht"  . "time-asc")
-    ("-lhtr" . "time-desc"))
+    ("-alhXr"  . "ext-asc")
+    ("-alhX" . "ext-desc")
+    ("-alhSr"  . "size-asc")
+    ("-alhS" . "size-desc")
+    ("-alhtr"  . "time-asc")
+    ("-alht" . "time-desc"))
   "")
 
 (defcustom mdired-conponments
@@ -39,7 +39,7 @@
   (interactive "f")
   (let ((dired-hide-details-mode t)
         (dired-free-space nil)
-        (dired-listing-switches (car (car mdired-ls-switchs)))
+        (dired-listing-switches (car (car mdired-listing-switches)))
         (directory (if (file-directory-p filename)
                        filename
                      (file-name-parent-directory filename))))
@@ -137,7 +137,7 @@ Maybe nil."
   :global nil
   :group mdired
   (mdired-set-current-by-dired)
-  (mdired-hide-details)
+  (mdired-dired-details (not dired-hide-details-mode))
   (add-hook 'post-command-hook
             (lambda ()
               (when (bound-and-true-p mdired-object-vector)
@@ -152,9 +152,13 @@ else we will jump into its parent and goto this file."
   (interactive)
   (let ((dired-hide-details-mode t)
         (dired-free-space nil)
-        (old-vector mdired-object-vector))
+        (old-buffer (current-buffer))
+        (old-vector mdired-object-vector)
+        (old-listing-switches dired-listing-switches)
+        (old-hide-details-mode dired-hide-details-mode))
     ;; If the file is a directory, so we just jump into it,
     ;; else we get into its parent directory and goto this file.
+    (setq-default dired-listing-switches old-listing-switches)
     (if (directory-name-p filename)
         (find-alternate-file filename)
       (let ((directory (file-name-parent-directory filename))
@@ -167,6 +171,7 @@ else we will jump into its parent and goto this file."
           (dired-goto-file file))))
     ;; Todo: is there any better method for us to set this vector?
     (setq-local mdired-object-vector old-vector)
+    (setq-local dired-hide-details-mode old-hide-details-mode)
     (mdired--set-toolbar-buttons)
     (mdired--set-directory-buffer mdired-object-vector (current-buffer))
     (mdired--set-directory-window mdired-object-vector (selected-window))
@@ -207,41 +212,41 @@ but for child."
        filename))
     (mdired-refresh mdired-object-vector)))
 
-(defun mdired-hide-details (&optional show-all)
+(defun mdired-dired-details (&optional show-detail)
   "Hide unneed infomation in this dired buffer, such as file infomations
 and dired header lines."
-  (if show-all
-      (revert-buffer)
-    (let ((dired-free-space nil))
-      (mdired-hide-header)
-      (setq-default dired-hide-details-mode t)
-      (dired-hide-details-update-invisibility-spec))))
+  (let ((dired-free-space nil))
+    (mdired-hide-header)
+    (if show-detail
+        (setq-local dired-hide-details-mode nil)
+      (setq-local dired-hide-details-mode t))
+    (dired-hide-details-update-invisibility-spec)))
 
 (defun mdired-hide-header ()
   "Hide the header line and remove the `.' and the `..'"
   (let ((buffer-read-only nil))
     (save-excursion
       (goto-char (point-min))
-      (while
-          (or
-           (when-let* ((regex-dir (regexp-quote
-                                   (directory-file-name
-                                    (expand-file-name default-directory))))
-                       (line (buffer-substring-no-properties
-                              (line-beginning-position)
-                              (line-end-position)))
-                       (match (string-match
-                               (concat "^  " regex-dir ":\\(.*\\)") line))
-                       (mstr (match-string 1)))
-             (put-text-property (line-beginning-position) (1+ (line-end-position)) 'display mstr)
-             (forward-line)
-             t)
-           (when-let* ((begin (dired-move-to-filename nil))
-                       (end (dired-move-to-end-of-filename t))
-                       (str (buffer-substring-no-properties begin end))
-                       (match (string-match-p "^\\.\\.?" str)))
-             (delete-region (line-beginning-position) (1+ (line-end-position)))
-             t))))))
+      ;; Hide the first header line
+      (when-let* ((regex-dir (regexp-quote
+                              (directory-file-name
+                               (expand-file-name default-directory))))
+                  (line (buffer-substring-no-properties
+                         (line-beginning-position)
+                         (line-end-position)))
+                  (match (string-match
+                          (concat "^  " regex-dir ":\\(.*\\)") line))
+                  (mstr (match-string 1)))
+        (put-text-property (line-beginning-position) (1+ (line-end-position)) 'display mstr)
+        (forward-line))
+      
+        (while (not (eobp))
+          (if-let* ((begin (dired-move-to-filename nil))
+                    (end (dired-move-to-end-of-filename t))
+                    (str (buffer-substring-no-properties begin end))
+                    (match (string-match-p "^\\.\\.?$" str)))
+              (delete-region (line-beginning-position) (1+ (line-end-position)))
+            (forward-line))))))
 
 (defun mdired-toggle-detail ()
   (interactive)
@@ -256,8 +261,33 @@ and dired header lines."
   (interactive)
   (if-let ((buffer (mdired--try-get-dired-buffer)))
       (with-current-buffer buffer
-        )
+        (let ((old-switches dired-listing-switches)
+              (length (length mdired-listing-switches))
+              (counter 0)
+              (next-index 0))
+          (dolist (e mdired-listing-switches)
+            (setq counter (1+ counter))
+            (when (string= old-switches (car e))
+              (setq next-index (% counter length))))
+          (let* ((tuple (nth next-index mdired-listing-switches))
+                 (switches (car tuple))
+                 (name (cdr tuple)))
+            (setq-default dired-listing-switches switches)
+            (dired-sort-other dired-listing-switches)
+            (mdired-hide-header)
+            (mdired--set-toolbar-buttons t)
+            (message "toggle to %s" name))))
     (message "Unable to toggle dired sort method")))
+
+(defun mdired--get-sort-name ()
+  (if-let* ((buffer (mdired--try-get-dired-buffer))
+            (result (with-current-buffer buffer
+                      (seq-filter (apply-partially
+                                   (lambda (x) (string= dired-listing-switches (car x))))
+                                  mdired-listing-switches))))
+      (cdr-safe (car-safe result))
+    (cdr (car mdired-listing-switches))))
+
 
 ;;; Path window functions
 (defun mdired--get-or-build-path-window (vector)
@@ -419,11 +449,13 @@ and dired header lines."
      'image-load-path
      (expand-file-name "lib/images" user-emacs-directory))
     (let ((map (make-sparse-keymap)))
-      (define-key map [mdired-toggle-sort]
-                  `(menu-item "Switches" mdired-toggle-sort
-                              :enable t
-                              :help "Toggle Dired Listing Switches"
-                              :image ,(find-image '((:type svg :file "dired-sort-ext-asc.svg")))))
+      (let* ((sort-name (mdired--get-sort-name))
+             (icon-file (concat "dired-sort-" sort-name ".svg")))
+        (define-key map [mdired-toggle-sort]
+                    `(menu-item "Switches" mdired-toggle-sort
+                                :enable t
+                                :help "Toggle Dired Listing Switches"
+                                :image ,(find-image `((:type svg :file ,icon-file))))))
       (define-key map [mdired-show-detail]
                   `(menu-item "Detail" mdired-toggle-detail
                               :enable t
