@@ -25,6 +25,35 @@
     ("-alht" . "time-desc"))
   "")
 
+(defconst mdired-extensions
+  '((audio "mp3" "aac" "ogg" "flac" "alac" "wav" "aiff" "dsd" "pcm")
+    (video "mp4" "mov" "wmv" "avi" "avchd" "flv" "f4v" "swf" "mkv" "webm" "mpeg")
+    (image "apng" "avif" "gif" "jpg" "jpeg" "jfif" "pjpeg" "pjp" "png" "svg" "webp" "bmp" "ico" "cur" "tif" "tiff")
+    (code "el" "js" "ts" "rs" "c" "cc" "cpp" "h" "hh" "hpp" "java" "sh" "bash" "zsh" "css" "py" "pl" "lisp" "conf" "inf" "yml" "yaml" "xml" "json")
+    (webpage "html" "htm")
+    (ebook "pdf" "epub" "mobi"))
+  "")
+
+(defconst mdired-font-icons
+  '((ebook . "")
+    (rich-text . "")
+    (book . "")
+    (code . "")
+    (file . "")
+    (database . "")
+    (config . "")
+    (compress . "")
+    (folder . "")
+    (image . "")
+    (mindmap . "")
+    (video . "")
+    (audio . "")
+    (secret . ""))
+  "")
+
+(defvar mdired--extension-icons nil
+  "")
+
 (defcustom mdired-conponments
   '(filename
     directory-window directory-buffer
@@ -39,11 +68,11 @@
   (interactive "f")
   (let ((dired-hide-details-mode t)
         (dired-free-space nil)
-        (dired-listing-switches (car (car mdired-listing-switches)))
         (directory (if (file-directory-p filename)
                        filename
                      (file-name-parent-directory filename))))
-    (with-current-buffer (dired directory)
+    (setq-default dired-listing-switches (car (car mdired-listing-switches)))
+    (with-current-buffer (dired directory )
       (mdired-build-getter-and-setters)
       (mdired--set-filename mdired-object-vector (dired-get-filename))
       (mdired-refresh mdired-object-vector))))
@@ -138,6 +167,7 @@ Maybe nil."
   :group mdired
   (mdired-set-current-by-dired)
   (mdired-dired-details (not dired-hide-details-mode))
+  (mdired--dired-refresh-icons)
   (add-hook 'post-command-hook
             (lambda ()
               (when (bound-and-true-p mdired-object-vector)
@@ -239,14 +269,14 @@ and dired header lines."
                   (mstr (match-string 1)))
         (put-text-property (line-beginning-position) (1+ (line-end-position)) 'display mstr)
         (forward-line))
-      
-        (while (not (eobp))
-          (if-let* ((begin (dired-move-to-filename nil))
-                    (end (dired-move-to-end-of-filename t))
-                    (str (buffer-substring-no-properties begin end))
-                    (match (string-match-p "^\\.\\.?$" str)))
-              (delete-region (line-beginning-position) (1+ (line-end-position)))
-            (forward-line))))))
+
+      (while (not (eobp))
+        (if-let* ((begin (dired-move-to-filename nil))
+                  (end (dired-move-to-end-of-filename t))
+                  (str (buffer-substring-no-properties begin end))
+                  (match (string-match-p "^\\.\\.?$" str)))
+            (delete-region (line-beginning-position) (1+ (line-end-position)))
+          (forward-line))))))
 
 (defun mdired-toggle-detail ()
   (interactive)
@@ -299,7 +329,6 @@ and dired header lines."
        vector
        (split-window-vertically 2 (mdired--get-directory-window vector)))
       ;; So the window won't change its height
-      (setq window-size-fixed 'height)
       (setq path-window (mdired--set-path-window vector (selected-window)))
       (select-window (mdired--get-directory-window vector))
       path-window)))
@@ -318,6 +347,7 @@ and dired header lines."
                      mode-line-format nil
                      buffer-read-only t
                      truncate-lines t)
+         (setq window-size-fixed 'height)
          (mdired--set-toolbar-buttons))
        buffer))))
 
@@ -432,6 +462,7 @@ and dired header lines."
             (erase-buffer)
             (when parent-path
               (process-file "ls" nil t nil "-A" "-p" (mdired--remove-slash-more item-path)))
+            (mdired--dired-refresh-icons)
             ;; highlight current line
             (let ((itemname (file-name-nondirectory item-path)))
               (goto-char (point-min))
@@ -481,3 +512,56 @@ and dired header lines."
 
 (defun mdired--set-toolbar-buttons (&optional force)
   (setq-local tool-bar-map (mdired--make-toolbar-buttons force)))
+
+
+;;; Icon part functions for dired and parent windows
+(defun mdired--dired-refresh-icons ()
+  ""
+  (mdired--build-font-icons)
+  (save-excursion
+    (goto-char (point-min))
+    (let ((common-icon (concat " " (cdr (assq 'file mdired-font-icons))))
+          (folder-icon (concat " " (cdr (assq 'folder mdired-font-icons))))
+          (not-dired-mode (not (equal 'dired-mode major-mode)))
+          (put-icon (make-symbol "mdired--put-file-icon")))
+      (mapc #'delete-overlay
+            (seq-filter (apply-partially
+                         (lambda (ov)
+                           (overlay-get ov 'mdired--icon-overlay)))
+                        (overlays-in (point-min) (point-max))))
+      (fset put-icon
+            (lambda (pos icon)
+              (let ((ov (make-overlay pos pos)))
+                (overlay-put ov 'mdired--icon-overlay t)
+                (overlay-put ov 'after-string icon))))
+      (if not-dired-mode
+          (while (not (eobp))
+            (if (re-search-forward "/" (line-end-position) t)
+                (funcall put-icon (line-beginning-position) (concat folder-icon " "))
+              (let* ((match (re-search-forward ".*\\.\\([^.]+\\)" (line-end-position) t))
+                     (ext (match-string 1))
+                     (icon (or (gethash ext mdired--extension-icons) common-icon)))
+                (funcall put-icon (line-beginning-position) (concat icon " "))))
+            (forward-line))
+        (while (not (eobp))
+          (when-let* ((match (re-search-forward "..\\(.\\)[rwxt-]\\{9\\}.*\\([ .][^.]+\\)" (line-end-position) t))
+                      (type (match-string 1))
+                      (ext  (match-string 2))
+                      (icon (cond ((string= type "d") folder-icon)
+                                  (t (or (gethash ext mdired--extension-icons) common-icon))))
+                      (pos (dired-move-to-filename nil)))
+            (funcall put-icon (1- pos) icon))
+          (forward-line))))))
+
+
+(defun mdired--build-font-icons (&optional force)
+  ""
+  (when (or force (null mdired--extension-icons))
+    (let ((table (make-hash-table :test 'equal)))
+      (dolist (e mdired-extensions)
+        (when-let* ((type (car e))
+                    (exts (cdr e))
+                    (icon (cdr (assq type mdired-font-icons))))
+          (dolist (ext exts)
+            (puthash (concat "." (downcase ext)) (concat " " icon) table))))
+      (setq mdired--extension-icons table))))
