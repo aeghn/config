@@ -5,11 +5,8 @@
   "Dired with preview and some other features"
   :group 'convenience)
 
-(defvar mdired-mode-toolbar-map nil
-  "The variable which holds the toolbar buttons")
-
-(defvar-local mdired--dired-buffer nil)
-(defvar-local mdired--hl-overlay nil)
+(defcustom mdired-preview-text-threshold 10000000
+  "")
 
 (defcustom mdired-listing-switches
   '(("-alh"    . "name-asc")
@@ -50,17 +47,27 @@
     (secret    . ""))
   "")
 
-(defvar mdired--extension-icons nil
-  "")
-
 (defcustom mdired--vector-conponments
   '(filename
-    directory-window directory-buffer
+    dired-window dired-buffer
     parent-window parent-buffer
     info-window info-buffer
     preview-window preview-buffer
     path-window path-buffer)
   "the infomations we need to save")
+
+(defvar mdired--extension-icons nil "")
+
+(defcustom mdired-preview-cache-directory "/tmp/mdired"
+  "The directory which we put the cache files")
+
+(defvar mdired-mode-toolbar-map nil
+  "The variable which holds the toolbar buttons")
+
+(defvar-local mdired--dired-buffer nil)
+(defvar-local mdired--hl-overlay nil)
+(defvar-local mdired--owned nil)
+
 
 (defvar-local mdired--vector nil
   "The variable which saves the infomation")
@@ -74,9 +81,9 @@
                        filename
                      (file-name-parent-directory filename))))
     (setq-default dired-listing-switches (car (car mdired-listing-switches)))
-    (with-current-buffer (dired directory )
+    (with-current-buffer (dired directory)
       (mdired-build-getter-and-setters)
-      (mdired--set-filename mdired--vector (dired-get-filename))
+      (mdired--set-filename mdired--vector filename)
       (mdired-refresh mdired--vector))))
 
 (defun mdired-refresh (vector &optional exclude-main)
@@ -86,17 +93,21 @@
   (mdired--refresh-path vector)
   (mdired--refresh-parent vector)
   (mdired--refresh-info vector)
-  (mdired--refresh-preview vector))
+  (mdired-ignore-errors
+    (mdired--get-preview-window vector)
+    (mdired--get-preview-buffer vector)
+    (mdired--refresh-preview vector)))
 
 (defun mdired-set-current (filename)
   "Set dired current file to FILENAME if it exists
 and is different from current file."
-  (when-let (filename
-             (absolute-filename (expand-file-name filename))
-             (should-set (not (string= absolute-filename
-                                       (mdired--get-filename mdired--vector))))
-             (file-exists (file-exists-p absolute-filename)))
-    (mdired--set-filename mdired--vector absolute-filename)))
+  (if-let (filename
+           (absolute-filename (expand-file-name filename))
+           (should-set (not (string= absolute-filename
+                                     (mdired--get-filename mdired--vector))))
+           (file-exists (file-exists-p absolute-filename)))
+      (progn (mdired--set-filename mdired--vector absolute-filename) t)
+    nil))
 
 ;;; Getter and Setters
 (defun mdired-build-getter-and-setters ()
@@ -107,20 +118,35 @@ and is different from current file."
     (dolist (e mdired--vector-conponments)
       (defalias (intern (format "mdired--set-%s" e))
         `(lambda (vector newval)
-           (interactive)
            (aset vector ,index newval)
            newval))
       (defalias (intern (format "mdired--get-%s" e))
         `(lambda (vector)
-           (interactive)
            (aref vector ,index)))
-      (defalias (intern (format "mdired--null-%s" e))
-        `(lambda (vector)
-           (interactive)
-           (null (aref vector ,index))))
       (setq index (1+ index)))))
 
 ;;; Helper Functions
+(defmacro mdired-ignore-errors (window buffer &rest body)
+  "A copy of `ignore-errors'"
+  (declare (debug t) (indent 0))
+  `(condition-case err
+       (progn ,@body)
+     (error
+      (mdired--rewrite-buffer-and-switch
+       ,buffer (format "Mdired-Error: %S" err) ,window))))
+
+(defun mdired--rewrite-buffer-and-switch (buffer str &optional window)
+  "Try to switch to the BUFFER and show STR"
+  (if (buffer-live-p buffer)
+      (let ((buffer-read-only nil))
+        (with-current-buffer buffer
+          (erase-buffer)
+          (insert str))
+        (when (window-live-p window)
+          (with-selected-window window
+            (switch-to-buffer buffer))))
+    (message "unable to find [%s][%s], original info: %s" window buffer str)))
+
 (defun mdired--get-dired-filename ()
   "Get filename by using `dired-get-filename'.
 
@@ -129,6 +155,13 @@ current directory with a slash in the end."
   (if-let ((filename (dired-get-filename nil t)))
       filename
     (file-name-as-directory default-directory)))
+
+(defun mdired--hl-current-line ()
+  (if-let ((overlay mdired--hl-overlay))
+      (move-overlay overlay (line-beginning-position) (1+ (line-end-position)))
+    (setq-local mdired--hl-overlay
+                (make-overlay (line-beginning-position) (1+ (line-end-position))))
+    (overlay-put mdired--hl-overlay 'face '((:inherit highlight :extend t)))))
 
 (defun mdired--remove-slash-more (filename)
   "Remove the current directory from the path.
@@ -141,6 +174,12 @@ Maybe nil."
         (directory-file-name parent))
     nil))
 
+(defun mdired--file-is-binary (filename)
+  "In case of 'Memory exhausted' error, we use a external tool to do this."
+  (with-temp-buffer
+    (call-process "file" nil t nil "--dereference" "-b" "--mime-encoding" filename)
+    (string= "binary" (buffer-substring (point-min) (1- (point-max))))))
+
 (defun mdired--is-root-dir (filename)
   "Check if we arraived on the root dir."
   (not (file-name-parent-directory filename)))
@@ -151,7 +190,7 @@ Maybe nil."
 (defun mdired--try-get-vector ()
   (cond (mdired--vector mdired--vector)
         (mdired--dired-buffer (with-current-buffer mdired--dired-buffer
-                              mdired--vector))
+                                mdired--vector))
         (t nil)))
 
 (defun mdired--try-get-dired-buffer ()
@@ -166,7 +205,7 @@ Maybe nil."
 
 (defun mdired--rebalance-windows (vector)
   (let* ((path-window    (mdired--check-live-window (mdired--get-path-window vector)))
-         (dired-window   (mdired--check-live-window (mdired--get-directory-window vector)))
+         (dired-window   (mdired--check-live-window (mdired--get-dired-window vector)))
          (parent-window  (mdired--check-live-window (mdired--get-parent-window vector)))
          (preview-window (mdired--check-live-window (mdired--get-preview-window vector)))
          (info-window    (mdired--check-live-window (mdired--get-info-window vector)))
@@ -182,12 +221,12 @@ Maybe nil."
                   (adjust-window-trailing-edge window delta t t)))))
     (fset aoe (lambda (e1 e2) (or (and e1 e2) (equal e1 e2))))
     (let ((layouts '((30   70 nil nil)
-                     (20   40  40 nil)
-                     (20   30  30  20)
+                     (20   30  50 nil)
+                     (20   20  40  20)
                      (20   50 nil  30)
                      (nil 100 nil nil)
-                     (nil  50  50 nil)
-                     (nil  40  40  20))))
+                     (nil  40  60 nil)
+                     (nil  30  50  20))))
       (dolist (l layouts)
         (when (and (funcall aoe parent-window  (nth 0 l))
                    (funcall aoe dired-window   (nth 1 l))
@@ -208,7 +247,6 @@ Maybe nil."
   :lighter " mdired "
   :global nil
   :group mdired
-  (mdired-set-current-by-dired)
   (mdired-dired-details (not dired-hide-details-mode))
   (mdired--dired-refresh-icons)
   (add-hook 'post-command-hook
@@ -245,21 +283,18 @@ else we will jump into its parent and goto this file."
     ;; Todo: is there any better method for us to set this vector?
     (setq-local mdired--vector old-vector)
     (setq-local dired-hide-details-mode old-hide-details-mode)
+    (mdired-mode)
     (mdired--set-toolbar-buttons)
-    (mdired--set-directory-buffer mdired--vector (current-buffer))
-    (mdired--set-directory-window mdired--vector (selected-window))
-    (mdired-mode)))
+    (mdired--set-dired-buffer mdired--vector (current-buffer))
+    (mdired--set-dired-window mdired--vector (selected-window))
+    (mdired--hl-current-line)))
 
 (defun mdired-set-current-by-dired ()
   "Set current file by using `mdired--get-dired-filename'"
-  (mdired-set-current (mdired--get-dired-filename))
-  ;; Highlight current line
-  (if-let ((overlay mdired--hl-overlay))
-      (move-overlay overlay (line-beginning-position) (1+ (line-end-position)))
-    (setq-local mdired--hl-overlay
-                (make-overlay (line-beginning-position) (1+ (line-end-position))))
-    (overlay-put mdired--hl-overlay 'face '((:inherit highlight :extend t))))
-  (mdired-refresh mdired--vector t))
+  (when (mdired-set-current (mdired--get-dired-filename))
+    ;; Highlight current line
+    (mdired--hl-current-line)
+    (mdired-refresh mdired--vector t)))
 
 (defun mdired-set-current-parent ()
   "Go to the parent dir when we don't on the root dir."
@@ -369,12 +404,12 @@ and dired header lines."
         path-window)
     (if (mdired--check-live-window window)
         window
-      (mdired--set-directory-window
+      (mdired--set-dired-window
        vector
-       (split-window-vertically 2 (mdired--get-directory-window vector)))
+       (split-window-vertically 2 (mdired--get-dired-window vector)))
       ;; So the window won't change its height
       (setq path-window (mdired--set-path-window vector (selected-window)))
-      (select-window (mdired--get-directory-window vector))
+      (select-window (mdired--get-dired-window vector))
       path-window)))
 
 (defun mdired--get-or-build-path-buffer (vector)
@@ -401,7 +436,7 @@ and dired header lines."
              (path (button-get button 'token)))
     (with-current-buffer main-buffer
       (when-let ((vector mdired--vector)
-                 (main-window (mdired--get-directory-window vector)))
+                 (main-window (mdired--get-dired-window vector)))
         (select-window main-window)
         (mdired--set-filename vector path)
         (mdired-refresh vector)))))
@@ -438,7 +473,7 @@ and dired header lines."
     (switch-to-buffer (mdired--get-or-build-path-buffer vector))
     (with-current-buffer (mdired--get-or-build-path-buffer vector)
       (setq-local mdired--dired-buffer
-                  (mdired--get-directory-buffer vector))
+                  (mdired--get-dired-buffer vector))
       (let ((buffer-read-only nil)
             begin bs be path end)
         (erase-buffer)
@@ -465,18 +500,18 @@ and dired header lines."
       (goto-char (point-max)))))
 
 ;;; Parent Window Functions
-(defun mdired--get-or-build-parent-window (vector &optional build)
+(defun  mdired--get-or-build-parent-window (vector &optional build)
   (let ((window (mdired--get-parent-window vector))
         parent-window)
     (if (mdired--check-live-window window)
         window
       (when build
-        (select-window (mdired--get-directory-window vector))
-        (mdired--set-directory-window
+        (select-window (mdired--get-dired-window vector))
+        (mdired--set-dired-window
          vector
-         (split-window-horizontally 25 (mdired--get-directory-window vector)))
+         (split-window-horizontally 25 (mdired--get-dired-window vector)))
         (setq parent-window (mdired--set-parent-window vector (selected-window)))
-        (select-window (mdired--get-directory-window vector))
+        (select-window (mdired--get-dired-window vector))
         parent-window))))
 
 (defun mdired--get-or-build-parent-buffer (vector)
@@ -492,13 +527,13 @@ and dired header lines."
 
 (defun mdired--refresh-parent (vector &optional build)
   (when-let ((dired-window (mdired--check-live-window
-                            (mdired--get-directory-window vector)))
+                            (mdired--get-dired-window vector)))
              (parent-window (mdired--get-or-build-parent-window vector build))
              (parent-buffer (mdired--get-or-build-parent-buffer vector)))
     (with-selected-window parent-window
       (switch-to-buffer parent-buffer))
     (with-current-buffer parent-buffer
-      (setq-local mdired--dired-buffer (mdired--get-directory-buffer vector))
+      (setq-local mdired--dired-buffer (mdired--get-dired-buffer vector))
       (let* ((item-path (mdired--remove-slash-more (mdired--get-filename vector)))
              (parent-path (mdired--remove-slash-more item-path))
              (buffer-read-only nil))
@@ -620,13 +655,13 @@ and dired header lines."
         window
       (when build
         (let ((base-window (or (mdired--check-live-window (mdired--get-preview-window vector))
-                               (mdired--check-live-window (mdired--get-directory-window vector)))))
+                               (mdired--check-live-window (mdired--get-dired-window vector)))))
           (select-window base-window)
           (mdired--set-info-window
            vector
            (split-window-horizontally -30 base-window))
           ;; (setq info-window (mdired--set-info-window vector (selected-window)))
-          (select-window (mdired--get-directory-window vector))
+          (select-window (mdired--get-dired-window vector))
           (mdired--get-info-window vector))))))
 
 (defun mdired--get-or-build-info-buffer (vector)
@@ -646,42 +681,43 @@ and dired header lines."
   (car (window-text-pixel-size nil (line-beginning-position) (or pos (point)) t)))
 
 (defun mdired--insert-head-info (icon desc window-width)
-  (let ((icon-width 0)
-        (space-width 0)
-        first-space last-word width)
-    (goto-char (point-min))
-    (when icon
-      (insert icon)
-      (setq icon-width (mdired--line-width-here))
-      (insert " ")
-      (setq space-width (- (mdired--line-width-here) icon-width)))
-    (setq first-space (point))
-    (insert desc)
-    (setq width (if icon (mdired--line-width-here) (1+ window-width)))
-    (newline)
-    (if (<= width window-width)
-        (when-let* ((_ (> space-width 0))
-                    (delta (- window-width width)))
-          (goto-char first-space)
-          (insert (make-string (/ delta space-width) ? )))
-      (let* ((prefix-width (+ icon-width space-width))
-             (prefix (if (> space-width 0)
-                         (make-string (/ prefix-width space-width) ? )
-                       " "))
-             (word-count 0)
-             (last-word first-space))
-        (goto-char last-word)
-        (while (not (eolp))
-          (setq last-word (point))
-          (forward-word)
-          (setq word-count (1+ word-count))
-          (setq width (mdired--line-width-here))
-          (when (>= width window-width)
-            (when (> word-count 1) (goto-char last-word))
-            (newline)
-            (when (looking-at " ") (delete-char 1))
-            (insert prefix)
-            (setq word-count 0)))))))
+  (ignore-errors
+    (let ((icon-width 0)
+          (space-width 0)
+          first-space last-word width)
+      (goto-char (point-min))
+      (when icon
+        (insert icon)
+        (setq icon-width (mdired--line-width-here))
+        (insert " ")
+        (setq space-width (- (mdired--line-width-here) icon-width)))
+      (setq first-space (point))
+      (insert desc)
+      (setq width (if icon (mdired--line-width-here) (1+ window-width)))
+      (newline)
+      (if (<= width window-width)
+          (when-let* ((_ (> space-width 0))
+                      (delta (- window-width width)))
+            (goto-char first-space)
+            (insert (make-string (/ delta space-width) ? )))
+        (let* ((prefix-width (+ icon-width space-width))
+               (prefix (if (> space-width 0)
+                           (make-string (/ prefix-width space-width) ? )
+                         " "))
+               (word-count 0)
+               (last-word first-space))
+          (goto-char last-word)
+          (while (not (eolp))
+            (setq last-word (point))
+            (forward-word)
+            (setq word-count (1+ word-count))
+            (setq width (mdired--line-width-here))
+            (when (>= width window-width)
+              (when (> word-count 1) (goto-char last-word))
+              (newline)
+              (when (looking-at " ") (delete-char 1))
+              (insert prefix)
+              (setq word-count 0))))))))
 
 (defun mdired--get-file-type (filename)
   (let ((process-file-side-effects))
@@ -689,8 +725,7 @@ and dired header lines."
       (process-file "file" nil t t "-b" "--" filename)
       (buffer-substring-no-properties (point-min) (1- (point-max))))))
 
-(defun mdired--insert-preview-common-info
-    (vector)
+(defun mdired--insert-preview-common-info (vector)
   (when-let* ((filename (mdired--get-filename vector))
               (window (mdired--get-info-window vector))
               (buffer (mdired--get-info-buffer vector))
@@ -726,14 +761,14 @@ and dired header lines."
 
 (defun mdired--refresh-info (vector &optional build)
   (when-let ((dired-window (mdired--check-live-window
-                            (mdired--get-directory-window vector)))
+                            (mdired--get-dired-window vector)))
              (info-window (mdired--get-or-build-info-window vector build))
              (info-buffer (mdired--get-or-build-info-buffer vector)))
     (with-selected-window info-window
       (switch-to-buffer info-buffer))
     (with-current-buffer info-buffer
       (let ((buffer-read-only nil))
-        (setq-local mdired--dired-buffer (mdired--get-directory-buffer vector))
+        (setq-local mdired--dired-buffer (mdired--get-dired-buffer vector))
         (erase-buffer)
         ;; TODO: insert specific infomations
         (mdired--insert-preview-common-info vector)))))
@@ -745,41 +780,24 @@ and dired header lines."
     (if (mdired--check-live-window window)
         window
       (when build
-        (select-window (mdired--check-live-window (mdired--get-directory-window vector)))
+        (select-window (mdired--check-live-window (mdired--get-dired-window vector)))
         (mdired--set-preview-window
          vector
-         (split-window-horizontally -50 (mdired--check-live-window (mdired--get-directory-window vector))))
+         (split-window-horizontally -50 (mdired--check-live-window (mdired--get-dired-window vector))))
         ;; (setq preview-window (mdired--set-preview-window vector (selected-window)))
-        (select-window (mdired--get-directory-window vector))
+        (select-window (mdired--get-dired-window vector))
         (mdired--get-preview-window vector)))))
 
 (defun mdired--get-or-build-preview-buffer (vector)
-  (let ((inhibit-message t)
-        (enable-dir-local-variables nil)
-        (enable-local-variables :safe)
-        (non-essential t)
-        (delay-mode-hooks t)
-        (vc-follow-symlinks nil)
-        buffer)
-    (when-let* ((filename (mdired--get-filename vector))
-                (file-exits (file-exists-p filename))
-                (self-preview-buffer-name "mdired-preview-directory"))
-      (if (file-directory-p filename)
-          (setq buffer
-                (let ((self-buffer (or (get-buffer self-preview-buffer-name)
-                                       (generate-new-buffer self-preview-buffer-name))))
-                  (with-current-buffer self-buffer
-                    (setq truncate-lines t)
-                    (setq-local buffer-read-only nil)
-                    (erase-buffer)
-                    (mdired--list-files-in-current-buffer filename))
-                  self-buffer))
-        (setq buffer (find-file-noselect filename 'nowarn)))
-      (with-current-buffer buffer
-        (setq-local mdired--dired-buffer (mdired--get-directory-buffer vector))
-        (setq-local buffer-read-only t)
-        (mdired--set-toolbar-buttons))
-      (mdired--set-preview-buffer vector buffer))))
+  (if-let* ((buffer (mdired--get-preview-buffer vector))
+            (buffer-live (buffer-live-p buffer)))
+      buffer
+    (mdired--set-preview-buffer
+     vector
+     (let ((buffer (generate-new-buffer "mdired-preview-buffer")))
+       (setq-local mdired--dired-buffer (mdired--get-dired-buffer vector))
+       (mdired--set-toolbar-buttons)
+       buffer))))
 
 (defun mdired-toggle-preview (&rest args)
   (interactive)
@@ -791,18 +809,103 @@ and dired header lines."
       (mdired--refresh-preview vector t))
     (mdired--rebalance-windows vector)))
 
-
 (defun mdired--refresh-preview (vector &optional build)
   (when-let ((dired-window (mdired--check-live-window
-                            (mdired--get-directory-window vector)))
+                            (mdired--get-dired-window vector)))
              (preview-window (mdired--get-or-build-preview-window vector build))
-             (preview-buffer (mdired--get-or-build-preview-buffer vector)))
-    (with-selected-window preview-window
-      (switch-to-buffer preview-buffer))))
+             (preview-buffer (mdired--get-or-build-preview-buffer vector))
+             (preview-file (mdired--get-filename vector)))
+    (mdired-ignore-errors
+      preview-window preview-buffer
+      (with-selected-window preview-window
+        (switch-to-buffer (mdired--preview-file vector preview-buffer))))))
+
+(defun mdired--preview-file (vector preserve-buffer)
+  "Mdired Preview Core Function.
+
+1. Check if we has permission to preview this file.
+   Do this in parent level.
+2. Check if this file is binary
+   Then use `mdired--preview-binary' to preview this file.
+3. Check if this file is text
+   Then use `mdired--preview-text' to preview this file.
+
+Return the preview buffer"
+  (let* ((filename (mdired--get-filename vector))
+         (attrs (file-attributes filename))
+         (md5-file (concat (md5 filename) "-" (file-name-nondirectory filename)))
+         (expanded-filename (expand-file-name md5-file mdired-preview-cache-directory))
+         result-buffer)
+    (setq result-buffer
+          (cond ((file-exists-p expanded-filename)
+                 (find-file-noselect expanded-filename))
+                ((file-directory-p filename)
+                 (mdired--preview-directory filename preserve-buffer))
+                ((mdired--file-is-binary filename)
+                 (mdired--preview-binary filename))
+                (t (mdired--preview-text filename attrs preserve-buffer))))
+    (with-current-buffer result-buffer
+      (setq-local mdired--owned t)
+      (setq-local mdired--dired-buffer (mdired--get-dired-buffer vector))
+      (mdired--set-toolbar-buttons))
+    result-buffer))
+
+(defun mdired--preview-text (filename file-attrs preserve-buffer)
+  "This function is just for Text File Preview.
+
+If this file is bigger than `mdired-preview-text-threshold', refuse to view it.
+If this file is opened before, use a indirect buffer to view."
+  (if (> (file-attribute-size file-attrs) mdired-preview-text-threshold)
+      (mdired--rewrite-buffer-and-switch preserve-buffer "file is to big to view")
+    (if-let* ((buffer (find-buffer-visiting filename)))
+        (if-let* ((new-name (concat "mdired-" (buffer-name buffer)))
+                  (mdired-buffer (get-buffer new-name)))
+            mdired-buffer
+          (setq mdired-buffer (make-indirect-buffer buffer new-name t))
+          (with-current-buffer mdired-buffer
+            (setq-local buffer-read-only t)))
+      (mdired--preview-text-now filename))))
+
+(defun mdired--preview-text-now (filename)
+  (let ((inhibit-message t)
+        (enable-dir-local-variables nil)
+        (enable-local-variables :safe)
+        (non-essential t)
+        (delay-mode-hooks t)
+        (vc-follow-symlinks nil)
+        buffer)
+    (when (file-exists-p filename)
+      (setq buffer (find-file-noselect filename 'nowarn))
+      (with-current-buffer buffer
+        (setq-local buffer-read-only t)))))
+
+(defun mdired--preview-directory (filename buffer &optional switches)
+  (with-current-buffer buffer
+    (let ((buffer-read-only nil))
+      (setq truncate-lines t)
+      (erase-buffer)
+      (mdired--list-files-in-current-buffer filename switches)))
+  buffer)
+
+(defun mdired--preview-binary ()
+  )
+
+(defun mdired--preview-image (filename preview-filename width height)
+  )
 
 
-;;; Kill related Functions
-(defun mdired-kill ()
+(defun mdired--preview-pdf (filename preview-filename width height)
+  )
+
+(defun mdired--preview-font (filename preview-filename width height)
+  )
+
+(defun mdired--preview-video (filename preview-filename)
+  (process-file "ffmpegthumbnailer" nil nil nil "-i" filename "-o" preview-filename "-f" "-m" "-q" "5"))
+
+
+;;; Quit related Functions
+(defun mdired-quit ()
   (interactive)
   (when-let ((vector (mdired--try-get-vector)))
     (seq-map
