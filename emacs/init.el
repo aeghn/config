@@ -133,7 +133,7 @@
       (setq speed-sidebar-face `(:family "nrss" :height 120)))))
 
 ;; Toolbar Settings
-(tool-bar-mode -1)
+(tool-bar-mode 1)
 (setq tool-bar-button-margin 8
       tool-bar-images-pixel-height 100)
 
@@ -475,3 +475,4 @@ If popup is focused, kill it."
 (setq corfu-auto t)
 (setq corfu-quit-at-boundary t)
 (global-corfu-mode)
+(put 'downcase-region 'disabled nil)
