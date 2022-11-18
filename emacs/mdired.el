@@ -5,6 +5,10 @@
   "Dired with preview and some other features"
   :group 'convenience)
 
+(defcustom mdired-preview-font-text
+  "ABCDEFGHIJKLM\nNOPQRSTUVWXYZ\nabcdefghijklm\nnopqrstuvwxyz\n1234567890\n!@$\n%(){}[]"
+  "Text used to preview font file")
+
 (defcustom mdired-preview-text-threshold 10000000
   "")
 
@@ -27,7 +31,8 @@
     (code "el" "js" "ts" "rs" "c" "cc" "cpp" "h" "hh" "hpp" "java" "sh" "bash" "zsh" "css" "py" "pl"
           "lisp" "conf" "inf" "yml" "yaml" "xml" "json")
     (webpage "html" "htm")
-    (ebook "pdf" "epub" "mobi"))
+    (ebook "pdf" "epub" "mobi")
+    (font  "ttf" "ttc" "otf" "otc"))
   "")
 
 (defconst mdired-font-icons
@@ -44,7 +49,8 @@
     (mindmap   . "")
     (video     . "")
     (audio     . "")
-    (secret    . ""))
+    (secret    . "")
+    (font      . ""))
   "")
 
 (defcustom mdired--vector-conponments
@@ -80,6 +86,8 @@
         (directory (if (file-directory-p filename)
                        filename
                      (file-name-parent-directory filename))))
+    (unless (file-exists-p mdired-preview-cache-directory)
+      (make-directory mdired-preview-cache-directory t))
     (setq-default dired-listing-switches (car (car mdired-listing-switches)))
     (with-current-buffer (dired directory)
       (mdired-build-getter-and-setters)
@@ -175,10 +183,11 @@ Maybe nil."
     nil))
 
 (defun mdired--file-is-binary (filename)
-  "In case of 'Memory exhausted' error, we use a external tool to do this."
+  "Similiar binary check method from GIT"
   (with-temp-buffer
-    (call-process "file" nil t nil "--dereference" "-b" "--mime-encoding" filename)
-    (string= "binary" (buffer-substring (point-min) (1- (point-max))))))
+    (insert-file-contents filename nil 0 8000)
+    (goto-char (point-min))
+    (and (search-forward "\0" nil 'noerror) t)))
 
 (defun mdired--is-root-dir (filename)
   "Check if we arraived on the root dir."
@@ -197,6 +206,13 @@ Maybe nil."
   (cond (mdired--vector (current-buffer))
         (mdired--dired-buffer mdired--dired-buffer)
         (t nil)))
+
+(defun mdired--get-file-type-by-extension (filename)
+  (let ((ext (file-name-extension filename)))
+    (car-safe (car-safe
+               (seq-filter (apply-partially
+                            (lambda (e) (member ext (cdr e))))
+                           mdired-extensions)))))
 
 (defun mdired--list-files-in-current-buffer (directory-path &optional switches)
   (if switches
@@ -247,7 +263,7 @@ Maybe nil."
   :lighter " mdired "
   :global nil
   :group mdired
-  (mdired-dired-details (not dired-hide-details-mode))
+  (mdired-dired-details)
   (mdired--dired-refresh-icons)
   (add-hook 'post-command-hook
             (lambda ()
@@ -680,44 +696,13 @@ and dired header lines."
 (defun mdired--line-width-here (&optional pos)
   (car (window-text-pixel-size nil (line-beginning-position) (or pos (point)) t)))
 
-(defun mdired--insert-head-info (icon desc window-width)
+(defun mdired--insert-head-info (icon desc)
   (ignore-errors
-    (let ((icon-width 0)
-          (space-width 0)
-          first-space last-word width)
-      (goto-char (point-min))
-      (when icon
-        (insert icon)
-        (setq icon-width (mdired--line-width-here))
-        (insert " ")
-        (setq space-width (- (mdired--line-width-here) icon-width)))
-      (setq first-space (point))
-      (insert desc)
-      (setq width (if icon (mdired--line-width-here) (1+ window-width)))
-      (newline)
-      (if (<= width window-width)
-          (when-let* ((_ (> space-width 0))
-                      (delta (- window-width width)))
-            (goto-char first-space)
-            (insert (make-string (/ delta space-width) ? )))
-        (let* ((prefix-width (+ icon-width space-width))
-               (prefix (if (> space-width 0)
-                           (make-string (/ prefix-width space-width) ? )
-                         " "))
-               (word-count 0)
-               (last-word first-space))
-          (goto-char last-word)
-          (while (not (eolp))
-            (setq last-word (point))
-            (forward-word)
-            (setq word-count (1+ word-count))
-            (setq width (mdired--line-width-here))
-            (when (>= width window-width)
-              (when (> word-count 1) (goto-char last-word))
-              (newline)
-              (when (looking-at " ") (delete-char 1))
-              (insert prefix)
-              (setq word-count 0))))))))
+    (goto-char (point-min))
+    (if icon
+        (insert icon " " desc)
+      (insert desc))
+    (newline)))
 
 (defun mdired--get-file-type (filename)
   (let ((process-file-side-effects))
@@ -736,18 +721,15 @@ and dired header lines."
     (with-current-buffer buffer
       (let ((buffer-read-only nil)
             (window-pixel-width (window-body-width nil t)))
-        (mdired--insert-head-info "" (user-login-name (file-attribute-user-id file-attrs)) window-pixel-width)
-        (mdired--insert-head-info "" (group-name (file-attribute-group-id file-attrs)) window-pixel-width)
-        (mdired--insert-head-info "" (file-attribute-modes file-attrs) window-pixel-width)
-        (mdired--insert-head-info "" (file-size-human-readable (file-attribute-size file-attrs))
-                                  window-pixel-width)
+        (mdired--insert-head-info "" (user-login-name (file-attribute-user-id file-attrs)))
+        (mdired--insert-head-info "" (group-name (file-attribute-group-id file-attrs)))
+        (mdired--insert-head-info "" (file-attribute-modes file-attrs))
+        (mdired--insert-head-info "" (file-size-human-readable (file-attribute-size file-attrs)))
         (mdired--insert-head-info "" (format-time-string
                                        "%y-%m-%d %H:%M:%S"
-                                       (file-attribute-modification-time file-attrs))
-                                  window-pixel-width)
-        (goto-char (point-min))
-        (newline)
-        (mdired--insert-head-info nil file-type window-pixel-width)))))
+                                       (file-attribute-modification-time file-attrs)))
+        (mdired--insert-head-info nil "")
+        (mdired--insert-head-info nil file-type)))))
 
 (defun mdired-toggle-info (&rest args)
   (interactive)
@@ -833,21 +815,25 @@ and dired header lines."
 Return the preview buffer"
   (let* ((filename (mdired--get-filename vector))
          (attrs (file-attributes filename))
-         (md5-file (concat (md5 filename) "-" (file-name-nondirectory filename)))
-         (expanded-filename (expand-file-name md5-file mdired-preview-cache-directory))
+         (preview-filename (mdired--preview-filename filename))
          result-buffer)
     (setq result-buffer
-          (cond ((file-exists-p expanded-filename)
-                 (find-file-noselect expanded-filename))
-                ((file-directory-p filename)
+          (cond ((file-directory-p filename)
                  (mdired--preview-directory filename preserve-buffer))
+                ((= 0 (file-attribute-size attrs))
+                 (mdired--rewrite-buffer-and-switch preserve-buffer
+                                                    (concat "[EMPTY] " filename))
+                 preserve-buffer)
+                ((file-exists-p preview-filename)
+                 (find-file-noselect preview-filename))
                 ((mdired--file-is-binary filename)
-                 (mdired--preview-binary filename))
+                 (mdired--preview-binary filename preview-filename preserve-buffer))
                 (t (mdired--preview-text filename attrs preserve-buffer))))
     (with-current-buffer result-buffer
       (setq-local mdired--owned t)
       (setq-local mdired--dired-buffer (mdired--get-dired-buffer vector))
-      (mdired--set-toolbar-buttons))
+      (mdired--set-toolbar-buttons)
+      (goto-char (point-min)))
     result-buffer))
 
 (defun mdired--preview-text (filename file-attrs preserve-buffer)
@@ -856,14 +842,23 @@ Return the preview buffer"
 If this file is bigger than `mdired-preview-text-threshold', refuse to view it.
 If this file is opened before, use a indirect buffer to view."
   (if (> (file-attribute-size file-attrs) mdired-preview-text-threshold)
-      (mdired--rewrite-buffer-and-switch preserve-buffer "file is to big to view")
+      (progn
+        (mdired--rewrite-buffer-and-switch
+         preserve-buffer
+         (with-temp-buffer
+           (insert (propertize "[Oversized files, partially previewed]" 'face '(:weight bold)))
+           (newline)
+           (insert-file-contents filename nil 0 (* (window-height) (window-width)))
+           (buffer-string)))
+        preserve-buffer)
     (if-let* ((buffer (find-buffer-visiting filename)))
         (if-let* ((new-name (concat "mdired-" (buffer-name buffer)))
                   (mdired-buffer (get-buffer new-name)))
             mdired-buffer
           (setq mdired-buffer (make-indirect-buffer buffer new-name t))
           (with-current-buffer mdired-buffer
-            (setq-local buffer-read-only t)))
+            (setq-local buffer-read-only t))
+          mdired-buffer)
       (mdired--preview-text-now filename))))
 
 (defun mdired--preview-text-now (filename)
@@ -877,7 +872,8 @@ If this file is opened before, use a indirect buffer to view."
     (when (file-exists-p filename)
       (setq buffer (find-file-noselect filename 'nowarn))
       (with-current-buffer buffer
-        (setq-local buffer-read-only t)))))
+        (setq-local buffer-read-only t)))
+    buffer))
 
 (defun mdired--preview-directory (filename buffer &optional switches)
   (with-current-buffer buffer
@@ -887,22 +883,56 @@ If this file is opened before, use a indirect buffer to view."
       (mdired--list-files-in-current-buffer filename switches)))
   buffer)
 
-(defun mdired--preview-binary ()
-  )
+(defun mdired--preview-filename (filename)
+  "Just get the correct preview filename"
+  (let* ((type (mdired--get-file-type-by-extension filename))
+         (directory-md5 (md5 (file-name-parent-directory filename)))
+         (md5-file (concat (substring directory-md5 0 1)
+                           "/"
+                           "mdired-"
+                           directory-md5
+                           "-"
+                           (file-name-nondirectory filename)))
+         (expanded-filename (expand-file-name md5-file mdired-preview-cache-directory)))
+    (make-directory (file-name-parent-directory expanded-filename) t)
+    (cond ((equal 'image type)
+           (concat expanded-filename ".png"))
+          ((equal 'font type)
+           (concat expanded-filename ".png"))
+          ((equal 'video type)
+           (concat expanded-filename ".png"))
+          (t expanded-filename))))
 
-(defun mdired--preview-image (filename preview-filename width height)
-  )
+(defun mdired--preview-binary (filename preview-filename preserver-buffer)
+  (let ((type (mdired--get-file-type-by-extension filename)))
+    (cond ((equal 'image type)
+           (mdired--preview-image filename preview-filename))
+          ((equal 'font type)
+           (mdired--preview-font filename preview-filename)))))
+
+(defun mdired--preview-image (filename preview-filename &optional width height)
+  (process-file "convert" nil nil nil filename "-resize" "600" preview-filename)
+  (find-file-noselect preview-filename))
 
 
 (defun mdired--preview-pdf (filename preview-filename width height)
   )
 
-(defun mdired--preview-font (filename preview-filename width height)
-  )
+(defun mdired--preview-font (filename preview-filename &optional width height)
+  (unless (file-exists-p preview-filename)
+    (let ((buf (find-file preview-filename)))
+      (with-current-buffer buf
+        (save-buffer)
+        (kill-buffer))))
+  (process-file "convert" nil nil nil "-size" "800x600" "xc:#ffffff" "-font" filename
+                "-pointsize" "48" "-gravity" "center" "-fill" "#000000"
+                "-annotate" "+0+0"
+                mdired-preview-font-text
+                "-flatten" preview-filename)
+  (find-file-noselect preview-filename))
 
 (defun mdired--preview-video (filename preview-filename)
   (process-file "ffmpegthumbnailer" nil nil nil "-i" filename "-o" preview-filename "-f" "-m" "-q" "5"))
-
 
 ;;; Quit related Functions
 (defun mdired-quit ()
