@@ -45,7 +45,8 @@
     (webpage "html" "htm")
     (ebook "pdf" "epub" "mobi")
     (font  "ttf" "ttc" "otf" "otc")
-    (compress "zip" "7z" "tar" "gz" "xz" "rar" "zst"))
+    (compress "zip" "7z" "tar" "gz" "xz" "rar" "zst")
+    (iso "iso"))
   "")
 
 (defconst mdired-font-icons
@@ -63,7 +64,8 @@
     (video     . "")
     (audio     . "")
     (secret    . "")
-    (font      . ""))
+    (font      . "")
+    (iso       . ""))
   "")
 
 (defvar mdired--extension-icons nil "")
