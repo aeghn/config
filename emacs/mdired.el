@@ -102,7 +102,8 @@
     (with-current-buffer (dired directory)
       (mdired-build-getter-and-setters)
       (mdired--set-filename mdired--vector filename)
-      (mdired-refresh mdired--vector))))
+      (mdired-refresh mdired--vector)
+      (mdired-toggle-preview))))
 
 (defun mdired-refresh (vector &optional exclude-main)
   "Refresh this mdired instance."
@@ -160,7 +161,7 @@ and is different from current file."
         (with-current-buffer buffer
           (erase-buffer)
           (insert str))
-        (when (window-live-p window)
+        (when (mdired--check-live-window window)
           (with-selected-window window
             (switch-to-buffer buffer))))
     (message "unable to find [%s][%s], original info: %s" window buffer str)))
@@ -180,6 +181,10 @@ current directory with a slash in the end."
     (setq-local mdired--hl-overlay
                 (make-overlay (line-beginning-position) (1+ (line-end-position))))
     (overlay-put mdired--hl-overlay 'face '((:inherit highlight :extend t)))))
+
+(defun mdired--propertize-hint (string)
+  (propertize (concat "[Mdired]: " string) 'face
+              '(:inherit highlight :weight bold)))
 
 (defun mdired--remove-slash-more (filename)
   "Remove the current directory from the path.
@@ -273,13 +278,7 @@ Maybe nil."
   :lighter " mdired "
   :global nil
   :group mdired
-  (mdired-dired-details)
-  (mdired--dired-refresh-icons)
-  (add-hook 'post-command-hook
-            (lambda ()
-              (when (bound-and-true-p mdired--vector)
-                (mdired-set-current-by-dired)))
-            nil t))
+  )
 
 (defun mdired-find-file (filename)
   "Find the file in the current buffer.
@@ -297,23 +296,36 @@ else we will jump into its parent and goto this file."
     ;; else we get into its parent directory and goto this file.
     (setq-default dired-listing-switches old-listing-switches)
     (if (directory-name-p filename)
-        (find-alternate-file filename)
+        (mdired--find-alternate-file mdired--vector filename old-hide-details-mode)
       (let ((directory (file-name-parent-directory filename))
             ;; FIXME: does this work for soft links?
             (file (expand-file-name filename)))
         (unless (string= directory default-directory)
-          (find-alternate-file directory))
+          (mdired--find-alternate-file mdired--vector directory old-hide-details-mode))
         (unless (string= (file-name-nondirectory filename)
                          (dired-get-filename t t))
           (dired-goto-file file))))
-    ;; Todo: is there any better method for us to set this vector?
-    (setq-local mdired--vector old-vector)
-    (setq-local dired-hide-details-mode old-hide-details-mode)
+    (mdired--hl-current-line)))
+
+(defun mdired--find-alternate-file (vector directory hide-details-mode)
+  (let ((kill-buffer-hook nil))
+    (find-alternate-file directory)
     (mdired-mode)
+    (setq-local mdired--vector vector)
+    (setq-local dired-hide-details-mode hide-details-mode)
+    (mdired--dired-add-icon-advices)
+    (add-hook 'kill-buffer-hook
+              (lambda ()
+                (mdired-quit (list (current-buffer))))
+              nil t)
+    (add-hook 'post-command-hook
+              (lambda ()
+                (when (bound-and-true-p mdired--vector)
+                  (mdired-set-current-by-dired)))
+              nil t)
     (mdired--set-toolbar-buttons)
     (mdired--set-dired-buffer mdired--vector (current-buffer))
-    (mdired--set-dired-window mdired--vector (selected-window))
-    (mdired--hl-current-line)))
+    (mdired--set-dired-window mdired--vector (selected-window))))
 
 (defun mdired-set-current-by-dired ()
   "Set current file by using `mdired--get-dired-filename'"
@@ -346,7 +358,7 @@ but for child."
        filename))
     (mdired-refresh mdired--vector)))
 
-(defun mdired-dired-details (&optional show-detail)
+(defun mdired--dired-details (&optional show-detail)
   "Hide unneed infomation in this dired buffer, such as file infomations
 and dired header lines."
   (let ((dired-free-space nil))
@@ -672,6 +684,28 @@ and dired header lines."
             (puthash (concat "." (downcase ext)) (concat " " icon) table))))
       (setq mdired--extension-icons table))))
 
+;; Thus I don't like to use all-the-icons, so I copied them to here
+;; https://github.com/jtbm37/all-the-icons-dired/blob/master/all-the-icons-dired.el
+(defun mdired--dired-refresh-advice (fn &rest args)
+  "Advice function for FN with ARGS."
+  (apply fn args)
+  (when mdired-mode
+    (mdired--dired-details)
+    (mdired--dired-refresh-icons)))
+
+(defun mdired--dired-add-icon-advices ()
+  ""
+  (when (derived-mode-p 'dired-mode)
+    (setq-local tab-width 1)
+    (advice-add 'dired-readin :around #'mdired--dired-refresh-advice)
+    (advice-add 'dired-revert :around #'mdired--dired-refresh-advice)
+    (advice-add 'dired-internal-do-deletions :around #'mdired--dired-refresh-advice)
+    (advice-add 'dired-insert-subdir :around #'mdired--dired-refresh-advice)
+    (advice-add 'dired-do-kill-lines :around #'mdired--dired-refresh-advice)
+    (with-eval-after-load 'dired-narrow
+      (advice-add 'dired-narrow--internal :around #'mdired--dired-refresh-advice))
+    (mdired--dired-details)
+    (mdired--dired-refresh-icons)))
 
 ;;; Info Window Functions
 (defun mdired--get-or-build-info-window (vector &optional build)
@@ -843,31 +877,34 @@ Return the preview buffer"
         (vc-follow-symlinks nil)
         (buffer-read-only t)
         (find-file-hook nil))
-
     (mdired--preview-post-actions
      vector
      (find-file-noselect filename t))))
 
 (defun mdired--preview-post-actions (vector buffer)
-  ;; Keep the preview buffer list size in a little value
-  (unless (equal buffer (mdired--get-preview-buffer vector))
-    (setq mdired-preview-buffer-list
-          (delete-dups mdired-preview-buffer-list))
-    (delete buffer mdired-preview-buffer-list)
-    (while (length> mdired-preview-buffer-list 9)
-      (kill-buffer (car (last mdired-preview-buffer-list)))
-      (setq mdired-preview-buffer-list (butlast mdired-preview-buffer-list)))
-    (push buffer mdired-preview-buffer-list))
-  (with-current-buffer buffer
-    (setq-local mdired--owned t)
-    (setq-local mdired--dired-buffer (mdired--get-dired-buffer vector))
-    (mdired--set-toolbar-buttons)
-    (setq-local mode-line-format
-                (concat " [MDired] " (file-name-nondirectory (mdired--get-filename vector))))
-    (goto-char (point-min)))
   (when-let ((window (mdired--get-preview-window vector)))
+    ;; Keep the preview buffer list size in a little value
+    (unless (equal buffer (mdired--get-preview-buffer vector))
+      (setq mdired-preview-buffer-list
+            (delete-dups mdired-preview-buffer-list))
+      (delete buffer mdired-preview-buffer-list)
+      (while (length> mdired-preview-buffer-list 9)
+        (kill-buffer (car (last mdired-preview-buffer-list)))
+        (setq mdired-preview-buffer-list (butlast mdired-preview-buffer-list)))
+      (push buffer mdired-preview-buffer-list))
+    ;; We should switch to the buffer first, so we can set window margins
     (with-selected-window window
-      (switch-to-buffer buffer)))
+      (switch-to-buffer buffer))
+    (with-current-buffer buffer
+      (setq-local mdired--owned t)
+      (setq-local mdired--dired-buffer (mdired--get-dired-buffer vector))
+      (mdired--set-toolbar-buttons)
+      (set-window-margins window 3 2)
+      (setq-local mode-line-format
+                  (concat " [MDired] " (file-name-nondirectory (mdired--get-filename vector))))
+      (unless (string-prefix-p "mdired-" (buffer-name))
+        (rename-buffer (format "mdired-%s" (buffer-name))))
+      (goto-char (point-min))))
   buffer)
 
 
@@ -881,7 +918,7 @@ If this file is opened before, use a indirect buffer to view."
         (mdired--rewrite-buffer-and-switch
          preserve-buffer
          (with-temp-buffer
-           (insert (propertize "[Oversized files, partially previewed]" 'face '(:weight bold)))
+           (insert (mdired--propertize-hint "Oversized files, partially previewed"))
            (newline)
            (insert-file-contents filename nil 0 (* (window-height) (window-width)))
            (buffer-string)))
@@ -927,31 +964,35 @@ If this file is opened before, use a indirect buffer to view."
           ((string= "pdf" ext)
            (setq preview-filename (concat expanded-filename ".png"))
            (setq preview-cmd (mdired--preview-pdf filename preview-filename))))
-    (when (and preview-filename preview-cmd
-               ;; We only need one process to deal with one file.
-               (not (get-process filename)))
-      (if (file-exists-p preview-filename)
-          (mdired--preview-find-file vector preview-filename)
-        (make-directory directory t)
-        (setq process (apply #'start-process filename "*mdired-binary-log*" preview-cmd))
-        (process-put process 'pf preview-filename)
-        (set-process-sentinel
-         process
-         (lambda (process event)
-           (when-let ((vector (mdired--try-get-vector))
-                      (filename (process-name process))
-                      (samep (string= (mdired--get-filename vector) filename))
-                      (preview-window (mdired--get-preview-window vector))
-                      (preview-filename (process-get process 'pf)))
-             (if (not (file-exists-p preview-filename))
-                 (message "Unable to create preview for: %s" filename)
-               (mdired--preview-find-file vector preview-filename)))))))))
+    (if (and preview-filename preview-cmd
+             ;; We only need one process to deal with one file.
+             (not (get-process filename)))
+        ;; TODO: check whether preview file is older than the original file
+        (if (file-exists-p preview-filename)
+            (mdired--preview-find-file vector preview-filename)
+          (make-directory directory t)
+          (setq process (apply #'start-process filename "*mdired-binary-log*" preview-cmd))
+          (process-put process 'pf preview-filename)
+          (set-process-sentinel
+           process
+           (lambda (process event)
+             (when-let ((vector (mdired--try-get-vector))
+                        (filename (process-name process))
+                        (samep (string= (mdired--get-filename vector) filename))
+                        (preview-filename (process-get process 'pf)))
+               (if (not (file-exists-p preview-filename))
+                   (message "Unable to create preview for: %s" filename)
+                 (mdired--preview-find-file vector preview-filename))))))
+      (mdired--rewrite-buffer-and-switch
+       preserver-buffer
+       (mdired--propertize-hint "Unable to view this file")
+       (mdired--get-preview-window vector)))))
 
 (defun mdired--preview-image (filename preview-filename &optional width height)
   (list "convert" filename "-resize" "600" preview-filename))
 
 (defun mdired--preview-pdf (filename preview-filename &optional width height)
-  (list "sh" "-c" (format "pdftoppm -f 0 -l 1 -W 600 -png \"%s\" > \"%s\"" filename preview-filename)))
+  (list "sh" "-c" (format "pdftoppm -f 0 -l 1 -scale-to 600 -W 600 -png \"%s\" > \"%s\"" filename preview-filename)))
 
 (defun mdired--preview-font (filename preview-filename &optional width height)
   (list "convert" "-size" "800x600" "xc:#ffffff" "-font" filename
@@ -960,24 +1001,26 @@ If this file is opened before, use a indirect buffer to view."
         "-flatten" preview-filename))
 
 (defun mdired--preview-video (filename preview-filename)
-  (list "ffmpegthumbnailer" "-i" filename "-o" preview-filename "-f" "-m" "-q" "5"))
+  (list "ffmpegthumbnailer" "-i" filename "-o" preview-filename "-s600" "-f" "-m" "-q8"))
 
 (defun mdired--preview-compress (filename ext preview-filename)
   (cond ((string= ext "zip")
          (list "sh" "-c" (format "unzip -l \"%s\" > \"%s\"" filename preview-filename)))
-        ((string ext "7z")
-         (list "sh" "-c" (format "7z l \"%s\" > \"%s\"" filename preview-filename)))))
+        ((string= ext "7z")
+         (list "sh" "-c" (format "7z l \"%s\" > \"%s\"" filename preview-filename)))
+        ((string= ext "rar")
+         (list "sh" "-c" (format "unrar l \"%s\" > \"%s\"" filename preview-filename)))))
 
 ;;; Quit related Functions
-(defun mdired-quit ()
+(defun mdired-quit (&optional exclude-items)
   (interactive)
   (when-let ((vector (mdired--try-get-vector)))
-    (seq-map
+    (mapc
      (lambda (e)
-       (ignore-errors
-         (message "destroy %s" e)
-         (cond ((bufferp e) (kill-buffer e))
-               ((windowp e) (delete-window e)))))
+       (unless (member e exclude-items)
+         (ignore-errors
+           (cond ((bufferp e) (kill-buffer e))
+                 ((windowp e) (delete-window e))))))
      vector)))
 
 (defun mdired-quit-all ()
