@@ -1,3 +1,5 @@
+;;; mdired.el -*- lexical-binding: t; -*-
+
 (require 'dired)
 (require 'dired-x)
 
@@ -861,7 +863,8 @@ Return the preview buffer"
     (cond ((file-directory-p filename)
            (mdired--preview-directory vector preserve-buffer))
           ((= 0 (file-attribute-size attrs))
-           (mdired--rewrite-buffer-and-switch preserve-buffer (concat "[EMPTY] " filename))
+           (mdired--rewrite-buffer-and-switch preserve-buffer
+                                              (mdired--propertize-hint "Empty"))
            (mdired--preview-post-actions vector preserve-buffer))
           ((or (mdired--file-is-binary filename)
                (string= "pdf" (file-name-extension filename)))
@@ -1032,3 +1035,6 @@ If this file is opened before, use a indirect buffer to view."
           mdired-quit)
         (when mdired--owned
           (kill-buffer))))))
+
+
+(provide 'mdired)

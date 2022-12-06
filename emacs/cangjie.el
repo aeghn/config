@@ -14,7 +14,7 @@
 ;;; Code:
 
 (require 'quail)
-(quail-define-package "chinese-cns-cangjie" "Chinese-CNS" "倉5 " t
+(quail-define-package "chinese-cns-cangjie" "Chinese-CNS" "'>` " t
                       "中文輸入【倉頡】CNS rime
 
     漢語倉頡輸入鍵盤
