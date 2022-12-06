@@ -5,6 +5,21 @@
 
 (setq byte-compile-warnings nil)
 
+
+(add-hook 'emacs-startup-hook
+          (lambda ()
+            (let ((threshold (* 100 gc-cons-threshold))
+                  (percentage gc-cons-percentage))
+              (message "Emacs ready in %s with %d garbage collections."
+                       (format "%.2f seconds"
+                               (float-time
+                                (time-subtract after-init-time before-init-time)))
+                       gcs-done)
+              (setq gc-cons-threshold threshold
+                    gc-cons-percentage percentage)
+              (garbage-collect)))
+          t)
+
 (setq x-gtk-stock-map '(("etc/images/new" . "n:emacs-new")
                         ("etc/images/open" . "n:emacs-open")
                         ("etc/images/diropen" . "n:emacs-diropen")
@@ -62,3 +77,11 @@
                         ("images/gud/break" . "n:emacs-no")
                         ("images/gud/recstart" . "n:emacs-media-record")
                         ("images/gud/recstop" . "n:emacs-media-stop")))
+
+
+(setq package-enable-at-startup nil
+      file-name-handler-alist nil
+      message-log-max 16384
+      gc-cons-threshold (* 1000 gc-cons-threshold)
+      gc-cons-percentage 0.6
+      auto-window-vscroll nil)

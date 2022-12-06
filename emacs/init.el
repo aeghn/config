@@ -42,7 +42,8 @@
 (chin/load-other-file "ibuffer-sidebar.el")
 (chin/load-other-file "speed-sidebar.el")
 (chin/load-other-file "envir.el")
-(chin/load-other-file "cangjie.el")
+(chin/load-other-file "mdired.el")
+(chin/load-other-file "damer.el")
 
 ;;; Platform Settings
 (defconst chin/is-linux   (eq system-type 'gnu/linux))
@@ -95,10 +96,14 @@
 (load-theme 'modus-operandi)
 ;; (load-theme 'modus-vivendi)
 
+(dolist (e (font-family-list))
+  (when (string-prefix-p "Latin" e)
+    (message e)))
+
 ;; Font settings
 (defun chin/set-fonts ()
   (when (display-graphic-p)
-    (let ((prefered-mono-font-list '("Sarasa Mono SC" "IBM Plex Mono Text" "Jetbrains Mono"))
+    (let ((prefered-mono-font-list '("IBM Plex Mono" "Jetbrains Mono"))
           (prefered-chinese-font-list '("Noto Serif CJK CN"))
           (prefered-serif-font-list (list "Literata 7pt" "Charter" "Roboto"))
           prefered-mono-font prefered-chinese-font prefered-serif-font first-font-fun)
@@ -121,7 +126,7 @@
             (funcall first-font-fun prefered-chinese-font-list prefered-chinese-font))
       (setq prefered-serif-font
             (funcall first-font-fun prefered-serif-font-list prefered-serif-font))
-      (set-fontset-font "fontset-default"  '(#xe000 . #xf8ff) "nrss")
+      (set-fontset-font "fontset-default" '(#xe000 . #xf8ff) "nrss")
       (set-face-attribute 'default nil
                           :family prefered-mono-font :height 120 :weight 'Regular)
       (set-face-attribute 'mode-line nil
@@ -269,16 +274,16 @@
 (defun chin/insert-image-from-clipboard ()
   (interactive)
   (let* ((pure-filename (file-name-sans-extension
-                        (file-name-nondirectory
-                         (buffer-file-name))))
-        (time (format-time-string "%y%m%d-%H%M%S"))
-        (image-dir-name "images")
-        (image-dir (expand-file-name image-dir-name))
-        (filename (concat pure-filename "-" time ".png")))
+                         (file-name-nondirectory
+                          (buffer-file-name))))
+         (time (format-time-string "%y%m%d-%H%M%S"))
+         (image-dir-name "images")
+         (image-dir (expand-file-name image-dir-name))
+         (filename (concat pure-filename "-" time ".png")))
     (unless (file-exists-p image-dir)
       (make-directory image-dir))
     (if (process-file "convert" nil nil nil "clipboard:myimage"
-                           (expand-file-name filename image-dir))
+                      (expand-file-name filename image-dir))
         (insert  (concat "[[file:./" image-dir-name "/" filename "]]"))
       (message "Unable to create image"))))
 (define-key org-mode-map (kbd "C-c p") 'chin/insert-image-from-clipboard)
@@ -444,13 +449,10 @@ If popup is focused, kill it."
 (global-set-key (kbd "M-2") 'point-stack-forward-stack-pop)
 
 ;; Chinese
-;; (require 'pyim)
-;; (require 'pyim-basedict)
-;; (pyim-basedict-enable)
-;; (setq-default pyim-punctuation-translate-p '(auto no yes))
-;; (set-input-method 'pyim)
-;; (deactivate-input-method)
-;; (put 'erase-buffer 'disabled nil)
+(chin/load-other-file "cangjie.el")
+(set-input-method 'chinese-cns-cangjie)
+(deactivate-input-method)
+(put 'erase-buffer 'disabled nil)
 
 (defvar chin/cangjie-fancha-file "/home/chin/files/docs/cangjie.fancha")
 (when chin/is-windows
@@ -463,8 +465,7 @@ If popup is focused, kill it."
                  (buffer-substring-no-properties (point-min) (point-max)))
                "\r?\n"
                t)))
-    (completing-read "Cangjie Fancha: " list)))
-
+    (completing-read "Cangjie: " list)))
 
 ;; Eglot
 (require 'eglot)
@@ -476,3 +477,16 @@ If popup is focused, kill it."
 (setq corfu-quit-at-boundary t)
 (global-corfu-mode)
 (put 'downcase-region 'disabled nil)
+
+
+;; Message Functions
+(defun chin/clear-buffer-forcily ()
+  (interactive)
+  (let ((buffer-read-only nil))
+    (erase-buffer)))
+
+
+;; Damer
+(defun damer-default ()
+  (interactive)
+  (damer "/home/chin/files/datamanager.db"))
