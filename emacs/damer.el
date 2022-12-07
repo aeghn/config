@@ -1,5 +1,7 @@
 ;;; damer.el --- A Database First-class Data Manager Based on Sqlite3 -*- lexical-binding: t; -*-
 
+(setq debug-on-error t)
+
 (defgroup damer nil
   "DAta ManagER"
   :group 'convenience)
@@ -10,7 +12,7 @@
   "The datamanager database.")
 
 (defconst damer-categories
-  '(("item"  . "")
+  '(("item"   . "")
     ("folder" . "")
     ("file"   . "")
     ("web"    . "")
@@ -29,6 +31,8 @@
   "g"          #'damer-refresh
   "M-<left>"   #'damer-level-up
   "D"          #'damer-delete-items-and-descendants
+  "n"          #'damer-next-line
+  "p"          #'damer-previous-line
   "TAB"        #'damer-toggle-expand)
 
 (define-derived-mode damer-mode fundamental-mode "Damer"
@@ -166,6 +170,16 @@ item into the database and refresh the ui."
       (damer-refresh)
       (damer--find-item item-oid))))
 
+(defun damer-previous-line ()
+  (interactive)
+  (previous-line)
+  (damer-move-to-item-start))
+
+(defun damer-next-line ()
+  (interactive)
+  (next-line)
+  (damer-move-to-item-start))
+
 ;;; UI
 (defun damer-move-to-item-start ()
   (goto-char (line-beginning-position)))
@@ -184,14 +198,15 @@ item into the database and refresh the ui."
 
 (defun damer--tree-end ()
   (damer-move-to-item-start)
-  (let ((parent (get-text-property (point) 'item-parent))
-        tree-end)
+  (let* ((oid (get-text-property (point) 'item-oid))
+         (ascendants (damer--dao-ascendants oid))
+         tree-end)
     (save-excursion
       (forward-line)
       (while (and (not tree-end)
                   (not (eobp)))
         (damer-move-to-item-start)
-        (when (string= parent (get-text-property (point) 'item-parent))
+        (when (member (get-text-property (point) 'item-parent) ascendants)
           (previous-line)
           (setq tree-end (line-end-position)))
         (forward-line)))
@@ -225,7 +240,7 @@ item into the database and refresh the ui."
             (oid (md5 (format "%s%s%s%s" (emacs-uptime) category name parent)))
             (item (damer--build-item oid name category parent 1)))
       (progn
-        (damer--dao-insert-item item)
+        (damer--dao-insert-or-replace-item item)
         (damer--insert-item-line item))
     (message "Unformated Item")))
 
@@ -277,9 +292,9 @@ item into the database and refresh the ui."
                  (list table)))
 
 (defun damer--dao-try-create-tables ()
-  (unless (damer--dao-has-table "items")
-    (damer--dao-create-item-table)
-    (damer--dao-insert-root)))
+  (damer--dao-create-item-table)
+  (damer--dao-create-text-attr-tables)
+  (damer--dao-insert-root))
 
 (defun damer--get-or-open-database ()
   (cond (damer-database damer-database)
@@ -288,38 +303,88 @@ item into the database and refresh the ui."
          damer-database)
         (t (throw "Unable to open database" damer-database-path))))
 
+(defun damer--dao-try-create-modify-trigger (tablename &rest pkeys)
+  (let* ((filter (string-join (mapc (lambda (s) (format "%s = NEW.%s" s s)) pkeys) " AND "))
+         (sql (format "CREATE TRIGGER if not exists trigger_%s_modify AFTER UPDATE ON %s
+ BEGIN
+  update %s SET modify = datetime('now') WHERE %s;
+ END;" tablename tablename tablename filter)))
+    (sqlite-execute damer-database sql)))
+
 (defun damer--dao-create-item-table ()
-  (let ((table (concat "CREATE TABLE items ("
+  (let ((table (concat "CREATE TABLE if not exists damer_items ("
                        "oid            TEXT     PRIMARY KEY,"
                        "NAME           TEXT     NOT NULL,"
-                       "category       TEXT     NOT NULL DEFAULT \"file\","
+                       "category       TEXT     NOT NULL DEFAULT `item`,"
                        "parent         TEXT     default ROOT,"
                        "avail          integer  default 1,"
                        "birth          DATETIME DEFAULT CURRENT_TIMESTAMP,"
                        "modify         DATETIME DEFAULT CURRENT_TIMESTAMP,"
                        "UNIQUE(parent, name)"
                        ");" )))
-    (sqlite-execute damer-database table)))
+    (sqlite-execute damer-database table)
+    (damer--dao-try-create-modify-trigger "damer_items" "oid")))
+
+(defun damer--dao-create-text-attr-tables ()
+  (let ((attr-table (concat "CREATE TABLE if not exists damer_attrs ("
+                            "item_oid       TEXT     NOT NULL,"
+                            "name           TEXT     NOT NULL,"
+                            "vtype          TEXT     NOT NULL,"
+                            "tvalue         TEXT     DEFAULT NULL,"
+                            "bvalue         BLOB     DEFAULT NULL,"
+                            "birth          DATETIME DEFAULT CURRENT_TIMESTAMP,"
+                            "modify         DATETIME DEFAULT CURRENT_TIMESTAMP,"
+                            "UNIQUE(item_oid, name)"
+                            ");" ))
+        (code-table (concat "CREATE TABLE if not exists damer_attr_codes ("
+                            "category       TEXT     PRIMARY KEY,"
+                            "icon           TEXT     not null default \"*\","
+                            "attrs          TEXT     NOT NULL,"
+                            "birth          DATETIME DEFAULT CURRENT_TIMESTAMP,"
+                            "modify         DATETIME DEFAULT CURRENT_TIMESTAMP"
+                            ");" )))
+    (sqlite-execute damer-database attr-table)
+    (damer--dao-try-create-modify-trigger "damer_attrs" "item_oid" "name")
+    (sqlite-execute damer-database code-table)
+    (damer--dao-try-create-modify-trigger "damer_attr_codes" "category")))
+
+(defun damer--dao-get-attr-codes (category)
+  (let ((line (sqlite-select damer-database "select attrs from damer_attr_codes where category = ?" (list category))))
+    (mapcar (lambda (s) (capitalize s)) (split-string line "," t t))))
+
+(defun damer--dao-save-attr-codes (category attrs)
+  (let ((sql "insert or replace into damer_attr_codes (category, attrs) values (?, ?)")
+        (line (string-join (mapcar (lambda (s) (downcase (string-trim s))) attrs) ",")))
+    (sqlite-execute damer-database sql (list category line))))
+
+(defun damer--dao-get-attrs (item-oid)
+  (let ((sql (concat "select vtype, CASE WHEN vtype = 'text' THEN tvalue ELSE bvalue END AS value "
+                     "from damer_attrs where item_oid = ? and name in (%s)")
+             (line (sqlite-select damer-database  (list category))))
+        (mapcar (lambda (s) (capitalize s)) (split-string line "," t t)))))
+
+(defun damer--dao-ascendants (oid)
+  (let ((sql "select parent from damer_items where oid = ?")
+        line)
+    (while (not (string= oid "root"))
+      (setq oid (caar (sqlite-select damer-database sql (list oid))))
+      (push oid line))
+    line))
 
 (defun damer--dao-depth (oid)
-  (let ((sql "select parent from items where oid = ?")
-        (depth 0))
-    (while (not (string= oid "root"))
-      (setq oid (caar (sqlite-select damer-database sql (list oid)))
-            depth (1+ depth)))
-    depth))
+  (length (damer--dao-ascendants oid)))
 
-(defun damer--dao-insert-item (item)
-  (let ((sql "INSERT INTO items (oid, name, category, parent, avail) VALUES (?, ?, ?, ?, ?)"))
+(defun damer--dao-insert-or-replace-item (item)
+  (let ((sql "INSERT OR REPLACE INTO damer_items (oid, name, category, parent, avail) VALUES (?, ?, ?, ?, ?)"))
     (sqlite-execute damer-database sql (list (damer--item-oid item)
                                              (damer--item-name item)
-                                             (format "%s" (damer--item-category item))
+                                             (damer--item-category item)
                                              (damer--item-parent item)
                                              (damer--item-avail item)))))
 
 (defun damer--dao-insert-root ()
   (let ((item (damer--build-item "root" "DATAMANAGER-ROOT" "folder" "rroot" 1)))
-    (damer--dao-insert-item item)))
+    (damer--dao-insert-or-replace-item item)))
 
 (defun damer--dao-sql-list-to-item (list)
   (let ((oid      (nth 0 list))
@@ -332,12 +397,12 @@ item into the database and refresh the ui."
     (damer--build-item oid name category parent avail birth modify)))
 
 (defun damer--dao-get-item (oid)
-  (let ((sql "select oid, name, category, parent, avail, birth, modify from items where oid = ?"))
+  (let ((sql "select oid, name, category, parent, avail, birth, modify from damer_items where oid = ?"))
     (damer--dao-sql-list-to-item (car (sqlite-select damer-database sql (list oid))))))
 
 (defun damer--dao-get-descendants (oids &optional unavailable)
   (let ((sql (concat "select oid, name, category, parent, avail, birth, modify "
-                     "from items where parent in (%s) "
+                     "from damer_items where parent in (%s) "
                      (if unavailable "" "and avail = 1 ")
                      "order by name asc"))
         result ret)
@@ -357,21 +422,21 @@ item into the database and refresh the ui."
                             (append (mapcar 'damer--item-oid items)
                                     (items))
                           oids))
-         (delete-sql (format (if physical "delete from items where oid in (%s)"
-                               "update items set avail = 0 where oid in (%s)")
+         (delete-sql (format (if physical "delete from damer_items where oid in (%s)"
+                               "update damer_items set avail = 0 where oid in (%s)")
                              (damer--dao-append-qmark (length to-delete-ids)))))
     (sqlite-execute damer-database delete-sql to-delete-ids)))
 
 (defun damer--dao-move-parent (item)
   (when-let* ((parent (damer--item-parent item))
               (not-top (not (string= parent "root")))
-              (pparent-sql "select parent from items where oid = ?")
+              (pparent-sql "select parent from damer_items where oid = ?")
               (pparent (caar (sqlite-select damer-database pparent-sql (list parent))))
-              (update-sql "update items set parent = ? where oid = ?"))
+              (update-sql "update damer_items set parent = ? where oid = ?"))
     (sqlite-execute damer-database update-sql (list pparent (damer--item-oid item)))))
 
 (defun damer--dao-move-other (item parent)
-  (let* ((update-sql "update items set parent = ? where oid = ?"))
+  (let* ((update-sql "update damer_items set parent = ? where oid = ?"))
     (sqlite-execute damer-database update-sql (list parent (damer--item-oid item)))))
 
 ;;; Sort Functions
