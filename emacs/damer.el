@@ -10,6 +10,8 @@
   "The datamanager database path.")
 (defvar-local damer-database nil
   "The datamanager database.")
+(defvar-local damer-main-buffer nil
+  "The main buffer of damer")
 
 (defconst damer-categories
   '(("item"   . "")
@@ -33,9 +35,21 @@
   "D"          #'damer-delete-items-and-descendants
   "n"          #'damer-next-line
   "p"          #'damer-previous-line
+  "<down>"     #'damer-next-line
+  "<up>"       #'damer-previous-line
   "TAB"        #'damer-toggle-expand)
 
 (define-derived-mode damer-mode fundamental-mode "Damer"
+  "Damer is a datamanager interface for managing items in emacs based on sqlite3."
+  :global nil
+  :group 'damer)
+
+(defvar-keymap damer-image-mode-map
+  :doc "Keymap for damer-image-mode"
+  "q"          #'damer-quit
+  "C-y"        #'yank-media)
+
+(define-derived-mode damer-image-mode image-mode "Darme-Image"
   "Damer is a datamanager interface for managing items in emacs based on sqlite3."
   :global nil
   :group 'damer)
@@ -62,28 +76,147 @@
   "Globally initilize some things like OBJECT operators."
   (damer--build-operator item oid name category parent avail birth modify))
 
+(defun damer--yank-media-handler (format data)
+  (when-let* ((buffer damer-main-buffer)
+              (current-item (damer-current-item)))
+    (with-current-buffer buffer
+      (damer--dao-insert-preview (damer--item-oid current-item)
+                                 (unibyte-string data)))))
+
+(defun damer-curl (uri)
+  (with-temp-buffer
+    (process-file "curl" nil t nil "-s" uri "--output" "-")
+    (buffer-string)))
+
+;; Copied from org-download
+(defun damer--dnd-handler (url action)
+  (let* ((buffer damer-main-buffer)
+         (current-item (with-current-buffer buffer (damer-current-item)))
+         (data (with-temp-buffer (insert-file-contents (string-replace "file:/" "" url)) (buffer-string))))
+    (with-current-buffer buffer
+      (damer--dao-insert-preview (damer--item-oid current-item) data))))
+
+(defun damer--dnd-handler-fallback (uri action)
+  (let ((dnd-protocol-alist
+         (rassq-delete-all
+          'damer--dnd-handler
+          (copy-alist dnd-protocol-alist))))
+    (dnd-handle-one-url nil action uri)))
+
+;;;###autoload
+(defun damer--register-dnd-handler ()
+  (unless (eq (cdr (assoc "^\\(https?\\|ftp\\|file\\|nfs\\):" dnd-protocol-alist))
+              'org-download-dnd)
+    (setq dnd-protocol-alist
+          `(("^\\(https?\\|ftp\\|file\\|nfs\\):" . damer--dnd-handler)
+            ,@dnd-protocol-alist))))
+
+(defun damer--regeister-some-handlers ()
+  (yank-media-handler "image/.*" 'damer--yank-media-handler)
+  (damer--register-dnd-handler))
+
+(defun damer-current-item ()
+  (with-current-buffer damer-main-buffer
+    (damer-move-to-item-start)
+    (damer--convert-pos-to-item)))
+
 ;;;###autoload
 (defun damer (db-path)
   "Open a sqlite3 databse, and try to read from damer-tables or create them."
   (interactive "f")
   (let ((buffer (generate-new-buffer "datamanager")))
     (with-selected-window (selected-window)
-      (switch-to-buffer buffer))
+      (switch-to-buffer buffer)
+      (damer-attr-window buffer 1))
     (with-current-buffer buffer
       (damer-mode)
-      (setq-local damer-database-path db-path)
+      (damer--register-dnd-handler)
+      (setq-local damer-database-path db-path
+                  damer-main-buffer buffer)
       (damer--get-or-open-database)
       (damer--dao-try-create-tables)
       (damer-refresh)
       (setq-local buffer-read-only t)
       (goto-char (point-min)))))
 
+
+(defun damer--get-buffer (name &optional create)
+  (if-let ((buffer (get-buffer name)))
+      buffer
+    (when create (generate-new-buffer name))))
+
+(defun damer--get-window (name &optional new-window-func)
+  (if-let ((window (get-window-with-predicate
+                    (lambda (w)
+                      (string= name (window-parameter w 'damer-name))))))
+      window
+    (when-let ((func (and new-window-func))
+               (window (funcall new-window-func)))
+      (set-window-parameter window 'damer-name name)
+      window)))
+
+(defun damer-attr-window (main-buffer &optional flag)
+  (let* ((preview-name "*damer-preview*")
+         (attr-name "*damer-attribute*")
+         (preview-window (damer--get-window preview-name))
+         (attr-window (damer--get-window attr-name)))
+    (cond ((= flag 1)
+           (let ((main-window (get-buffer-window main-buffer))
+                 (preview-buffer (damer--get-buffer preview-name t))
+                 (attr-buffer (damer--get-buffer attr-name t)))
+             (if preview-window
+                 (with-selected-window preview-window
+                   (damer-init-preview main-buffer)
+                   (switch-to-buffer preview-buffer)
+                   (with-selected-window (or attr-window (split-window-below))
+                     (set-window-parameter (selected-window) 'damer-name attr-name)
+                     (switch-to-buffer attr-buffer))))
+             (when attr-window (delete-window attr-window))
+             (with-selected-window main-window
+               (with-selected-window (split-window-right)
+                 (set-window-parameter (selected-window) 'damer-name preview-name)
+                 (damer-init-preview main-buffer)
+                 (switch-to-buffer preview-buffer)
+                 (with-selected-window (split-window-below)
+                   (set-window-parameter (selected-window) 'damer-name attr-name)
+                   (switch-to-buffer attr-buffer))))))
+          ((= flag 0)
+           (let ((preview-buffer (damer--get-buffer preview-name))
+                 (attr-buffer (damer--get-buffer attr-name)))
+             (when preview-window (delete-window preview-window))
+             (when attr-window (delete-window attr-window))
+             (when preview-buffer (kill-buffer preview-buffer))
+             (when attr-buffer (kill-buffer attr-buffer)))))))
+
+(defun damer-init-preview (main-buffer)
+  (let ((preview-buffer (damer--get-buffer "*damer-preview*")))
+    (with-current-buffer preview-buffer
+      (damer-image-mode)
+      (damer--regeister-some-handlers)
+      (setq-local damer-main-buffer main-buffer))))
+
+(defun damer-refresh-preview ()
+  (when-let* ((preview-window (damer--get-window "*damer-preview*"))
+              (preview-buffer (damer--get-buffer "*damer-preview*"))
+              (main-buffer damer-main-buffer))
+    (with-current-buffer preview-buffer
+      (fundamental-mode)
+      (erase-buffer)
+      (when-let ((data (with-current-buffer main-buffer
+                         (damer--dao-get-preview
+                          (damer--item-oid (damer-current-item))))))
+        (insert data)
+        (goto-char (point-min))
+        (damer-image-mode)
+        (setq-local damer-main-buffer main-buffer)))))
+
 ;;;###autoload
 (defun damer-quit ()
   "Quit current damer session"
   (interactive)
   (when (equal major-mode 'damer-mode)
-    (kill-buffer)))
+    (kill-buffer))
+  (damer-attr-window damer-main-buffer 0))
 
 ;;;###autoload
 (defun damer-insert-child ()
@@ -173,11 +306,13 @@ item into the database and refresh the ui."
 (defun damer-previous-line ()
   (interactive)
   (previous-line)
+  (damer-refresh-preview)
   (damer-move-to-item-start))
 
 (defun damer-next-line ()
   (interactive)
   (next-line)
+  (damer-refresh-preview)
   (damer-move-to-item-start))
 
 ;;; UI
@@ -281,6 +416,7 @@ item into the database and refresh the ui."
     (damer--item-set-modify item modify)
     item))
 
+
 ;;; Dao
 ;;; Dao Helper Functions
 (defun damer--dao-append-qmark (length)
@@ -357,11 +493,20 @@ item into the database and refresh the ui."
         (line (string-join (mapcar (lambda (s) (downcase (string-trim s))) attrs) ",")))
     (sqlite-execute damer-database sql (list category line))))
 
-(defun damer--dao-get-attrs (item-oid)
+(defun damer--dao-get-attrs (item-oid &optional captial)
   (let ((sql (concat "select vtype, CASE WHEN vtype = 'text' THEN tvalue ELSE bvalue END AS value "
-                     "from damer_attrs where item_oid = ? and name in (%s)")
+                     "from damer_attrs where item_oid = ? and name in (%s) and type = 'text'")
              (line (sqlite-select damer-database  (list category))))
-        (mapcar (lambda (s) (capitalize s)) (split-string line "," t t)))))
+        (mapcar (lambda (s) (if captial (capitalize s) s)) (split-string line "," t t)))))
+
+(defun damer--dao-insert-preview (item-oid value)
+  (let ((sql "insert or replace into damer_attrs (item_oid, name, vtype, bvalue) values (?, 'preview', 'image', ?)"))
+    (message "value: %s" value)
+    (sqlite-execute damer-database sql (list item-oid value))))
+
+(defun damer--dao-get-preview (item-oid)
+  (let ((sql "select bvalue from damer_attrs where item_oid = ? and name = 'preview'"))
+    (caar (sqlite-select damer-database sql (list item-oid)))))
 
 (defun damer--dao-ascendants (oid)
   (let ((sql "select parent from damer_items where oid = ?")
