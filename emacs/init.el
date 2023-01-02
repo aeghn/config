@@ -94,11 +94,8 @@
 
 ;; Theme Settings
 (load-theme 'modus-operandi)
+;; (load-theme 'spacemacs-dark)
 ;; (load-theme 'modus-vivendi)
-
-(dolist (e (font-family-list))
-  (when (string-prefix-p "Latin" e)
-    (message e)))
 
 ;; Font settings
 (defun chin/set-fonts ()
@@ -106,8 +103,9 @@
     (let ((prefered-mono-font-list '("IBM Plex Mono" "Jetbrains Mono"))
           (prefered-chinese-font-list '("Noto Serif CJK CN"))
           (prefered-serif-font-list (list "Literata 7pt" "Charter" "Roboto"))
-          prefered-mono-font prefered-chinese-font prefered-serif-font first-font-fun)
-      (setf first-font-fun
+          (first-font-fun (make-symbol "chin/get-first-available-font"))
+          prefered-mono-font prefered-chinese-font prefered-serif-font )
+      (fset first-font-fun
             (lambda (font-list selected-font)
               (if selected-font
                   selected-font
@@ -134,8 +132,9 @@
       (set-face-attribute 'mode-line-inactive nil
                           :family prefered-serif-font :height 120 :weight 'Regular)
       (setq ibuffer-sidebar-use-custom-font t)
-      (setq ibuffer-sidebar-face `(:family "nrss" :height 120))
-      (setq speed-sidebar-face `(:family "nrss" :height 120)))))
+      (setq ibuffer-sidebar-face `(:family "Noto Sans" :height 120))
+      ;; (setq speed-sidebar-face `(:family "nrss" :height 120))
+      )))
 
 ;; Toolbar Settings
 (tool-bar-mode 1)
@@ -209,7 +208,7 @@
 (chin/set-gui-emacs)
 
 ;; Frame title settings
-(setq frame-title-format "%b [%f] -- GNU Emacs")
+(setq frame-title-format "%b [%f] -- GNU/Emacs")
 (setq backup-directory-alist `(("." . "~/.emacs-saves")))
 (setq speedbar-show-unknown-files t)
 
@@ -249,6 +248,7 @@
             (local-set-key (kbd "C-c .") 'cscope-find-global-definition-no-prompting)))
 
 ;; Org-mode settings
+(require 'org)
 (setq
  ;; Edit settings
  ;; org-auto-align-tags nil
@@ -352,12 +352,12 @@
 (global-set-key (kbd "M-;") 'comment-dwim-2)
 
 ;; Dired Settings
-;; (defadvice dired-find-file (around dired-find-file-single-buffer activate)
-;;   "Replace current buffer if file is a directory."
-;;   (interactive)
-;;   (let ((orig (current-buffer)) (filename (dired-get-file-for-visit)))
-;;     ad-do-it (when (and (file-directory-p filename) (not (eq (current-buffer) orig)))
-;;                (kill-buffer orig))))
+(defadvice dired-find-file (around dired-find-file-single-buffer activate)
+  "Replace current buffer if file is a directory."
+  (interactive)
+  (let ((orig (current-buffer)) (filename (dired-get-file-for-visit)))
+    ad-do-it (when (and (file-directory-p filename) (not (eq (current-buffer) orig)))
+               (kill-buffer orig))))
 
 ;; Power Settings
 (defun chin/server-shutdown ()
@@ -448,7 +448,7 @@ If popup is focused, kill it."
 (global-set-key (kbd "M-1") 'point-stack-pop)
 (global-set-key (kbd "M-2") 'point-stack-forward-stack-pop)
 
-;; Chinese
+;; ;; Chinese
 (chin/load-other-file "cangjie.el")
 (set-input-method 'chinese-cns-cangjie)
 (deactivate-input-method)
@@ -478,15 +478,27 @@ If popup is focused, kill it."
 (global-corfu-mode)
 (put 'downcase-region 'disabled nil)
 
-
 ;; Message Functions
 (defun chin/clear-buffer-forcily ()
   (interactive)
   (let ((buffer-read-only nil))
     (erase-buffer)))
 
-
 ;; Damer
 (defun damer-default ()
   (interactive)
   (damer "/home/chin/files/datamanager.db"))
+
+
+;; Ansi Shell
+(defun chin/toggle-ansi-term ()
+  (interactive)
+  (if-let* ((name "bottom-ansi-shell")
+            (buffer (get-buffer (concat "*" name "*")))
+            (window (get-buffer-window buffer)))
+      (delete-window window)
+    (setq window (split-window-below (- (frame-height) 12) (frame-root-window)))
+    (select-window window)
+    (ansi-term "/bin/zsh" name)))
+
+(global-set-key (kbd "M-=") 'chin/toggle-ansi-term)

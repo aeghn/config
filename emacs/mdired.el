@@ -273,7 +273,14 @@ Maybe nil."
 ;;; Dired Window Functions
 (defvar-keymap mdired-mode-map
   "<left>"  'mdired-set-current-parent
-  "<right>" 'mdired-set-current-child)
+  "<right>" 'mdired-set-current-child
+  "q"       'mdired-quit
+  "RET"     (lambda ()
+              (interactive)
+              (let ((vector mdired--vector))
+                (mdired-quit)
+                (mdired-quit-all)
+                (find-file (mdired--get-filename vector)))))
 
 (define-minor-mode mdired-mode
   "mdired -- just for the main dired window's minor mode"
@@ -288,8 +295,7 @@ Maybe nil."
 If FILENAME is a directory, just jump into it,
 else we will jump into its parent and goto this file."
   (interactive)
-  (let ((dired-hide-details-mode t)
-        (dired-free-space nil)
+  (let ((dired-free-space nil)
         (old-buffer (current-buffer))
         (old-vector mdired--vector)
         (old-listing-switches dired-listing-switches)
@@ -311,6 +317,7 @@ else we will jump into its parent and goto this file."
 
 (defun mdired--find-alternate-file (vector directory hide-details-mode)
   (let ((kill-buffer-hook nil))
+    (setq-local dired-hide-details-mode hide-details-mode)
     (find-alternate-file directory)
     (mdired-mode)
     (setq-local mdired--vector vector)
@@ -360,14 +367,11 @@ but for child."
        filename))
     (mdired-refresh mdired--vector)))
 
-(defun mdired--dired-details (&optional show-detail)
+(defun mdired--dired-details ()
   "Hide unneed infomation in this dired buffer, such as file infomations
 and dired header lines."
   (let ((dired-free-space nil))
     (mdired-hide-header)
-    (if show-detail
-        (setq-local dired-hide-details-mode nil)
-      (setq-local dired-hide-details-mode t))
     (dired-hide-details-update-invisibility-spec)))
 
 (defun mdired-hide-header ()
@@ -906,7 +910,7 @@ Return the preview buffer"
       (setq-local mode-line-format
                   (concat " [MDired] " (file-name-nondirectory (mdired--get-filename vector))))
       (unless (string-prefix-p "mdired-" (buffer-name))
-        (rename-buffer (format "mdired-%s" (buffer-name))))
+        (rename-buffer (format "mdired-%s" (buffer-name)) t))
       (goto-char (point-min))))
   buffer)
 
@@ -942,12 +946,14 @@ If this file is opened before, use a indirect buffer to view."
           (filename (mdired--get-filename vector)))
       (setq truncate-lines t)
       (erase-buffer)
-      (mdired--list-files-in-current-buffer filename switches)))
+      (mdired--list-files-in-current-buffer filename switches)
+      (when (= (buffer-size) 0)
+        (insert (mdired--propertize-hint "Empty Directory")))))
   (mdired--preview-post-actions vector buffer))
 
 (defun mdired--preview-binary (vector preserver-buffer)
   (let* ((filename (mdired--get-filename vector))
-         (ext (downcase (file-name-extension filename)))
+         (ext (downcase (or (file-name-extension filename) "")))
          (type (mdired--get-file-type-by-extension filename))
          (directory (expand-file-name (md5 (file-name-parent-directory filename)) mdired-preview-cache-directory))
          (expanded-filename (expand-file-name (file-name-nondirectory filename) directory))
@@ -1032,7 +1038,7 @@ If this file is opened before, use a indirect buffer to view."
     (ignore-errors
       (with-current-buffer e
         (when mdired--vector
-          mdired-quit)
+          (mdired-quit))
         (when mdired--owned
           (kill-buffer))))))
 

@@ -12,6 +12,8 @@
   "The datamanager database.")
 (defvar-local damer-main-buffer nil
   "The main buffer of damer")
+(defvar-local damer-current-item nil
+  "Current item of damer")
 
 (defconst damer-categories
   '(("item"   . "")
@@ -49,7 +51,7 @@
   "q"          #'damer-quit
   "C-y"        #'yank-media)
 
-(define-derived-mode damer-image-mode image-mode "Darme-Image"
+(define-derived-mode damer-image-mode image-mode "Damer-Image"
   "Damer is a datamanager interface for managing items in emacs based on sqlite3."
   :global nil
   :group 'damer)
@@ -81,7 +83,7 @@
               (current-item (damer-current-item)))
     (with-current-buffer buffer
       (damer--dao-insert-preview (damer--item-oid current-item)
-                                 (unibyte-string data)))))
+                                 data))))
 
 (defun damer-curl (uri)
   (with-temp-buffer
@@ -91,10 +93,11 @@
 ;; Copied from org-download
 (defun damer--dnd-handler (url action)
   (let* ((buffer damer-main-buffer)
-         (current-item (with-current-buffer buffer (damer-current-item)))
+         (preview-window (damer--get-window "*damer-preview*"))
          (data (with-temp-buffer (insert-file-contents (string-replace "file:/" "" url)) (buffer-string))))
+    (select-window preview-window)
     (with-current-buffer buffer
-      (damer--dao-insert-preview (damer--item-oid current-item) data))))
+      (damer--dao-insert-preview (damer--item-oid (damer-current-item)) data))))
 
 (defun damer--dnd-handler-fallback (uri action)
   (let ((dnd-protocol-alist
@@ -106,19 +109,24 @@
 ;;;###autoload
 (defun damer--register-dnd-handler ()
   (unless (eq (cdr (assoc "^\\(https?\\|ftp\\|file\\|nfs\\):" dnd-protocol-alist))
-              'org-download-dnd)
+              'damer--dnd-handler)
     (setq dnd-protocol-alist
           `(("^\\(https?\\|ftp\\|file\\|nfs\\):" . damer--dnd-handler)
             ,@dnd-protocol-alist))))
 
+(defun damer--register-yank-handler ()
+  (yank-media-handler "image/.*" 'damer--yank-media-handler))
+
 (defun damer--regeister-some-handlers ()
-  (yank-media-handler "image/.*" 'damer--yank-media-handler)
+  (damer--register-yank-handler)
   (damer--register-dnd-handler))
 
 (defun damer-current-item ()
   (with-current-buffer damer-main-buffer
-    (damer-move-to-item-start)
-    (damer--convert-pos-to-item)))
+    (if damer-current-item
+        damer-current-item
+      (damer-move-to-item-start)
+      (damer--convert-pos-to-item))))
 
 ;;;###autoload
 (defun damer (db-path)
@@ -130,11 +138,11 @@
       (damer-attr-window buffer 1))
     (with-current-buffer buffer
       (damer-mode)
-      (damer--register-dnd-handler)
       (setq-local damer-database-path db-path
                   damer-main-buffer buffer)
       (damer--get-or-open-database)
       (damer--dao-try-create-tables)
+      (damer--regeister-some-handlers)
       (damer-refresh)
       (setq-local buffer-read-only t)
       (goto-char (point-min)))))
@@ -195,20 +203,24 @@
       (damer--regeister-some-handlers)
       (setq-local damer-main-buffer main-buffer))))
 
-(defun damer-refresh-preview ()
+(defun damer-refresh-preview (&optional item)
   (when-let* ((preview-window (damer--get-window "*damer-preview*"))
               (preview-buffer (damer--get-buffer "*damer-preview*"))
               (main-buffer damer-main-buffer))
     (with-current-buffer preview-buffer
       (fundamental-mode)
       (erase-buffer)
-      (when-let ((data (with-current-buffer main-buffer
-                         (damer--dao-get-preview
-                          (damer--item-oid (damer-current-item))))))
+      (when-let* ((data (with-current-buffer main-buffer
+                          (damer--dao-get-preview
+                           (damer--item-oid (or item (damer-current-item)))))))
         (insert data)
-        (goto-char (point-min))
-        (damer-image-mode)
-        (setq-local damer-main-buffer main-buffer)))))
+        (goto-char (point-min)))
+      (damer-image-mode)
+      (damer--register-yank-handler)
+      (setq-local damer-main-buffer main-buffer))))
+
+(defun damer-refresh-attrs (&optional item)
+  (damer-refresh-preview item))
 
 ;;;###autoload
 (defun damer-quit ()
@@ -306,14 +318,16 @@ item into the database and refresh the ui."
 (defun damer-previous-line ()
   (interactive)
   (previous-line)
-  (damer-refresh-preview)
-  (damer-move-to-item-start))
+  (damer-move-to-item-start)
+  (setq damer-current-item (damer--convert-pos-to-item))
+  (damer-refresh-attrs damer-current-item))
 
 (defun damer-next-line ()
   (interactive)
   (next-line)
-  (damer-refresh-preview)
-  (damer-move-to-item-start))
+  (damer-move-to-item-start)
+  (setq damer-current-item (damer--convert-pos-to-item))
+  (damer-refresh-attrs damer-current-item))
 
 ;;; UI
 (defun damer-move-to-item-start ()
@@ -501,7 +515,6 @@ item into the database and refresh the ui."
 
 (defun damer--dao-insert-preview (item-oid value)
   (let ((sql "insert or replace into damer_attrs (item_oid, name, vtype, bvalue) values (?, 'preview', 'image', ?)"))
-    (message "value: %s" value)
     (sqlite-execute damer-database sql (list item-oid value))))
 
 (defun damer--dao-get-preview (item-oid)
@@ -586,9 +599,7 @@ item into the database and refresh the ui."
 
 ;;; Sort Functions
 (defun damer--sort-items-by-tree (oid list)
-  "
-
-The list is relatively ordered.
+  "The list is relatively ordered.
 
 That is to say:
   Parent Child1 Child2 Chile3 Child1_1 Child1_2 Child2_1 Child2_2."
