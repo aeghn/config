@@ -115,12 +115,12 @@ This only takes effect if `ibuffer-sidebar-use-custom-font' is true."
   :type 'list
   :group 'ibuffer-sidebar)
 
-(defcustom ibuffer-sidebar-current-buffer-mark ""
+(defcustom ibuffer-sidebar-current-buffer-mark ""
   ""
   :type 'string
   :group 'ibuffer-sidebar)
 
-(defcustom ibuffer-sidebar-buffer-mark ""
+(defcustom ibuffer-sidebar-buffer-mark ""
   ""
   :type 'string
   :group 'ibuffer-sidebar)
@@ -159,11 +159,12 @@ So we can get a more stable buffer list in the ibuffer-sidebar,
 besides we can use `ibuffer-sidebar-previous-buffer' and
 `ibuffer-sidebar-next-buffer' to switch between them.")
 
-(defvar ibuffer-sidebar-switch-buffer-mtx (make-mutex)
-  "the mutex for switching and refreshing buffer.")
-
 (defvar ibuffer-sidebar-last-marked-buffer nil
   "The last marked buffer.")
+
+(defvar ibuffer-sidebar-current-overlay
+  "The overlay of current line.")
+
 
 (defvar-keymap ibuffer-sidebar-mode-map
   "RET"            #'ibuffer-sidebar-visit-buffer
@@ -306,7 +307,6 @@ Sets up both `ibuffer' and `ibuffer-sidebar'."
   (ibuffer-update nil)
   (run-hooks 'ibuffer-hook)
   (ibuffer-sidebar-mode)
-  ;; (message "ibuffer-never-show-predicates: %s" ibuffer-never-show-predicates)
   (with-eval-after-load "ibuffer"
     (add-to-list 'ibuffer-never-show-predicates
                  (lambda (e)
@@ -323,19 +323,19 @@ Sets up both `ibuffer' and `ibuffer-sidebar'."
       (unless this-buffer (message "This line contains no buffer")))
     this-buffer))
 
-(defun ibuffer-sidebar-visit-buffer (&optional single)
+(defun ibuffer-sidebar-visit-buffer (&optional buffer)
   "Try to visit buffer from ibuffer-sidebar"
   (interactive)
-  (let ((buf (ibuffer-sidebar-get-buffer-this-line)))
-    (when buf
-      (setq window-buffer-exists
-            (car-safe (seq-filter (apply-partially (lambda (e) (equal (window-buffer e) buf)))
-                                  (window-list))))
-      (if window-buffer-exists
-          (select-window window-buffer-exists)
-        (if (chin-bw-utils-select-window)
-            (switch-to-buffer buf)
-          (ibuffer-visit-buffer buf))))))
+  (when-let ((buf (or buffer (ibuffer-sidebar-get-buffer-this-line))))
+    (if-let ((window-buffer-exists
+              (car-safe (seq-filter
+                         (apply-partially
+                          (lambda (e) (equal (window-buffer e) buf)))
+                         (window-list)))))
+        (select-window window-buffer-exists)
+      (if (chin-bw-utils-select-window)
+          (switch-to-buffer buf)
+        (ibuffer-visit-buffer buf)))))
 
 (defun ibuffer-sidebar-switch-buffer (forward &optional input-buffer)
   (if-let ((sidebar (ibuffer-sidebar-buffer))
@@ -344,10 +344,7 @@ Sets up both `ibuffer' and `ibuffer-sidebar'."
                              (current-buffer))))
       (with-current-buffer sidebar
         (let ((first-cycle-times 0)
-              (buffer)
-              (first-buffer nil)
-              (last-buffer nil)
-              (selected-buffer nil))
+              buffer first-buffer last-buffer selected-buffer)
           (goto-char (point-min))
           (while (and (not selected-buffer) (< first-cycle-times 2))
             (ibuffer-forward-line)
@@ -363,7 +360,7 @@ Sets up both `ibuffer' and `ibuffer-sidebar'."
                     (setq selected-buffer last-buffer))
                 (when (not forward) (setq last-buffer buffer)))))
           (if selected-buffer
-              (switch-to-buffer selected-buffer)
+              (ibuffer-sidebar-visit-buffer selected-buffer)
             (message "No buffer on this direction"))))
     (if forward (next-buffer) (previous-buffer))))
 
@@ -424,7 +421,7 @@ This returns nil if there isn't a buffer for F."
   (ibuffer-sidebar-when-let* ((cur-buf (if current-buffer current-buffer (current-buffer)))
                               (sidebar (ibuffer-sidebar-buffer))
                               (window (get-buffer-window sidebar)))
-    (with-selected-window window
+    (with-current-buffer sidebar
       (setq-local ibuffer-sorting-mode 'birth)
       (ibuffer-update nil t)
       (let ((last-linnum nil)
@@ -433,21 +430,13 @@ This returns nil if there isn't a buffer for F."
         (while (and setting (not (equal last-linnum (line-number-at-pos))))
           (setq last-linnum (line-number-at-pos))
           (forward-line)
+
           (let* ((r-end (line-end-position))
                  (r-begin (line-beginning-position))
                  (properties (get-text-property r-begin 'ibuffer-properties)))
             (when (equal (car-safe properties) cur-buf)
-              (setq buffer-read-only nil)
-              (delete-region r-begin r-end)
-              (insert (concat
-                       (ibuffer-sidebar-get-prefix ibuffer-sidebar-current-buffer-mark)
-                       " "
-                       (propertize (format "%s" (buffer-name cur-buf)) 'font-lock-face
-                                   '(:foreground "#aa0000" :underline t))))
-              (put-text-property (line-beginning-position) (point) 'ibuffer-properties properties)
-              (unless (chin-bw-utils-check-side)
-                (setq ibuffer-sidebar-last-marked-buffer cur-buf))
-              (setq buffer-read-only t)
+              (setq ibuffer-sidebar-current-overlay (make-overlay r-begin (1+ r-end)))
+              (overlay-put ibuffer-sidebar-current-overlay 'face '((:inherit highlight :extend t)))
               (setq setting nil))))
         (setq-local cursor-in-non-selected-windows nil)
         (beginning-of-line)))))
