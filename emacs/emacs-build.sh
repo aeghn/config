@@ -6,9 +6,14 @@ set -e
 
 cd "$SRC"
 
-./autogen.sh
-./configure --without-pop --with-native-compilation --enable-link-time-optimization --with-dbus --with-sound=no 
+git clean -xfd
 
+./autogen.sh
+./configure --without-pop --with-sound=no --with-modules \
+    --without-dbus \
+    --without-compress-install
+
+    # --with-native-compilation \
 
 make NATIVE_FULL_AOT=1 -j$(nproc)
 make install

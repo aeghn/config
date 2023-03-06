@@ -44,6 +44,7 @@
 (chin/load-other-file "envir.el")
 (chin/load-other-file "mdired.el")
 (chin/load-other-file "damer.el")
+(chin/load-other-file "tool-bar.el")
 
 ;;; Platform Settings
 (defconst chin/is-linux   (eq system-type 'gnu/linux))
@@ -100,7 +101,7 @@
 ;; Font settings
 (defun chin/set-fonts ()
   (when (display-graphic-p)
-    (let ((prefered-mono-font-list '("IBM Plex Mono" "Jetbrains Mono"))
+    (let ((prefered-mono-font-list '("Jetbrains Mono"))
           (prefered-chinese-font-list '("Noto Serif CJK CN"))
           (prefered-serif-font-list (list "Literata 7pt" "Charter" "Roboto"))
           (first-font-fun (make-symbol "chin/get-first-available-font"))
@@ -132,8 +133,8 @@
       (set-face-attribute 'mode-line-inactive nil
                           :family prefered-serif-font :height 120 :weight 'Regular)
       (setq ibuffer-sidebar-use-custom-font t)
-      (setq ibuffer-sidebar-face `(:family "Noto Sans" :height 120))
-      ;; (setq speed-sidebar-face `(:family "nrss" :height 120))
+      (setq ibuffer-sidebar-face `(:family "Public Sans" :height 108))
+      (setq speed-sidebar-face `(:family "Public Sans" :height 108))
       )))
 
 ;; Toolbar Settings
