@@ -15,6 +15,7 @@
 
 (package-initialize)
 
+
 ;; Seamlessly stolen from https://github.com/rejeep/f.el/blob/master/f.el
 (defun chin/this-true-file ()
   "Return path to this file."
@@ -35,6 +36,9 @@
     (when (file-exists-p f)
       (load (file-truename f)))))
 
+(add-to-list
+ 'image-load-path
+ (expand-file-name "lib/images" (file-name-directory (chin/this-true-file))))
 
 (chin/load-other-file "point-stack.el")
 (chin/load-other-file "chin-bw-utils.el")
@@ -148,7 +152,7 @@
         (fh (frame-native-height))
         (tp (frame-parameter (selected-frame) 'tool-bar-position))
         (pos))
-    (when (or not-show (not chin/is-linux))
+    (when (or not-show)
       (setq chin/show-tool-bar nil))
     (cond ((not chin/show-tool-bar) (when tool-bar-mode (tool-bar-mode -1)))
           ((< fh 500) (when tool-bar-mode (tool-bar-mode -1)))
