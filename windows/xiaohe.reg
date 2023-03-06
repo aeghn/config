@@ -1,0 +1,7 @@
+﻿Windows Registry Editor Version 5.00
+
+[HKEY_CURRENT_USER\Software\Microsoft\InputMethod\Settings\CHS]
+"Enable Double Pinyin"=dword:00000001
+"DoublePinyinScheme"=dword:0000000a
+"Expand Double Pinyin"=dword:00000000
+"UserDefinedDoublePinyinScheme0"="XiaoHe*2*^*iuvdjhcwfg xmlnpbksqszxkrltvyovt"
