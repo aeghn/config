@@ -107,6 +107,25 @@
       (mdired-refresh mdired--vector)
       (mdired-toggle-preview))))
 
+(defun find-mdired ()
+  (interactive)
+  (let ((dired-hide-details-mode t)
+        (dired-free-space nil))
+    (unless (file-exists-p mdired-preview-cache-directory)
+      (make-directory mdired-preview-cache-directory t))
+    (setq-default dired-listing-switches (car (car mdired-listing-switches)))
+    (find-dired (read-directory-name "Run find in directory: " nil "" t)
+                (read-string "Run find (with args): " find-args
+                             '(find-args-history . 1)))
+    (mdired-first-file)
+    (message "begin to refresh ..... %s, %s" (dired-get-filename nil t)
+             (buffer-substring (line-beginning-position) (line-end-position)))
+    (message "begin to refresh: %s" filename)
+    (mdired-build-getter-and-setters)
+    (mdired--set-filename mdired--vector filename)
+    (mdired-refresh mdired--vector t)
+    (mdired-toggle-preview)))
+
 (defun mdired-refresh (vector &optional exclude-main)
   "Refresh this mdired instance."
   (unless exclude-main
@@ -147,6 +166,12 @@ and is different from current file."
       (setq index (1+ index)))))
 
 ;;; Helper Functions
+(defun mdired-first-file ()
+  (goto-char (point-min))
+  (while (and (not (dired-get-filename nil t))
+              (not (eobp)))
+    (dired-next-line 2)))
+
 (defmacro mdired-ignore-errors (window buffer &rest body)
   "A copy of `ignore-errors'"
   (declare (debug t) (indent 0))
@@ -620,17 +645,17 @@ and dired header lines."
                   `(menu-item "Info" mdired-toggle-info
                               :enable t
                               :help "Toggle Info Window"
-                              :image ,(find-image '((:type svg :file "emacs-info.svg")))))
+                              :image ,(find-image '((:type svg :file "tm_info.svg")))))
       (define-key map [mdired-toggle-preview]
                   `(menu-item "Preview" mdired-toggle-preview
                               :enable t
                               :help "Toggle Preview Window"
-                              :image ,(find-image '((:type svg :file "emacs-mdired-preview-button.svg")))))
+                              :image ,(find-image '((:type svg :file "tm_picture.svg")))))
       (define-key map [mdired-toggle-parent]
                   `(menu-item "Parent" mdired-toggle-parent
                               :enable t
                               :help "Toggle Parent Window"
-                              :image ,(find-image '((:type svg :file "emacs-mdired-parent-button.svg")))))
+                              :image ,(find-image '((:type svg :file "mdired-parent.svg")))))
       (setq mdired-mode-toolbar-map map)))
   mdired-mode-toolbar-map)
 
@@ -1030,7 +1055,8 @@ If this file is opened before, use a indirect buffer to view."
          (ignore-errors
            (cond ((bufferp e) (kill-buffer e))
                  ((windowp e) (delete-window e))))))
-     vector)))
+     vector)
+    (mdired-quit-all)))
 
 (defun mdired-quit-all ()
   (interactive)
