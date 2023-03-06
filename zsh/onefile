@@ -2,13 +2,18 @@ autoload -U add-zsh-hook
 
 ## Aliases
 alias ls='ls --color=auto'
-alias rga="rg --no-ignore-files --no-ignore --hidden -i"
+alias rga="rg --path-separator // --no-ignore-files --no-ignore --hidden -i"
 alias rm='rm -I'
 alias mpa='mpv --no-video'
 alias aria2n='aria2c --no-conf=true -j4 -x4 -s4'
 
 alias pc='proxychains -q'
 alias hpx='export HTTP_PROXY=http://127.0.0.1:7890; export HTTPS_PROXY=http://127.0.0.1:7890'
+
+export CHIN_ZSH_CACHE_DIR="${XDG_CACHE_HOME:-$HOME/.cache}/zsh"
+export CHIN_ZSH_CONFIG_DIR="$(dirname "$(realpath "$0")")"
+
+[ -e "$CHIN_ZSH_CACHE_DIR" ] || mkdir -p "$CHIN_ZSH_CACHE_DIR"
 
 ## Editor
 # Finally, make sure the terminal is in application mode, when zle is
@@ -47,9 +52,8 @@ zstyle ':completion:*' matcher-list 'm:{a-zA-Z}={A-Za-z}' 'r:|[._-]=* r:|=* l:|=
 ## For autocompletion of command line switches for aliases
 setopt COMPLETE_ALIASES
 
-
 ## COMMAND HISTORY
-HISTFILE="${XDG_CACHE_HOME:-$HOME/.cache}/zsh/cmd_hist"
+HISTFILE="$CHIN_ZSH_CACHE_DIR/cmd_hist"
 HISTSIZE=10000
 SAVEHIST=100000
 
@@ -72,7 +76,7 @@ zle -N down-line-or-beginning-search
 
 
 ## DIRECTORY NAVI
-export DIR_HISTORY_FILE="$HOME/.hist-files"
+export DIR_HISTORY_FILE="$CHIN_ZSH_CACHE_DIR/hist-files"
 
 function chin-chpwd-append-dir() {
     echo "$PWD" >> "$DIR_HISTORY_FILE"
@@ -120,11 +124,12 @@ j() {
 }
 
 ## FRAME
+fpath=("$CHIN_ZSH_CONFIG_DIR/functions" "$fpath[@]")
 autoload -Uz promptinit
 promptinit
 
 ## To list all available prompt themes by: prompt -l
-if [ -f $HOME/.config/zsh/functions/prompt_chin_setup ]; then
+if [ -f "$CHIN_ZSH_CONFIG_DIR/functions/prompt_chin_setup" ]; then
     prompt chin
 else
     export PROMPT="%(?..%F{red}[%?]%f )%(1j.%F{cyan}(%j)%f .)%B%F{yellow}%n%f%b at %B%F{blue}%m%f%b in %B%F{green}%~%f%b${prompt_newline}> "
