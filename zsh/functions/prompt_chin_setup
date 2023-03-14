@@ -8,6 +8,7 @@
 
 # Thanks to: https://github.com/ericfreese/zsh-efgit-prompt/blob/master/prompt_efgit_setup
 
+
 ## Basic prompt parts
 prompt_chin_head() {
     setopt localoptions noxtrace nowarncreateglobal
@@ -107,7 +108,7 @@ prompt_chin_git_status() {
     [[ $untracked > 0 ]] && working_info+=" %F{red}+$untracked%f"
     parts+="${(j::)working_info}"
 
-    echo -n "on git:(${(j::)parts%%[:space:]})"
+    echo -n "on git:(${(j::)parts})"
 }
 
 prompt_chin_git_assemble() {
@@ -139,7 +140,14 @@ prompt_chin_extend() {
 prompt_chin_precmd() {
     typeset -g PROMPT_CHIN_HEAD PROMPT_CHIN_TAIL
 
-    PROMPT_CHIN_HEAD="$(prompt_chin_head)"
+    if [[ -v PROMPT_CHIN_LAST_TIME ]]; then
+      local cost_time=$(($SECONDS - $PROMPT_CHIN_LAST_TIME))
+      [[ $cost_time -gt 10 ]] && cost_time=" to %F{red}%D{%H:%M:%S} ${cost_time}s%f" || cost_time=""
+    fi
+
+    unset PROMPT_CHIN_LAST_TIME
+
+    PROMPT_CHIN_HEAD="$(prompt_chin_head)${cost_time}"
     PROMPT_CHIN_TAIL="$(prompt_chin_tail)"
 
     PROMPT="${PROMPT_CHIN_HEAD}${PROMPT_CHIN_TAIL}"
@@ -147,4 +155,10 @@ prompt_chin_precmd() {
     prompt_chin_extend
 }
 
+prompt_chin_preexec() {
+    typeset -g PROMPT_CHIN_LAST_TIME
+    PROMPT_CHIN_LAST_TIME=$SECONDS
+}
+
 add-zsh-hook precmd prompt_chin_precmd
+add-zsh-hook preexec prompt_chin_preexec
