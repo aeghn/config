@@ -1,0 +1,14 @@
+#!/usr/bin/env bash
+
+RESOLUTIONS=($(wlr-randr | grep -e DP-1 -e current | awk '{printf("%s ", $1)}'))
+
+if [ "${RESOLUTIONS[0]}" = "DP-1" ]; then
+    wlr-randr --output DP-1 --pos 0,0
+    xstart=$(echo "${RESOLUTIONS[1]}" | awk -Fx '{print $1}')
+    wlr-randr --output eDP-1 --pos $xstart,0 --scale 1.4
+else
+    wlr-randr --output DP-1 --pos 0,0
+    xstart=$(echo "${RESOLUTIONS[2]}" | awk -Fx '{print $1}')
+    wlr-randr --output eDP-1 --pos $xstart,0 --scale 1.4
+
+fi

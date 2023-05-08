@@ -1,0 +1,49 @@
+#!/usr/bin/env bash
+
+COMMIT="$1"
+
+
+get_commit_info() {
+  git log --pretty="%${1}" "$2"~1.."$2"  
+}
+
+get_all_files() {
+  git status --porcelain 2>/dev/null | grep -E '^[ ]?M ' | cut -c4-
+}
+
+is_crlf() {
+  unix2dos -i "$@" | awk '{if ($2 < $1) exit(0) else exit(1)}'
+}
+
+CAN="$(get_commit_info "an" "$COMMIT")"
+CAE="$(get_commit_info "ae" "$COMMIT")"
+CAD="$(get_commit_info "aD" "$COMMIT")"
+CCN="$(get_commit_info "cn" "$COMMIT")"
+CCE="$(get_commit_info "ce" "$COMMIT")"
+CCT="$(get_commit_info "ct" "$COMMIT")"
+CS="$(get_commit_info "s" "$COMMIT")"
+CB="$(get_commit_info "b" "$COMMIT" | sed -z 's/\n/\\n/g')"
+
+GIT_DIR=$(git rev-parse --git-dir)
+cd "${GIT_DIR%.git*}"
+git checkout "$COMMIT" .
+
+get_all_files | while read line; do
+    if git show HEAD:$line | iscrlf; then
+        unix2dos "$line"
+        git add "$line"
+    else
+        dos2unix "$line"
+        git add "$line"
+    fi
+    echo "done: $line"
+done
+
+export GIT_AUTHOR_NAME="$CAN"
+export GIT_AUTHOR_EMAIL="$CAE"
+export GIT_AUTHOR_DATE="$CAD"
+export GIT_COMMITTER_NAME="$CCN"
+export GIT_COMMITTER_EMAIL="$CCE"
+export GIT_COMMITTER_DATE="$CCT"
+
+git commit -m "$(echo -e "$CS\n\n$CB")"

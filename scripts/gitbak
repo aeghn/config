@@ -1,0 +1,28 @@
+#!/usr/bin/env bash
+
+GIT_ROOT="$(git rev-parse --show-toplevel)"
+if [ $? -ne 0 ]; then
+    echo "!! wrong, exiting..."
+    exit 1
+fi
+
+echo -e "> change directory to: \033[31m${GIT_ROOT}\033[0m"
+echo -e "    $(realpath ${GIT_ROOT})"
+cd "${GIT_ROOT}"
+
+
+ORIGIN_BRANCH="$(git branch --show-current)"
+CURRENT_BRANCH="$(git branch --show-current | sed -e 's/[^a-zA-Z0-9_]/_/g' -re "s/_+/_/g")"
+TIME="$(date +%y%m%d_%H%M)"
+COMMIT_MESSAGE="bak #${TIME} @${CURRENT_BRANCH}"
+BAK_BRANCH="bak_${TIME}_${CURRENT_BRANCH}"
+
+echo -e "\n> current branch is \033[31m${CURRENT_BRANCH}\033[0m"
+echo -e "\n> bak branch is \033[31m${BAK_BRANCH}\033[0m"
+git checkout -b "${BAK_BRANCH}" && git commit --allow-empty -am "${COMMIT_MESSAGE}"
+
+echo -e "\n> current branch is \033[31m${ORIGIN_BRANCH}\033[0m"
+git checkout "${ORIGIN_BRANCH}"
+
+echo -e "\n> if you want to get that commit, please do"
+echo -e "  \033[31mgit merge ${BAK_BRANCH}\033[0m"

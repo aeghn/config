@@ -1,0 +1,3 @@
+#!/usr/bin/env bash
+
+unix2dos -i "$@" | awk '{exit($1 == 0)}' && exit 0 || exit 1

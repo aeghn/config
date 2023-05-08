@@ -1,0 +1,12 @@
+#!/usr/bin/env bash
+
+if [ $# -lt 1 ]; then
+	explorer .
+else 
+  if [ -d "$1" ]; then
+    cd "$1"
+    explorer .
+  elif [ -f "$1" ]; then
+    start "$1"
+  fi
+fi

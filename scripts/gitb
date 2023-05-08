@@ -1,0 +1,10 @@
+#!/usr/bin/env bash
+
+branch="$(git branch | fzf | sed -e 's/^[[:space:]]*//g' -e 's/[[:space:]]*$//g')"
+
+if [ x = "x${branch}" ]; then
+    echo 'empty branch name'
+    exit 1
+fi
+
+git checkout "${branch}"
