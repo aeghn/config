@@ -307,13 +307,12 @@
 (defun chin/org-file-open ()
   (interactive)
   (let* ((date (format-time-string "%y-%m-%d"))
-        (result (completing-read "Org files: "
-                                 (directory-files chin/org-managed-files nil ".*org$")))
-        (full-result (expand-file-name result chin/org-managed-files)))
+         (result (completing-read "Org files: " (directory-files chin/org-managed-files nil ".*\\.org")))
+         (full-result (expand-file-name result chin/org-managed-files)))
     (if (file-exists-p full-result)
         (find-file full-result)
       (find-file (expand-file-name (concat date "-" result ".org") chin/org-managed-files)))))
-        
+
 
 (add-hook 'org-mode-hook 'chin/org-hook-function)
 
@@ -524,12 +523,6 @@ If popup is focused, kill it."
   (let ((buffer-read-only nil))
     (erase-buffer)))
 
-;; Damer
-(defun damer-default ()
-  (interactive)
-  (damer "/home/chin/files/datamanager.db"))
-
-
 ;; Ansi Shell
 (defun chin/toggle-ansi-term ()
   (interactive)
@@ -542,3 +535,7 @@ If popup is focused, kill it."
     (ansi-term "/bin/zsh" name)))
 
 (global-set-key (kbd "M-=") 'chin/toggle-ansi-term)
+
+;;(require 'epa-file)
+;;(epa-file-enable)
+;;(setq epa-file-select-keys nil)
