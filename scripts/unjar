@@ -1,0 +1,27 @@
+#!/usr/bin/env bash
+
+export PATH=$JAVA_HOME/bin:$PATH
+
+JAR="$1"
+
+which jar && which jad && [ x = "x$jar" ] || exit 127
+
+JAR_FILE="$(realpath "$JAR")"
+
+TARGET="${JAR_FILE}_FILES"
+TARGET_CLASS="${TARGET}/classes"
+TARGET_SOURCE="${TARGET}/sources"
+
+
+mkdir "$TARGET" && cd "$TARGET"
+
+echo "> begin to uncompress $JAR"
+mkdir "$TARGET_CLASS" && cd "$TARGET_CLASS"
+jar xf "$JAR_FILE" 
+
+echo "> begin to decompile $JAR"
+mkdir "$TARGET_SOURCE" && cd "$TARGET_SOURCE"
+jad -r -ff -s java "$TARGET_CLASS"/**/*.class &> /dev/null
+
+echo "> finished ${JAR}"
+

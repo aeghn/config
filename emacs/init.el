@@ -8,8 +8,7 @@
 (require 'package)
 (setq-default tsinghua-mirror
               '(("gnu"   . "https://mirrors.tuna.tsinghua.edu.cn/elpa/gnu/")
-                ("melpa" . "https://mirrors.tuna.tsinghua.edu.cn/elpa/melpa/")
-                ("org"   . "https://mirrors.tuna.tsinghua.edu.cn/elpa/org/")))
+                ("melpa" . "https://mirrors.tuna.tsinghua.edu.cn/elpa/melpa/")))
 
 (setq package-archives tsinghua-mirror)
 
@@ -40,6 +39,16 @@
  'image-load-path
  (expand-file-name "lib/images" (file-name-directory (chin/this-true-file))))
 
+;; Packages Initialization
+(defun chin/ensure-all-packages ()
+  (interactive)
+  (let* ((packages '(dash magit-section markdown-mode with-editor modus-themes json-mode go-imenu go-mode vala-mode cargo cargo-mode caroline-theme org-download embark-consult embark magit expand-region restclient lua-mode ahk-mode corfu symbol-overlay consult all-the-icons xr ibuffer-project graphviz-dot-mode htmlize xcscope rust-mode ripgrep rainbow-mode meson-mode grey-paper-theme comment-dwim-2 vertico consult vundo)))
+    (package-refresh-contents)
+    (dolist (p packages)
+      (if (package-installed-p p)
+          (package-update p)
+        (package-install p)))))
+
 (chin/load-other-file "point-stack.el")
 (chin/load-other-file "chin-bw-utils.el")
 (chin/load-other-file "org-static-blog.el")
@@ -49,6 +58,7 @@
 (chin/load-other-file "mdired.el")
 (chin/load-other-file "damer.el")
 (chin/load-other-file "tool-bar.el")
+(chin/load-other-file "shortcut.el")
 
 ;;; Platform Settings
 (defconst chin/is-linux   (eq system-type 'gnu/linux))
@@ -98,15 +108,15 @@
 (pixel-scroll-precision-mode t)
 
 ;; Theme Settings
-(load-theme 'modus-operandi)
-;; (load-theme 'spacemacs-dark)
-;; (load-theme 'modus-vivendi)
+(load-theme 'modus-operandi-deuteranopia)
+;; (load-theme 'modus-vivendi-tinted)
+
 
 ;; Font settings
 (defun chin/set-fonts ()
   (when (display-graphic-p)
-    (let ((prefered-mono-font-list '("Jetbrains Mono"))
-          (prefered-chinese-font-list '("Noto Serif CJK CN"))
+    (let ((prefered-mono-font-list '("IBM Plex Mono" "Jetbrains Mono"))
+          (prefered-chinese-font-list '("Noto Serif CJK SC"))
           (prefered-serif-font-list (list "Literata 7pt" "Charter" "Roboto"))
           (first-font-fun (make-symbol "chin/get-first-available-font"))
           prefered-mono-font prefered-chinese-font prefered-serif-font )
@@ -136,17 +146,17 @@
                           :family prefered-serif-font :height 120 :weight 'Bold)
       (set-face-attribute 'mode-line-inactive nil
                           :family prefered-serif-font :height 120 :weight 'Regular)
+
       (setq ibuffer-sidebar-use-custom-font t)
-      (setq ibuffer-sidebar-face `(:family "Public Sans" :height 108))
-      (setq speed-sidebar-face `(:family "Public Sans" :height 108))
-      )))
+      (setq ibuffer-sidebar-face `(:family "FreeSans" :height 120))
+      (setq speed-sidebar-face `(:family "FreeSans" :height 120)))))
 
 ;; Toolbar Settings
 (tool-bar-mode 1)
 (setq tool-bar-button-margin 8
       tool-bar-images-pixel-height 100)
 
-(defvar chin/show-tool-bar t)
+(defvar chin/show-tool-bar nil)
 (defun chin/replace-tool-bar (&optional not-show)
   (let ((fw (frame-native-width))
         (fh (frame-native-height))
@@ -213,7 +223,7 @@
 (chin/set-gui-emacs)
 
 ;; Frame title settings
-(setq frame-title-format "%b [%f] -- GNU/Emacs")
+(setq frame-title-format "Emacs - %b  %f")
 (setq backup-directory-alist `(("." . "~/.emacs-saves")))
 (setq speedbar-show-unknown-files t)
 
@@ -276,6 +286,37 @@
 (setq org-todo-keywords
       '((sequence "TODO(t)" "STARTED(s)" "WAIT(w)" "|" "DONE(d)" "CANCELED(c)")))
 
+(defun chin/org-hook-function ()
+  (interactive)
+  (let ((variable-font "Clear Han Serif")
+        (mono-font "IBM Plex Mono"))
+    (setq-local truncate-lines t
+                face-remapping-alist `((default (:family ,variable-font) variable-pitch)
+                                       (org-code (:family ,mono-font) org-code)
+                                       (org-verbatim (:family ,mono-font) org-verbatim)
+                                       (org-block (:family ,mono-font) org-block)
+                                       (org-block-begin-line (:family ,mono-font) org-block)))))
+
+(defvar chin/org-managed-files "~/files/docs/org")
+
+(defun chin/org-files ()
+  (interactive)
+  (find-file
+   (completing-read "Org files: " (directory-files chin/org-managed-files nil ".*org$"))))
+
+(defun chin/org-file-open ()
+  (interactive)
+  (let* ((date (format-time-string "%y-%m-%d"))
+        (result (completing-read "Org files: "
+                                 (directory-files chin/org-managed-files nil ".*org$")))
+        (full-result (expand-file-name result chin/org-managed-files)))
+    (if (file-exists-p full-result)
+        (find-file full-result)
+      (find-file (expand-file-name (concat date "-" result ".org") chin/org-managed-files)))))
+        
+
+(add-hook 'org-mode-hook 'chin/org-hook-function)
+
 (defun chin/insert-image-from-clipboard ()
   (interactive)
   (let* ((pure-filename (file-name-sans-extension
@@ -292,12 +333,6 @@
         (insert  (concat "[[file:./" image-dir-name "/" filename "]]"))
       (message "Unable to create image"))))
 (define-key org-mode-map (kbd "C-c p") 'chin/insert-image-from-clipboard)
-
-(global-set-key
- (kbd "M-5")
- (lambda ()
-   (interactive)
-   (find-file "/home/chin/files/docs/todo.org")))
 
 ;; Set tab width
 (setq-default tab-width 4)

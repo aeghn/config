@@ -1,0 +1,49 @@
+#!/usr/bin/env bash
+
+RED='\033[31m'
+GREEN='\033[32m'
+YELLOW='\033[31m'
+CEND='\033[0m'
+
+HUMAN_FMT="%Y-%m-%d %H:%M:%S"
+
+stamp_to_human() {
+    local s="${1}"
+
+    [ ${#s} -ne 10 ] && [ ${#s} -ne 13 ] && echo -e "len \`${s}' == ${RED}${#s}${CEND}"
+
+    local seconds=${s:0:10}
+
+    [ ${#s} -gt 10 ] && local mseconds=",${s#$seconds}"
+
+    local human_time=$(date -d @${seconds} +"$HUMAN_FMT")
+    echo -e "${seconds}${mseconds} => ${RED}${human_time}${mseconds}${CEND}"
+}
+
+date_to_stamp() {
+    local s="${@}"
+    local digits=($(echo "$s" | grep -Eo '[[:digit:]]+'))
+    local fmt="${digits[0]}-${digits[1]}-${digits[2]} ${digits[3]}:${digits[4]}:${digits[5]}"
+
+    echo -e  "${YELLOW} * ${CEND}Ori: $s"
+    echo -en "${YELLOW} * ${CEND}Fmt: "
+    date -d "$fmt" +"${HUMAN_FMT}"
+
+    echo -e "${YELLOW} * ${CEND}Unix: ${RED}$(date -d "$fmt" +"%s")${CEND}"
+}
+
+show_help() {
+    echo -e "${YELLOW} * ${CEND}Usage: stamp str
+${YELLOW} * ${CEND}Current
+    timestamp: $(date +"%s")
+         date: $(date +"${HUMAN_FMT}")"
+}
+
+
+if echo "$@" | grep -E '[^[:digit:]]+' &>/dev/null; then
+    date_to_stamp "$@"
+elif [ $# -eq 1 ]; then
+    stamp_to_human "$@"
+else
+    show_help
+fi

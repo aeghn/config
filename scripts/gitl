@@ -1,0 +1,13 @@
+#!/usr/bin/env bash
+
+export SHELL='/usr/bin/bash'
+
+git_log() {
+    local line="$1"
+    local commit="$(echo $line | awk '{print $1}')"
+    git show $commit 
+}
+
+export -f git_log
+
+git log --pretty="format:%H %ai %s %aE" | fzf --preview="git_log {}" --preview-window=up:wrap:sharp

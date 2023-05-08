@@ -349,7 +349,7 @@ else we will jump into its parent and goto this file."
     (setq-local dired-hide-details-mode hide-details-mode)
     (mdired--dired-add-icon-advices)
     (add-hook 'kill-buffer-hook
-              (lambda ()
+               (lambda ()
                 (mdired-quit (list (current-buffer))))
               nil t)
     (add-hook 'post-command-hook
