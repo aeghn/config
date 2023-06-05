@@ -861,9 +861,34 @@ archive headline."
    (org-static-blog-get-post-url post-filename)
    (org-static-blog-get-title post-filename)
    (if title-hierary title-hierary 2)
-   (format-time-string "%Y-%m-%d" (org-static-blog-get-date post-filename))
+
+   (org-static-blog-number-to-hanzi (org-static-blog-get-date post-filename))
+
    (org-static-blog-post-taglist post-filename)))
 
+(defun org-static-blog-number-to-hanzi (timestamp)
+  (let* ((chinese-numbers '("〇" "一" "二" "三" "四" "五" "六" "七" "八" "九"))
+         (year (format-time-string "%Y" timestamp))
+         (month (string-to-number (format-time-string "%m" timestamp)))
+         (day (string-to-number (format-time-string "%d" timestamp)))
+         (conv2 (lambda (num)
+                  (let ((quotient (floor num 10))
+                        (remainder (mod num 10)))
+                    (concat
+                     (cond ((= quotient 0) "")
+                           ((= quotient 1) "十")
+                           ((= quotient 2) "二十")
+                           ((= quotient 3) "三十"))
+                     (when (> remainder 0)
+                       (elt chinese-numbers remainder))
+                  ))))
+         (result ""))
+      (dolist (digit (split-string year "" t) result)
+        (setq result (concat result (elt chinese-numbers (string-to-number digit)))))
+      (setq result (concat result "年"))
+      (setq result (concat result (funcall conv2 month) "月"))
+      (setq result (concat result (funcall conv2 day) "日"))
+      result))
 
 (defun org-static-blog--prune-items (items)
   "Limit, if needed, the items to be included in an RSS feed."

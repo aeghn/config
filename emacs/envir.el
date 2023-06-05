@@ -1,5 +1,5 @@
-(setq org-static-blog-publish-title "wangz.me"
-      org-static-blog-publish-url "https://wangz.me/"
+(setq org-static-blog-publish-title "wangz.codeberg.page"
+      org-static-blog-publish-url "https://wangz.codeberg.page/"
       org-static-blog-publish-directory "/home/chin/Projects/blog"
       org-static-blog-posts-directory "/home/chin/Projects/blog/posts/"
       org-static-blog-drafts-directory "/home/chin/Projects/blog/drafts/"
@@ -16,21 +16,28 @@
       "<meta name=\"author\" content=\"Aeghn\">
 <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">
 <link href= \"static/style.css\" rel=\"stylesheet\" type=\"text/css\" />
+<script src=\"static/toc.js\" type=\"text/javascript\" defer></script>
 <link rel=\"icon\" href=\"static/favicon.ico\">")
 
 ;; This preamble is inserted at the beginning of the <body> of every page:
 ;;   This particular HTML creates a <div> with a simple linked headline
 (setq org-static-blog-page-preamble
       "<div id=\"blog-nav\">
-  <a href=\"/\">wangz's blog </a>
-  <span>/ </span>
-  <a href=\"/tags.html\">Tags </a>
-</div><hr/>")
+  <a href=\"/\">Index</a>
+  <span> </span>
+  <a href=\"/tags.html\">Tags</a>
+<div style=\"text-align: center;\">
+  <img class=\"banner\" src=\"static/xuan.png\">
+</div>
+</div>")
 
 ;; This postamble is inserted at the end of the <body> of every page:
 ;;   This particular HTML creates a <div> with a link to the archive page
 ;;   and a licensing stub.
 (setq org-static-blog-page-postamble
       "\n<div id=\"blog-tail\">
+<div style=\"text-align: center;\">
+<img class=\"banner\" src=\"static/huang.png\">
+</div>
 <center><span> Powered by Org-mode and</span> <a href=\"https://github.com/aeghn/org-static-blog\"> a fork</a><span> of</span><a href=\"https://github.com/bastibe/org-static-blog\"> org-static-blog</a> </center>
 </div>")
