@@ -37,7 +37,7 @@
 (require 'ibuffer)
 (require 'ibuf-ext)
 (require 'face-remap)
-(require 'chin-bw-utils)
+(require 'base-sidebar)
 (eval-when-compile (require 'subr-x))
 
 ;; Compatibility
@@ -227,7 +227,7 @@ besides we can use `ibuffer-sidebar-previous-buffer' and
     (when ibuffer-sidebar-use-custom-modeline
       (ibuffer-sidebar-set-mode-line))
 
-    (chin-bw-utils-buffer-change-hook-push 'ibuffer-sidebar-refresh-buffer)))
+    (base-sidebar-buffer-change-hook-push 'ibuffer-sidebar-refresh-buffer)))
 
 ;; User Interface
 
@@ -333,7 +333,7 @@ Sets up both `ibuffer' and `ibuffer-sidebar'."
                           (lambda (e) (equal (window-buffer e) buf)))
                          (window-list)))))
         (select-window window-buffer-exists)
-      (if (chin-bw-utils-select-window)
+      (if (base-sidebar-select-window)
           (switch-to-buffer buf)
         (ibuffer-visit-buffer buf)))))
 

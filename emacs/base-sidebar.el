@@ -1,47 +1,47 @@
 ;; Customizations
-(defgroup chin-bw-utils nil
+(defgroup base-sidebar nil
   "A major mode leveraging `ibuffer-sidebar' to display buffers in a sidebar."
   :group 'convenience)
 
-(defcustom chin-bw-utils-key-set '("a" "b" "c" "d" "e" "f" "g" "h" "i" "j" "k"
+(defcustom base-sidebar-key-set '("a" "b" "c" "d" "e" "f" "g" "h" "i" "j" "k"
                                    "l" "m" "n" "o" "p" "q" "r" "s" "t" "u" "v")
   "Visit window by those keys"
   :type 'list
-  :group 'chin-bw-utils)
+  :group 'base-sidebar)
 
-(defvar chin-bw-utils-buffer-change-functions '()
+(defvar base-sidebar-buffer-change-functions '()
   "")
 
-(defvar chin-bw-utils-buffer-last-file-buffer ""
+(defvar base-sidebar-buffer-last-file-buffer ""
   "")
 
-(defun chin-bw-utils-buffer-change-hook-push (funcname)
+(defun base-sidebar-buffer-change-hook-push (funcname)
   (when (fboundp funcname)
-    (unless (fboundp 'chin-bw-utils-buffer-change-do-functions)
-      (defalias (intern "chin-bw-utils-buffer-change-do-functions")
+    (unless (fboundp 'base-sidebar-buffer-change-do-functions)
+      (defalias (intern "base-sidebar-buffer-change-do-functions")
         (function (lambda (&rest _)
-                    (when chin-bw-utils-buffer-change-functions
-                      (dolist (f chin-bw-utils-buffer-change-functions)
+                    (when base-sidebar-buffer-change-functions
+                      (dolist (f base-sidebar-buffer-change-functions)
                         (funcall f)))))))
-    (unless (fboundp 'chin-bw-utils-window-buffer-func)
-      (defalias (intern "chin-bw-utils-window-buffer-func")
+    (unless (fboundp 'base-sidebar-window-buffer-func)
+      (defalias (intern "base-sidebar-window-buffer-func")
         (function (lambda (&rest _)
                     (add-hook 'window-buffer-change-functions
-                              #'chin-bw-utils-buffer-change-do-functions)))))
+                              #'base-sidebar-buffer-change-do-functions)))))
 
-    (unless (fboundp 'chin-bw-utils-window-selection-func)
-      (defalias (intern "chin-bw-utils-window-selection-func")
+    (unless (fboundp 'base-sidebar-window-selection-func)
+      (defalias (intern "base-sidebar-window-selection-func")
         (function (lambda (&rest _)
-                    (chin-bw-utils-window-buffer-func)
-                    (chin-bw-utils-buffer-change-do-functions)))))
+                    (base-sidebar-window-buffer-func)
+                    (base-sidebar-buffer-change-do-functions)))))
 
-    (unless (member funcname chin-bw-utils-buffer-change-functions)
-      (push funcname chin-bw-utils-buffer-change-functions))
+    (unless (member funcname base-sidebar-buffer-change-functions)
+      (push funcname base-sidebar-buffer-change-functions))
 
     (add-hook 'window-selection-change-functions
-              #'chin-bw-utils-window-selection-func)))
+              #'base-sidebar-window-selection-func)))
 
-(defun chin-bw-utils-select-window ()
+(defun base-sidebar-select-window ()
   (interactive)
   (let ((normal-window-list)
         (window-list-size)
@@ -60,7 +60,7 @@
                   (key)
                   (key-wins nil))
               (dolist (win normal-window-list)
-                (setq key (nth loop chin-bw-utils-key-set))
+                (setq key (nth loop base-sidebar-key-set))
                 (push (list key win) key-wins)
                 (select-window win)
                 (let ((ov (make-overlay (window-start) (1+ (window-start)))))
@@ -80,16 +80,16 @@
     (when selected-window (select-window selected-window))
     selected-window))
 
-(defun chin-bw-utils--set-buffer ()
+(defun base-sidebar--set-buffer ()
   (when (buffer-file-name)
-    (setq chin-bw-utils-buffer-last-file-buffer (current-buffer))))
+    (setq base-sidebar-buffer-last-file-buffer (current-buffer))))
 
-(defun chin-bw-utils-check-side (&optional window)
+(defun base-sidebar-check-side (&optional window)
   (let ((win (if window window (selected-window))))
     (if (window-parameter win 'window-side)
         t nil)))
 
-(chin-bw-utils-buffer-change-hook-push
- 'chin-bw-utils--set-buffer)
+(base-sidebar-buffer-change-hook-push
+ 'base-sidebar--set-buffer)
 
-(provide 'chin-bw-utils)
+(provide 'base-sidebar)

@@ -1,4 +1,5 @@
 (require 'speedbar)
+(require 'project)
 
 ;; Customizations
 (defgroup speed-sidebar nil
@@ -95,7 +96,7 @@ This only takes effect if `speed-sidebar-use-custom-font' is true."
     (speed-sidebar--set-font)
     (speed-sidebar--set-mode-line)
     (speed-sidebar--override-keys)
-    (chin-bw-utils-buffer-change-hook-push 'speed-sidebar-refresh-buffer)))
+    (base-sidebar-buffer-change-hook-push 'speed-sidebar-refresh-buffer)))
 
 ;;;###autoload
 (defun speed-sidebar-toggle-sidebar ()
@@ -161,13 +162,15 @@ buffer if buffer has a window attached to it."
                                   (window-list))))
       (if window-buffer-exists
           (select-window window-buffer-exists)
-        (if (chin-bw-utils-select-window)
+        (if (base-sidebar-select-window)
             (switch-to-buffer buf)
           (ibuffer-visit-buffer buf))))))
 
 (defun speed-sidebar--override-keys ()
   (let ((ori-fun (keymap-lookup speedbar-file-key-map "RET")))
     (define-key speedbar-file-key-map (kbd "M-RET") ori-fun))
+  (define-key speedbar-file-key-map (kbd "<mouse-1>") #'speed-sidebar-visit-file)
+  (define-key speedbar-file-key-map (kbd "<mouse-2>") #'speed-sidebar-visit-file)
   (define-key speedbar-file-key-map (kbd "RET") #'speed-sidebar-visit-file)
   (define-key speedbar-file-key-map (kbd "<return>") #'speed-sidebar-visit-file))
 
@@ -205,7 +208,7 @@ buffer if buffer has a window attached to it."
         (when speed-sidebar-selected-line-overlay
           (delete-overlay speed-sidebar-selected-line-overlay))
         (setq speed-sidebar-selected-line-overlay
-              (make-overlay (line-beginning-position) (line-end-position)))
+              (make-overlay (line-beginning-position) (1+ (line-end-position))))
         (overlay-put speed-sidebar-selected-line-overlay
                      'face 'speed-sidebar-selected-face)
         (beginning-of-line)
@@ -214,8 +217,11 @@ buffer if buffer has a window attached to it."
 (defun speed-sidebar--find-root ()
   "Find the project root of current file, which should as
 the default directory of speed-sidebar buffer"
-  (if-let ((vc-dir (vc-root-dir)))
-      vc-dir
+  (if-let* ((pc (project-current))
+            (dir (if (fboundp 'project-root)
+                    (project-root pc)
+                  (car (with-no-warnings (project-roots pc))))))
+      dir
     (expand-file-name default-directory)))
 
 (defun speed-sidebar--buffer (&optional f)
