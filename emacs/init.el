@@ -7,8 +7,14 @@
 ;;; Package Settings
 (require 'package)
 (setq-default tsinghua-mirror
-              '(("gnu"   . "https://mirrors.tuna.tsinghua.edu.cn/elpa/gnu/")
-                ("melpa" . "https://mirrors.tuna.tsinghua.edu.cn/elpa/melpa/")))
+              '(("gnu"   . "https://mirrors.bfsu.edu.cn/elpa/gnu/")
+                ("melpa" . "https://mirrors.bfsu.edu.cn/elpa/melpa/")))
+
+
+(add-to-list 'package-archives
+             '("nongnu" . "https://elpa.nongnu.org/nongnu/"))
+
+
 
 (setq package-archives tsinghua-mirror)
 
@@ -50,7 +56,7 @@
         (package-install p)))))
 
 (chin/load-other-file "point-stack.el")
-(chin/load-other-file "chin-bw-utils.el")
+(chin/load-other-file "base-sidebar.el")
 (chin/load-other-file "org-static-blog.el")
 (chin/load-other-file "ibuffer-sidebar.el")
 (chin/load-other-file "speed-sidebar.el")
@@ -264,22 +270,24 @@
 
 ;; Org-mode settings
 (require 'org)
-(setq
- ;; Edit settings
- ;; org-auto-align-tags nil
- org-tags-column 0
- org-catch-invisible-edits 'show-and-error
- org-special-ctrl-a/e t
- org-insert-heading-respect-content t
+(setq org-special-ctrl-a/e t
+      ;; Edit settings
+      ;; org-auto-align-tags nil
+      org-tags-column 0
+      org-catch-invisible-edits 'show-and-error
 
- org-adapt-indentation t
- org-hide-leading-stars t
- ;; org-odd-levels-only t
+      ;; org-insert-heading-respect-content t
 
- ;; Org styling, hide markup etc.
- org-hide-emphasis-markers nil
- org-pretty-entities t
- org-ellipsis "...")
+      org-adapt-indentation t
+      org-hide-leading-stars t
+      ;; org-odd-levels-only t
+
+      ;; Org styling, hide markup etc.
+      org-hide-emphasis-markers nil
+      org-pretty-entities t
+      org-ellipsis "..."
+
+      org-confirm-babel-evaluate nil)
 
 ;; Agenda styling
 (setq org-log-done 'time)
@@ -296,6 +304,15 @@
                                        (org-verbatim (:family ,mono-font) org-verbatim)
                                        (org-block (:family ,mono-font) org-block)
                                        (org-block-begin-line (:family ,mono-font) org-block)))))
+
+(setq org-plantuml-exec-mode 'plantuml)
+;; https://orgmode.org/worg/org-contrib/babel/languages/ob-doc-plantuml.html
+(org-babel-do-load-languages
+ 'org-babel-load-languages
+ '((plantuml . t)))
+
+(add-to-list
+ 'org-src-lang-modes '("plantuml" . plantuml))
 
 (defvar chin/org-managed-files "~/files/docs/org")
 
@@ -536,6 +553,29 @@ If popup is focused, kill it."
 
 (global-set-key (kbd "M-=") 'chin/toggle-ansi-term)
 
-;;(require 'epa-file)
-;;(epa-file-enable)
-;;(setq epa-file-select-keys nil)
+
+
+(add-hook 'prog-mode-hook 'diff-hl-mode)
+(add-hook 'org-mode-hook 'diff-hl-mode)
+
+
+(with-eval-after-load 'project
+  (add-to-list 'project-vc-ignores ".ccls-cache/")
+  (add-to-list 'project-vc-ignores "node_modules")
+  (defvar project-language-aware-root-files
+    '("tsconfig.json"
+      "package.json"
+      "Cargo.toml"
+      "compile_commands.json"
+      "project.clj"
+      "compile_flags.txt"))
+  (defun project-try-language-aware (dir)
+    "Find a super-directory of DIR containing a root file."
+    (let ((dir (cl-loop for pattern in project-language-aware-root-files
+                        for result = (locate-dominating-file dir pattern)
+                        if result return result)))
+      (and dir (cons 'language-aware dir))))
+  (cl-defmethod project-root ((project (head language-aware)))
+    (cdr project))
+  (add-hook 'project-find-functions
+	        #'project-try-language-aware))
