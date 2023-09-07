@@ -15,7 +15,6 @@
     (org-show-entry)
     (show-children)))
 
-
 (defun chin/todo (directory)
   (interactive)
   (when-let ((buf (find-file (expand-file-name "todo.org" directory))))
@@ -33,3 +32,47 @@
 
 (global-set-key (kbd "<f6>") (lambda () (interactive) (chin/todo chin/writer-dir)))
 (global-set-key (kbd "<f5>") (lambda () (interactive) (chin/todo "~/extra/firm/")))
+
+(defun chin/today-file (directory)
+  (interactive)
+  (let* ((ct (current-time))
+         (today (format-time-string "%Y-%m/%d" ct))
+         (dir (expand-file-name today directory))
+         (time
+          (completing-read (concat "Timebased file (" dir "): ")
+                           (if (file-exists-p dir) (directory-files dir) nil)
+                           nil
+                           nil
+                           (format-time-string "t%H%M%S" ct)))
+         (ct-file (expand-file-name time dir)))
+    (mkdir dir t)
+    (find-file ct-file)))
+
+(global-set-key (kbd "C-<f6>") (lambda () (interactive) (chin/today-file "~/extra/tmps")))
+(global-set-key (kbd "C-<f5>") (lambda () (interactive) (chin/today-file "~/extra/firm/days/")))
+
+
+(defun chin/number-items ()
+  (interactive)
+  (save-excursion
+    (goto-char (point-min))
+    (replace-regexp "\\(^[[:space:]]*\\)（?\\([0-9]+\\)）" "\\1\\2. ")
+    (goto-char (point-min))
+    (replace-regexp "\\(^[[:space:]]*[0-9]+\\)、" "\\1. ")
+    (goto-char (point-min))
+    (replace-regexp "\\(^[[:space:]]*[0-9]+\\)，" "\\1. ")
+    (goto-char (point-min))
+    (replace-regexp "\\(^[[:space:]]*[0-9]+\\))" "\\1. ")
+    (goto-char (point-min))
+    (replace-regexp "\\(^[[:space:]]*[0-9a-zA-Z]+\.\\)[ ]*" "\\1 ")
+    (goto-char (point-min))
+    (replace-regexp "\\(^[[:space:]]*\\)\\-+[[:space:]]*" "\\1 - ")))
+
+
+(defun uijm ()
+  (interactive)
+  (insert (format-time-string "%y-%m-%d %H:%M:%S")))
+
+(defun uijm-file ()
+  (interactive)
+  (insert (format-time-string "%y%m%d_%H%M%S")))

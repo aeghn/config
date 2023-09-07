@@ -52,7 +52,7 @@
     (package-refresh-contents)
     (dolist (p packages)
       (if (package-installed-p p)
-          (package-update p)
+          (package-upgrade p)
         (package-install p)))))
 
 (chin/load-other-file "point-stack.el")
@@ -72,6 +72,7 @@
 (defconst chin/is-android (string-match-p "-linux-android$" system-configuration))
 
 ;; Windows-nt specific settings
+;; windows-loader
 (when chin/is-windows
   (let ((msys2root "C:\\msys64\\"))
     (setenv "WENV" "D:\\wenv")
@@ -104,14 +105,21 @@
 (setq use-dialog-box nil)
 (setq use-short-answers t)
 
+;; Avoid the ask, just visit the direct file.
+(setq vc-follow-symlinks nil)
+
 ;; Scrolling Settings
 (scroll-bar-mode -1)
 (setq scroll-step           1
       scroll-conservatively 10000)
+(pixel-scroll-precision-mode 1)
+(setq pixel-scroll-precision-interpolate-page t)
+(defalias 'scroll-up-command 'pixel-scroll-interpolate-down)
+(defalias 'scroll-down-command 'pixel-scroll-interpolate-up)
+
 
 ;; Disable the annoying bell.
 (setq ring-bell-function 'ignore)
-(pixel-scroll-precision-mode t)
 
 ;; Theme Settings
 (load-theme 'modus-operandi-deuteranopia)
@@ -147,29 +155,30 @@
             (funcall first-font-fun prefered-serif-font-list prefered-serif-font))
       (set-fontset-font "fontset-default" '(#xe000 . #xf8ff) "nrss")
       (set-face-attribute 'default nil
-                          :family prefered-mono-font :height 120 :weight 'Regular)
+                          :family prefered-mono-font :height 108 :weight 'Regular)
       (set-face-attribute 'mode-line nil
                           :family prefered-serif-font :height 120 :weight 'Bold)
       (set-face-attribute 'mode-line-inactive nil
                           :family prefered-serif-font :height 120 :weight 'Regular)
 
       (setq ibuffer-sidebar-use-custom-font t)
-      (setq ibuffer-sidebar-face `(:family "FreeSans" :height 120))
-      (setq speed-sidebar-face `(:family "FreeSans" :height 120)))))
+      (setq ibuffer-sidebar-face `(:family "Archivo" :height 120))
+      (setq speed-sidebar-face `(:family "Archivo" :height 120)))))
 
 ;; Toolbar Settings
-(tool-bar-mode 1)
+(tool-bar-mode -1)
 (setq tool-bar-button-margin 8
       tool-bar-images-pixel-height 100)
 
-(defvar chin/show-tool-bar nil)
+(defvar chin/show-tool-bar -1)
 (defun chin/replace-tool-bar (&optional not-show)
   (let ((fw (frame-native-width))
         (fh (frame-native-height))
         (tp (frame-parameter (selected-frame) 'tool-bar-position))
         (pos))
-    (when (or not-show)
-      (setq chin/show-tool-bar nil))
+    ;; (when (or not-show (not chin/show-tool-bar))
+    (setq chin/show-tool-bar nil)
+    ;; )
     (cond ((not chin/show-tool-bar) (when tool-bar-mode (tool-bar-mode -1)))
           ((< fh 500) (when tool-bar-mode (tool-bar-mode -1)))
           ((< (* fh 5) (* fw 3))
@@ -240,9 +249,9 @@
 (global-set-key (kbd "C-x <right>") 'ibuffer-sidebar-next-buffer)
 (global-set-key (kbd "C-x C-<left>") 'ibuffer-sidebar-previous-buffer)
 (global-set-key (kbd "C-x C-<right>") 'ibuffer-sidebar-next-buffer)
-(global-set-key (kbd "M-p") 'ibuffer-sidebar-previous-buffer)
-(global-set-key (kbd "M-n") 'ibuffer-sidebar-next-buffer)
-(global-set-key (kbd "M-j") 'ibuffer-sidebar-select-window)
+;; (global-set-key (kbd "M-p") 'ibuffer-sidebar-previous-buffer)
+;; (global-set-key (kbd "M-n") 'ibuffer-sidebar-next-buffer)
+(global-set-key (kbd "M-j") 'base-sidebar-select-window)
 
 ;; Speed Sidebar Settings
 (global-set-key (kbd "M-l") 'speed-sidebar-focus-or-toggle)
@@ -270,6 +279,7 @@
 
 ;; Org-mode settings
 (require 'org)
+(require 'org-tempo)
 (setq org-special-ctrl-a/e t
       ;; Edit settings
       ;; org-auto-align-tags nil
@@ -278,6 +288,8 @@
 
       ;; org-insert-heading-respect-content t
 
+      org-src-tab-acts-natively nil
+      
       org-adapt-indentation t
       org-hide-leading-stars t
       ;; org-odd-levels-only t
@@ -285,9 +297,43 @@
       ;; Org styling, hide markup etc.
       org-hide-emphasis-markers nil
       org-pretty-entities t
-      org-ellipsis "..."
+      org-ellipsis " ▾ "
+
+      org-export-preserve-breaks t
 
       org-confirm-babel-evaluate nil)
+
+;; Make deletion(obsolote) text foreground with dark gray.
+(add-to-list 'org-emphasis-alist
+             '("+" (:foreground "dark gray"
+                                :strike-through t)))
+;; Make code style around with box.
+(add-to-list 'org-emphasis-alist
+             '("~" (:box (:line-width 1
+                                      :color "grey75"
+                                      :style released-button))))
+
+(require 'org-superstar)
+(setq org-superstar-leading-bullet ?\s)
+(setq org-superstar-headline-bullets-list '(?㊠))
+(setq org-superstar-item-bullet-alist
+      '((?* . ?▷)
+        (?+ . ?◁)
+        (?- . ?∎)))
+
+(custom-set-faces
+ '(org-level-1 ((t (:weight normal :height 1.2))))
+ '(org-level-2 ((t (:weight normal :height 1.0))))
+ '(org-level-3 ((t (:weight normal :height 1.0))))
+ '(org-level-4 ((t (:weight normal :height 1.0))))
+ '(org-level-5 ((t (:weight normal :height 1.0))))
+ '(org-level-6 ((t (:weight normal :height 1.0))))
+ '(org-level-8 ((t (:weight normal))))
+ '(org-block-begin-line ((t (:height 0.8 :slant italic))))
+ '(org-block-end-line ((t (:inherit 'org-block-begin-line))))
+ '(org-superstar-header-bullet ((t (:weight normal :foreground "#aa0000" :height 1.0))))
+ '(org-superstar-item ((t (:weight normal :foreground "#4466ee" :height 1.0)))))
+;; ㊟
 
 ;; Agenda styling
 (setq org-log-done 'time)
@@ -298,18 +344,27 @@
   (interactive)
   (let ((variable-font "Clear Han Serif")
         (mono-font "IBM Plex Mono"))
-    (setq-local truncate-lines t
-                face-remapping-alist `((default (:family ,variable-font) variable-pitch)
+    (setq-local face-remapping-alist `((default (:family ,variable-font) variable-pitch)
                                        (org-code (:family ,mono-font) org-code)
                                        (org-verbatim (:family ,mono-font) org-verbatim)
                                        (org-block (:family ,mono-font) org-block)
-                                       (org-block-begin-line (:family ,mono-font) org-block)))))
+                                       (org-block-begin-line (:family ,mono-font) org-block)))
+    (setq line-spacing 0.03))
+  (org-superstar-mode 1)
+  ;; (org-visual-indent-mode)
+  (olivetti-mode)
+  (define-key org-mode-map (kbd "M-h") 'chin/delete-blanks))
+
+;; Copied from https://github.com/lijigang/100-questions-about-orgmode
 
 (setq org-plantuml-exec-mode 'plantuml)
 ;; https://orgmode.org/worg/org-contrib/babel/languages/ob-doc-plantuml.html
 (org-babel-do-load-languages
  'org-babel-load-languages
- '((plantuml . t)))
+ '((plantuml . t)
+   (python . t)
+   (rust . t)
+   (dot . t)))
 
 (add-to-list
  'org-src-lang-modes '("plantuml" . plantuml))
@@ -328,7 +383,7 @@
          (full-result (expand-file-name result chin/org-managed-files)))
     (if (file-exists-p full-result)
         (find-file full-result)
-      (find-file (expand-file-name (concat date "-" result ".org") chin/org-managed-files)))))
+      (find-file (expand-file-name (concat date "-" (replace-regexp-in-string ".org$" "" result) ".org") chin/org-managed-files)))))
 
 
 (add-hook 'org-mode-hook 'chin/org-hook-function)
@@ -380,6 +435,7 @@
 ;; Consult Settings
 (global-set-key (kbd "M-3") 'consult-ripgrep)
 (global-set-key (kbd "M-4") 'consult-buffer)
+(global-set-key (kbd "M-s l") 'consult-line)
 
 ;; History files
 ;; Recentf Settings
@@ -510,7 +566,8 @@ If popup is focused, kill it."
 (deactivate-input-method)
 (put 'erase-buffer 'disabled nil)
 
-(defvar chin/cangjie-fancha-file "/home/chin/files/docs/cangjie.fancha")
+(defvar chin/cangjie-fancha-file "/home/chin/files/docs/others/cangjie.fancha")
+(defvar chin/cangjie-fancha-file-hist "/home/chin/files/docs/others/cangjie.fancha.history")
 (when chin/is-windows
   (setq chin/cangjie-fancha-file "e:/files/docs/cangjie.fancha"))
 (defun chin/cangjie-fancha ()
@@ -521,12 +578,27 @@ If popup is focused, kill it."
                  (buffer-substring-no-properties (point-min) (point-max)))
                "\r?\n"
                t)))
-    (completing-read "Cangjie: " list)))
+    (let ((option (completing-read "Cangjie: " list)))
+      (write-region (concat (format-time-string "%Y-%m-%d %H:%M:%S | ") option "\n") nil chin/cangjie-fancha-file-hist t))))
+
+(global-set-key (kbd "C-;") 'chin/cangjie-fancha)
 
 ;; Eglot
 (require 'eglot)
 (define-key eglot-mode-map (kbd "M-RET") 'eglot-code-actions)
 (add-hook 'rust-mode-hook 'eglot-ensure)
+
+(custom-set-variables
+ '(help-at-pt-timer-delay 0.1)
+ '(help-at-pt-display-when-idle '(flymake-diagnostic)))
+(add-hook 'eglot-managed-mode-hook
+          (lambda ()
+            ;; Show flymake diagnostics first.
+            (setq eldoc-documentation-functions
+                  (cons #'flymake-eldoc-function
+                        (remove #'flymake-eldoc-function eldoc-documentation-functions)))
+            ;; Show all eldoc feedback.
+            (setq eldoc-documentation-strategy #'eldoc-documentation-compose)))
 
 (require 'corfu)
 (setq corfu-auto t)
@@ -549,15 +621,19 @@ If popup is focused, kill it."
       (delete-window window)
     (setq window (split-window-below (- (frame-height) 12) (frame-root-window)))
     (select-window window)
-    (ansi-term "/bin/zsh" name)))
+    (if buffer
+        (switch-to-buffer buffer)
+      (ansi-term "/bin/zsh" name))))
 
 (global-set-key (kbd "M-=") 'chin/toggle-ansi-term)
-
-
+(require 'term)
+(define-key term-raw-map (kbd "M-=") 'chin/toggle-ansi-term)
 
 (add-hook 'prog-mode-hook 'diff-hl-mode)
 (add-hook 'org-mode-hook 'diff-hl-mode)
-
+(add-hook 'org-mode-hook 'visual-line-mode)
+(require 'iscroll)
+(add-hook 'org-mode-hook 'iscroll-mode)
 
 (with-eval-after-load 'project
   (add-to-list 'project-vc-ignores ".ccls-cache/")
@@ -578,4 +654,38 @@ If popup is focused, kill it."
   (cl-defmethod project-root ((project (head language-aware)))
     (cdr project))
   (add-hook 'project-find-functions
-	        #'project-try-language-aware))
+            #'project-try-language-aware))
+
+(require 'tramp)
+
+(require 'savehist)
+(savehist-mode)
+
+
+(with-eval-after-load 'ox-latex
+  ;; http://orgmode.org/worg/org-faq.html#using-xelatex-for-pdf-export
+  ;; latexmk runs pdflatex/xelatex (whatever is specified) multiple times
+  ;; automatically to resolve the cross-references.
+  (setenv "TEXMFHOME" "/home/chin/Repos/tex_config/texmfhome")
+  (setq org-latex-pdf-process '("xelatex -interaction=batchmode -shell-escape -f %f")
+        org-latex-remove-logfiles t
+        org-latex-logfiles-extensions '("aux" "bcf" "blg" "fdb_latexmk" "fls"
+                                        "figlist" "idx" "log" "nav" "out" "ptc"
+                                        "run.xml" "snm" "toc" "vrb" "xdv"))
+
+  (add-to-list 'org-latex-classes
+               '("elegantpaper"
+                 "\\documentclass[lang=cn]{elegantpaper}
+                  \\bigskip
+                 [NO-DEFAULT-PACKAGES]
+                 [PACKAGES]
+                 [EXTRA]"
+                 ("\\section{%s}" . "\\section*{%s}")
+                 ("\\subsection{%s}" . "\\subsection*{%s}")
+                 ("\\subsubsection{%s}" . "\\subsubsection*{%s}")
+                 ("\\paragraph{%s}" . "\\paragraph*{%s}")
+                 ("\\subparagraph{%s}" . "\\subparagraph*{%s}")))
+  (setq org-latex-listings 'minted)
+  (add-to-list 'org-latex-packages-alist '("" "minted")))
+
+(require 'ox-latex)
