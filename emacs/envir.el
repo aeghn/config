@@ -13,7 +13,7 @@
       org-static-blog-use-preview t)
 
 (setq org-static-blog-page-header
-      "<meta name=\"author\" content=\"Aeghn\">
+      "<meta name=\"author\" content=\"wangzh\">
 <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">
 <link href= \"static/style.css\" rel=\"stylesheet\" type=\"text/css\" />
 <script src=\"static/toc.js\" type=\"text/javascript\" defer></script>
@@ -22,22 +22,30 @@
 ;; This preamble is inserted at the beginning of the <body> of every page:
 ;;   This particular HTML creates a <div> with a simple linked headline
 (setq org-static-blog-page-preamble
-      "<div id=\"blog-nav\">
+      "<div style=\"text-align: center;\">
+  <img class=\"banner\" src=\"static/xuan.png\">
+</div>
+<div id=\"blog-nav\">
   <a href=\"/\">Index</a>
   <span> </span>
   <a href=\"/tags.html\">Tags</a>
-<div style=\"text-align: center;\">
-  <img class=\"banner\" src=\"static/xuan.png\">
 </div>
-</div>")
+")
 
 ;; This postamble is inserted at the end of the <body> of every page:
 ;;   This particular HTML creates a <div> with a link to the archive page
 ;;   and a licensing stub.
 (setq org-static-blog-page-postamble
-      "\n<div id=\"blog-tail\">
-<div style=\"text-align: center;\">
-<img class=\"banner\" src=\"static/huang.png\">
-</div>
-<center><span> Powered by Org-mode and</span> <a href=\"https://github.com/aeghn/org-static-blog\"> a fork</a><span> of</span><a href=\"https://github.com/bastibe/org-static-blog\"> org-static-blog</a> </center>
+      "<div id=\"blog-tail\">
+<center>
+<span> Powered by Org-mode and
+</span>
+ <a href=\"https://github.com/aeghn/org-static-blog\"> a fork
+</a>
+<span> of
+</span>
+<a href=\"https://github.com/bastibe/org-static-blog\"> org-static-blog
+</a>
+ </center>
+<div style=\"text-align: center;\"> <img class=\"banner\" src=\"static/huang.png\"> </div>
 </div>")
