@@ -1,0 +1,11 @@
+
+* My System Config
+  Some previews.
+** Editor
+   [[file:previews/editor.png]]
+** Browser(Firefox)
+   [[file:previews/browser.png]]
+** Terminal
+   [[file:previews/terminal.png]]
+** Launcher and Dictionary
+   [[file:previews/launcher.png]]
