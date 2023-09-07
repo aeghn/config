@@ -20,17 +20,22 @@ prompt_chin_head() {
     pr_dir='%B%F{green}%~%f%b'
     pr_name='%B%F{yellow}%n%f%b'
 
+
     printf  "%s"  "${pr_state}${pr_bgpg}${pr_name} at ${pr_host} in ${pr_dir}"
 }
 
 prompt_chin_tail() {
     setopt localoptions noxtrace nowarncreateglobal
-    local pr_prompt pr_post
+    local pr_prompt pr_post pr_al
 
     pr_prompt='%F{red}%(!,%K{red}#%k,$) '
     pr_post='%b%f%k'
 
-    echo "${prompt_newline}${pr_prompt}${pr_post}"
+    if [ -n "$CONDA_PROMPT_MODIFIER" ]; then
+        pr_al="${prompt_newline}> C${CONDA_PROMPT_MODIFIER}"
+    fi
+
+    echo "${pr_al}${prompt_newline}${pr_prompt}${pr_post}"
 }
 
 ## Extended prompt part: git

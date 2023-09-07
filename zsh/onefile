@@ -1,7 +1,7 @@
 autoload -U add-zsh-hook
 
 ## Aliases
-alias ls='ls --color=auto'
+alias ls='ls --color=auto --hyperlink=auto'
 alias rga="rg --path-separator // --no-ignore-files --no-ignore --hidden -i"
 alias rm='rm -I'
 alias mpa='mpv --no-video'
@@ -98,12 +98,12 @@ add-zsh-hook -Uz chpwd osc7
 chin_get_history_pwd_file() {
     (tac "${DIR_HISTORY_FILE}"; printf "$PWD/%s\n" *) \
         | awk 'arr[$0]++ == 0' \
-        | FZF_DEFAULT_OPTS="--height ${FZF_TMUX_HEIGHT:-40%} --reverse $FZF_DEFAULT_OPTS $FZF_ALT_C_OPTS $CHIN_FZF_DIR_OPTS" fzf +m
+        | FZF_DEFAULT_OPTS="--height ${FZF_TMUX_HEIGHT:-40%} --reverse $FZF_DEFAULT_OPTS $FZF_ALT_C_OPTS $CHIN_FZF_DIR_OPTS" fzf -q "$1"
 }
 
 j() {
     local dir
-    local opt="$(chin_get_history_pwd_file | sed -r 's/\r?\n?$//g')"
+    local opt="$(chin_get_history_pwd_file "$1" | sed -r 's/\r?\n?$//g')"
 
     if [[ -z "$opt" ]]; then
         return 0
@@ -122,6 +122,8 @@ j() {
     cd "$dir"
     unset dir opt
 }
+
+[ -f /usr/share/fzf/key-bindings.zsh ] && . /usr/share/fzf/key-bindings.zsh
 
 ## FRAME
 fpath=("$CHIN_ZSH_CONFIG_DIR/functions" "$fpath[@]")
@@ -161,7 +163,7 @@ function xterm_title_preexec () {
     [[ "$TERM" == 'screen'* ]] && { print -Pn -- '\e_\005{g}%n\005{-}@\005{m}%m\005{-} \005{B}%~\005{-} %# ' && print -n -- "${(q)1}\e\\"; }
 }
 
-if [[ "$TERM" == (alacritty|screen*|xterm*|rxvt*|tmux*|putty*|konsole*|gnome*) ]]; then
+if [[ "$TERM" == (foot*|alacritty|screen*|xterm*|tmux*|putty*|konsole*|gnome*) ]]; then
     add-zsh-hook -Uz precmd xterm_title_precmd
     add-zsh-hook -Uz preexec xterm_title_preexec
 fi
