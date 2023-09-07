@@ -357,8 +357,7 @@ N in the table of contents. "
 
 (defun get-org-date ()
   "Get date string like `<2022-08-16 Tue>'"
-  (with-temp-buffer
-    (org-time-stamp nil)))
+  (with-temp-buffer (org-time-stamp nil)))
 
 (defun read-file-lines (filename)
   (if (file-exists-p filename)
@@ -370,7 +369,7 @@ N in the table of contents. "
        t)
     '()))
 
-(defun copy-to-file-even-mkdir (filepath target)
+(defun copy-to-file-safe (filepath target)
   (let ((target-dir (file-name-parent-directory target)))
     (when (file-exists-p filepath)
       (unless (file-directory-p target-dir)
@@ -378,7 +377,8 @@ N in the table of contents. "
       (copy-file filepath target t t))))
 
 (defun org-static-blog--get-files-dir ()
-  (concat-to-dir org-static-blog-publish-directory org-static-blog-files-directory-name))
+  (expand-file-name org-static-blog-files-directory-name
+                    org-static-blog-publish-directory))
 
 (defun org-static-blog-template (tTitle tContent &optional tDescription)
   "Create the template that is used to generate the static pages."
@@ -421,6 +421,10 @@ Depends on org-static-blog-langcode and org-static-blog-texts."
       (concat "[" (symbol-name text-id) ":" org-static-blog-langcode "]"))))
 
 
+(defun org-static-blog-publish-force ()
+  (interactive)
+  (org-static-blog-publish t))
+
 ;;;###autoload
 (defun org-static-blog-publish (&optional force-render)
   "Render all blog posts, the index, archive, tags, and RSS feed.
@@ -452,8 +456,9 @@ unconditionally."
 
 (defun org-static-blog-matching-publish-filename (post-filename)
   "Generate HTML file name for POST-FILENAME."
-  (concat-to-dir org-static-blog-publish-directory
-                 (org-static-blog-get-post-public-path post-filename)))
+  (expand-file-name
+   (org-static-blog-get-post-public-path post-filename)
+   org-static-blog-publish-directory))
 
 (defun org-static-blog-get-post-filenames ()
   "Returns a list of all posts."
@@ -618,7 +623,7 @@ Preamble and Postamble are excluded, too."
 For example, when `org-static-blog-publish-url` is set to 'https://example.com/'
 and `relative-url` is passed as 'archive.html' then the function
 will return 'https://example.com/archive.html'."
-  (concat-to-dir org-static-blog-publish-url relative-url))
+  (concat (file-name-as-directory org-static-blog-publish-url) relative-url))
 
 (defun org-static-blog-get-post-url (post-filename)
   "Returns absolute URL to the published POST-FILENAME.
@@ -730,10 +735,12 @@ The index, archive, tags, and RSS feed are not updated."
              (buffer-exists (org-static-blog-file-buffer post-filename))
              result)
         (with-temp-buffer
+          (setq default-directory
+                (file-name-directory
+                 (file-truename post-filename)))
           (if buffer-exists
               (insert-buffer-substring buffer-exists)
             (insert-file-contents post-filename))
-          (org-static-blog--replace-and-place-attachments post-filename)
           (org-mode)
           (goto-char (point-min))
           (org-map-entries
@@ -745,6 +752,7 @@ The index, archive, tags, and RSS feed are not updated."
           (switch-to-buffer current-buffer))
         (with-temp-buffer
           (insert result)
+          (org-static-blog--place-attachments post-filename)
           (org-static-blog--embed-latex-previews)
           (buffer-string))))))
 
@@ -767,7 +775,7 @@ posts as full text posts."
     (setq post-filenames (sort post-filenames (lambda (x y) (time-less-p (org-static-blog-get-date x)
                                                                          (org-static-blog-get-date y)))))
     (org-static-blog-assemble-multi-postitem-page
-     (concat-to-dir org-static-blog-publish-directory org-static-blog-index-file)
+     (expand-file-name org-static-blog-index-file org-static-blog-publish-directory)
      post-filenames
      org-static-blog-index-front-matter)))
 
@@ -784,33 +792,38 @@ Posts are sorted in descending time."
      (when front-matter front-matter)
      (apply 'concat (mapcar 'org-static-blog-get-post-item post-filenames))))))
 
-(defun org-static-blog--replace-and-place-attachments (post-filename)
+(defun org-static-blog--place-attachments (post-filename)
   (goto-char (point-min))
-  (while (re-search-forward "\\[\\[\\(.*\\)\\]\\]" nil t)
+  (while (re-search-forward "<img src=\"\\([^\"]*\\)\"" nil t)
     (let ((match (match-string 1))
-          (attach-file-path)
-          (attach-file-pure-name)
-          (attach-file-format-name)
-          (post-filedir (file-name-parent-directory post-filename)))
+          (post-filedir (file-name-parent-directory post-filename))
+          (path-func (lambda (x) (if (file-exists-p x) x nil)))
+          attach-file-path
+          attach-file-pure-name
+          attach-file-format-name)
       (setq match (replace-regexp-in-string "^file:" "" match))
       (setq attach-file-path
-            (cond ((file-exists-p match) match)
-                  ((file-exists-p (concat-to-dir post-filedir match))
-                   (concat-to-dir post-filedir match))
-                  (t nil)))
+            (or (funcall path-func match)
+                (funcall path-func (expand-file-name match post-filedir))
+                (funcall path-func (expand-file-name match
+                                                     (file-name-parent-directory
+                                                      (file-truename post-filename))))))
       (when attach-file-path
         (setq attach-file-pure-name
               (file-name-nondirectory attach-file-path))
         (setq attach-file-format-name
               (concat
-               (file-name-sans-extension (org-static-blog-get-post-public-path post-filename))
-               "-" attach-file-pure-name))
-        (replace-match (format "[[./%s/%s]]"
+               (file-name-sans-extension
+                (org-static-blog-get-post-public-path post-filename))
+               "-"
+               attach-file-pure-name))
+        (replace-match (format "<img src=\"./%s/%s\""
                                org-static-blog-files-directory-name
                                attach-file-format-name))
-        (copy-to-file-even-mkdir
+        (copy-to-file-safe
          attach-file-path
-         (concat-to-dir (org-static-blog--get-files-dir) attach-file-format-name))))))
+         (expand-file-name attach-file-format-name
+                           (org-static-blog--get-files-dir)))))))
 
 (defun org-static-blog-post-preamble (post-filename)
   "Returns the formatted date and headline of the post.
@@ -881,14 +894,14 @@ archive headline."
                            ((= quotient 3) "三十"))
                      (when (> remainder 0)
                        (elt chinese-numbers remainder))
-                  ))))
+                     ))))
          (result ""))
-      (dolist (digit (split-string year "" t) result)
-        (setq result (concat result (elt chinese-numbers (string-to-number digit)))))
-      (setq result (concat result "年"))
-      (setq result (concat result (funcall conv2 month) "月"))
-      (setq result (concat result (funcall conv2 day) "日"))
-      result))
+    (dolist (digit (split-string year "" t) result)
+      (setq result (concat result (elt chinese-numbers (string-to-number digit)))))
+    (setq result (concat result "年"))
+    (setq result (concat result (funcall conv2 month) "月"))
+    (setq result (concat result (funcall conv2 day) "日"))
+    result))
 
 (defun org-static-blog--prune-items (items)
   "Limit, if needed, the items to be included in an RSS feed."
@@ -899,8 +912,9 @@ archive headline."
 
 (defun org-static-blog--rss-filename (&optional tag)
   "Full path to the RSS file for the given TAG."
-  (concat-to-dir org-static-blog-publish-directory
-                 (concat tag (when tag "-") org-static-blog-rss-file)))
+  (expand-file-name
+   (concat tag (when tag "-") org-static-blog-rss-file)
+   org-static-blog-publish-directory))
 
 (defun org-static-blog--write-rss (items &optional tag)
   "Generates an RSS file for the given TAG, or for all tags is TAG is nil."
@@ -982,8 +996,8 @@ The HTML content is taken from the rendered HTML post."
   (org-static-blog-assemble-tags-archive)
   (dolist (tag (org-static-blog-get-tag-tree))
     (org-static-blog-assemble-multi-postitem-page
-     (concat-to-dir org-static-blog-publish-directory
-                    (concat "tag-" (downcase (car tag)) ".html"))
+     (expand-file-name (concat "tag-" (downcase (car tag)) ".html")
+                       org-static-blog-publish-directory)
      (cdr tag)
      (concat "<h1 class=\"title\">" (org-static-blog-gettext 'posts-tagged) " \"" (car tag) "\":</h1>")
      (concat (org-static-blog-gettext 'posts-tagged) ": " (car tag)))))
@@ -999,7 +1013,8 @@ The HTML content is taken from the rendered HTML post."
   "Assemble the blog tag archive page.
 The archive page contains single-line links and dates for every
 blog post, sorted by tags, but no post body."
-  (let ((tags-archive-filename (concat-to-dir org-static-blog-publish-directory org-static-blog-tags-file))
+  (let ((tags-archive-filename (expand-file-name org-static-blog-tags-file
+                                                 org-static-blog-publish-directory))
         (tag-tree (org-static-blog-get-tag-tree)))
     (setq tag-tree (sort tag-tree (lambda (x y) (string-greaterp (car y) (car x)))))
     (org-static-blog-with-find-file
@@ -1057,14 +1072,13 @@ only a suggestion; You can choose any other file name if you so
 choose."
   (interactive)
   (let ((title (read-string (org-static-blog-gettext 'title))))
-    (find-file (concat-to-dir
-                (if draft
-                    org-static-blog-drafts-directory
-                  org-static-blog-posts-directory)
+    (find-file (expand-file-name
                 (read-string (org-static-blog-gettext 'filename)
                              (concat (format-time-string "%Y-%m-%d-" (current-time))
-                                     (replace-regexp-in-string "\s" "-" (downcase title))
-                                     ".org"))))
+                                     (replace-regexp-in-string "\s" "-" (downcase title))))
+                (if draft
+                    org-static-blog-drafts-directory
+                  org-static-blog-posts-directory)))
     (insert "#+title: " title "\n"
             "#+date: " (format-time-string "<%Y-%m-%d %H:%M>") "\n"
             "#+description: \n"
