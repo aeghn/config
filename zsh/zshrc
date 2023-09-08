@@ -25,7 +25,7 @@ export CHIN_TODAY_DIR_BASE="$HOME/days/"
 fi
 
 source "$ZSH_DIR/onefile"
-alias fda='NO_COLOR=1 fd -I'
+alias fda='NO_COLOR=1 fd -I --hidden'
 alias rga='rg --no-ignore'
 alias td="mkdir -p \"$CHIN_TODAY_DIR_BASE/$(date +%Y-%m/%d)\" && cd \"$CHIN_TODAY_DIR_BASE/$(date +%Y-%m/%d)\""
 
