@@ -1,0 +1,400 @@
+#!/usr/bin/env bash
+
+set -e
+shopt -s globstar nullglob
+
+DEBUG=true
+DRYRUN=false
+COPY_MODE=false
+DFS_FILE_MODE=false
+
+# CHIN_DOTFILE_ROOT
+
+msg() {
+    echo -e "=> \033[31m$*\033[0m"
+}
+
+msg2() {
+    echo -e "  -> \033[33m$*\033[0m"
+}
+
+debug() {
+    $DEBUG  && echo -e "### \033[36m$*\033[0m"
+}
+
+die() {
+    msg "$*"
+    exit 1
+}
+
+die_if_link() {
+    if [ -L "$1" ]; then
+        msg2 "This file $1 is softlink"
+        exit 1
+    fi
+}
+
+_get_dfs_file() {
+    local dir="$1"
+    while [ "$dir" != "" ]; do
+        [ -f "$dir/.dfs" ] && echo "$dir/.dfs" && return 0
+        dir="${dir%/*}"
+    done
+    return 1
+}
+
+_die_if_not_existed() {
+    if [ ! -e "$1" ]; then
+        msg2 "This file $1($(realpath "$1")) is not existed"
+        exit 1
+    fi
+}
+
+create_dir() {
+    [ -d "${1}" ] || ( msg2 "makdir ${1}"; mkdir -p "${1}" )
+}
+
+_has_mv_perm() {
+    [ -w "${1%/*}" ]
+}
+
+_a_is_link_of_b() {
+    local a="$(realpath "$(readlink "$1" || echo "$1")")"
+    local b="$(realpath "$2")"
+
+    debug "detect is already linked"
+    debug "a: $a"
+    debug "b: $b"
+
+    [ "$a" = "$b" ]
+}
+
+_is_all_dfs_files() {
+    for i in "$@"; do
+        [[ "x$i" =~ .*\.dfs ]] || return 1
+    done
+    return 0
+}
+
+_edit_temp() {
+    local temp="$(mktemp)"
+    echo "$1" > "$temp"
+
+    $EDITOR "$temp" >/dev/tty
+    cat "$temp"
+    rm "$temp"
+}
+
+_read() {
+    printf "%0$1s%s: " " " "$2" >&2
+    local readr
+    read -r readr
+    echo "$readr"
+}
+
+
+
+_store_cp_or_ln() {
+    local copy_mode="$1" # true or false
+    local source="$3"
+    local target="$2"
+    local perm="$4"
+
+    # peremeter check
+    ([ -z "$copy_mode" ] || [ -z "$source" ] || [ -z "$target" ] || [ -z "$perm" ]) && \
+        die "_store_cp_or_ln some peremeter is empty " "\`$@'"
+
+
+    $copy_mode && msg "try to copy ${target} -> ${source}" || msg "try to link ${target} -> ${source}"
+
+    for t in "$target" "$target/${source##*/}"; do
+        if _a_is_link_of_b "$source" "$t"; then
+            msg2 "already linked"
+            _perm_link "$copy_mode" "$t" "$source" "$perm"
+            return
+        fi
+    done
+    
+    die_if_link "${source}"
+    _die_if_not_existed "${source}"
+
+    local only_restore=false
+    if [ -e "$target" ]; then
+        local new_target="${target%/}/${source##*/}"
+        msg2 "$target is already existed"
+        msg2 "  1. skip."
+        msg2 "  2. remove target and relink."
+        msg2 "  3. remove source and relink."
+        msg2 "  4. store to \`$new_target'"
+
+        local ans="$(_read 4 "select one")"
+        case "$ans" in
+            1) return ;;
+            2) rm -r "$target" ;;
+            3) rm -r "$source"
+               only_restore=true
+               ;;
+            4) target="$new_target" ;;
+            *) die "unknown option $*" ;;
+        esac
+    fi
+
+    local target_dir="${target%/*}"
+    create_dir "$target_dir"
+
+    if  $copy_mode ; then
+        msg2 "coping ${source} to ${target}"
+        if $only_restore; then
+            rm -rf "${source}"
+            cp -r "${target}" "${source}"
+        else
+            cp -r "$(realpath "${source}")" "${target}"
+        fi
+    else
+        if ! $only_restore; then
+            msg2 "moving ${source} to ${target}"
+            mv "${source}" "${target}"
+        fi
+        local real_target="$(realpath "${target}")"
+        local real_source="$(realpath --no-symlinks "${source}")"
+
+        msg2 "re-linking ${real_target} -> ${real_source}"
+        ln -s "${real_target}" "${real_source}"
+    fi
+
+    _perm_link "$copy_mode" "$target" "$source" "$perm"
+}
+
+_store() {
+    local copy_mode=$1 #true or false
+    local source="$(realpath --no-symlinks $3)"
+    local target="$2"
+    local perm="$4" # save to dfs file, true or false
+    [ -z "$perm" ] && perm=true
+    if $DFS_FILE_MODE; then
+        perm=false
+    fi
+
+    if ! $copy_mode && _has_mv_perm "$source"; then
+        _store_cp_or_ln false "$target" "$source" "$perm"
+    else
+        _store_cp_or_ln true "$target" "$source" "$perm"
+    fi
+}
+
+_perm_link() {
+    local copy_mode=$1 #true or false
+    local source="$(realpath --no-symlinks $3)"
+    local target="$2"
+    local perm="$4" # save to dfs file, true or false
+
+    ## save to dfs file
+    if $perm; then
+        local dfs_file="$(_get_dfs_file "$target")"
+        [ -z "$dfs_file" ] && dfs_file="${target%/*}/.dfs"
+        local dfs_mode
+        if  $copy_mode ; then
+            dfs_mode="@c"
+        else
+            dfs_mode="@"
+        fi
+
+        target="$(realpath -m --relative-to="${dfs_file%.dfs}" "$target")"
+        local dfs_line="$(echo $dfs_mode \"$target\" \"$source\" | sed "s#$HOME#\$HOME#g")"
+
+        grep -F "$dfs_line" "$dfs_file" &>/dev/null || (echo "$dfs_line" >> "$dfs_file" && msg2 "saving \n\t$dfs_line \n\tto \n\t$dfs_file")
+    fi
+}
+
+
+store() {
+    _store false "$@"
+}
+
+storecp() {
+    _store true "$@"
+}
+
+store_dfs_file() {
+    local copy_mode="$1"
+    local dfs_file="$2"
+    local dfs_file_mode="$3"
+
+
+    DFS_FILE_MODE=true
+    msg "DFS_FILE_MODE: $DFS_FILE_MODE"
+    compile="$(mktemp)"
+    if  $copy_mode ; then
+        sed "s/^@ /storecp /g;s/^@c /storecp /g" "$dfs_file" > "$compile"
+    else
+        sed "s/^@ /store /g;s/^@c /storecp /g" "$dfs_file"> "$compile"
+    fi
+    debug "converted file: $compile"
+    if $DEBUG; then
+        cat "$compile"
+    fi
+    bash "$compile" && rm "$compile"
+}
+
+store_with_human() {
+    local copy_mode=false
+    if [ "$1" = "storecp" ] || [ "$1" = "scp" ]; then
+        copy_mode=true
+    fi
+    shift
+
+    # read all .dfs in config directory
+    if [ $# -eq 0 ]; then
+        die "need to implement"
+
+    fi
+
+    if _is_all_dfs_files "$@"; then
+        for i in "$@"; do
+            store_dfs_file $copy_mode "$1"
+        done
+    else
+        _store $copy_mode "$1" "$2"
+    fi
+}
+
+store_files_in_dir() {
+    local target_dir="$2"
+    local source_dir="${3%/}"
+    local target ans
+
+    ([ -z "$target_dir" ] || [ -z "$source_dir" ]) && die "anyone of $source_dir, $target_dir is null"
+
+    local temp="$(mktemp)"
+    for f in "$source_dir"/**/*; do
+        target="${target_dir%/}/${f#$source_dir/}"
+        echo "@ \"${target}\" \"${f}\"" >> "$temp"
+    done
+    $EDITOR "$temp"
+    cat "$temp"
+    local ans="$(_read 4 "would you like to execute them? y/[n]")"
+    if [ x"y" = "x$ans" ]; then
+        IFS=$'\n'
+
+        for line in $(<$temp); do
+            $0 store "${target}" "${f}"
+        done
+    fi
+}
+
+help_store() {
+    msg "store mode: store | s"
+    msg2 "non options: read all .dfs in config directory recursively, read the file, and do it.(CHIN_DOTFILE_ROOT:\`$CHIN_DOTFILE_ROOT')"
+    msg2 "foo/.dfs bar/.dfs: only read those .dfs files"
+    msg2 "  @ source target: link these files"
+    msg2 "  @c source target: copy these files"
+    msg2 "store|s|storecp|scp source target: store these, and create .dfs file automatically"
+    msg2 "storedir: set source dir, and save them."
+}
+
+store_edit() {
+    $EDITOR "$1"
+}
+
+### Restore Part
+restore_ln() {
+    local source="$2"
+    local target="$1"
+
+    msg "try to link ${target} -> ${source}"
+    _a_is_link_of_b "$source" "$target" && msg2 "already linked" && return
+    die_if_link "${target}"
+    _die_if_not_existed "${source}"
+
+    local source_dir="${source%/*}"
+    create_dir "$source_dir"
+    local real_target="$(realpath "${target}")"
+    local real_source="$(realpath "${source}")"
+    msg2 "re-linking ${real_target} -> ${real_source}"
+    ln -s "${real_target}" "${real_source}"
+}
+
+
+### Check part
+check_base() {
+    local base_dir="$1"
+    msg2 "checking base $base_dir"
+
+    _die_if_not_existed "${base_dir}"
+
+    local found=false
+    local dfs_lines="$(find "$base_dir" -name '.dfs' | sed 's/.dfs$//g')"
+    oldIFS=$IFS
+    IFS=$'\n'
+
+    readarray -t dfs_prts <<< "$dfs_lines"
+    for i in "${!dfs_prts[@]}"; do
+        for j in "${!dfs_prts[@]}"; do
+            if [[ $i != $j ]] && [[ "${dfs_prts[$i]}" == *"${dfs_prts[$j]}"* ]]; then
+                msg2 "${dfs_prts[$i]} -> ${dfs_prts[$j]}"
+                found=true
+            fi
+        done
+    done
+
+    IFS=$oldIFS
+    if $found; then
+        die "Find some lines"
+    fi
+}
+
+check_leaf() {
+    local leaf="$1"
+    msg2 "checking leaf $leaf"
+    if _get_dfs_file "$leaf"; then
+        die "Some assor has .dfs file"
+    fi
+}
+
+### Help Mode
+help_all() {
+    msg "Usage: $0 operation options"
+    help_store
+}
+
+_new() {
+    check_base "$1"
+    check_leaf "$1"
+    mkdir -p "$1"
+    touch "$1/.dfs"
+}
+
+if [ $# -eq 0 ]; then
+    help_all
+    exit 1
+fi
+
+function_names=$(declare -F | awk '{print $3}')
+for func_name in $function_names; do
+    export -f "${func_name?}"
+done
+
+case "$1" in
+    -h|--help|"help")
+        help_all
+        ;;
+    store|s|storecp|scp)
+        store_with_human "$@"
+        ;;
+    storedir)
+        store_files_in_dir "$@"
+        ;;
+    edit)
+        store_edit "$2"
+        ;;
+    check)
+        check_base "$2"
+        check_leaf "$1"
+        ;;
+    new)
+        _new "$2"
+        ;;
+    *)
+        die "unknown parameters: $*"
+        ;;
+esac
