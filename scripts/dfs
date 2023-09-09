@@ -27,17 +27,17 @@ die() {
     exit 1
 }
 
-die_if_link() {
+_die_if_link() {
     if [ -L "$1" ]; then
         msg2 "This file $1 is softlink"
         exit 1
     fi
 }
 
-_get_dfs_file() {
+_get_dfs_dir() {
     local dir="$1"
     while [ "$dir" != "" ]; do
-        [ -f "$dir/.dfs" ] && echo "$dir/.dfs" && return 0
+        [ -f "$dir/.dfs" ] && echo "$dir" && return 0
         dir="${dir%/*}"
     done
     return 1
@@ -92,30 +92,40 @@ _read() {
     echo "$readr"
 }
 
+_store() {
+    local copy_mode source target perm dfs_dir
+    copy_mode=$1       #true or false
+    source="$(realpath --no-symlinks $3)"
+    target="$2"
+    perm="${4:-true}" # save to dfs file, false, true
+    dfs_dir="${5}"
 
+    if ! $copy_mode && _has_mv_perm "$source"; then
+        copy_mode=false
+    else
+        copy_mode=true
+    fi
 
-_store_cp_or_ln() {
-    local copy_mode="$1" # true or false
-    local source="$3"
-    local target="$2"
-    local perm="$4"
+    [ -z "$perm" ] && perm=true
+    $DFS_FILE_MODE && perm=false
 
     # peremeter check
-    ([ -z "$copy_mode" ] || [ -z "$source" ] || [ -z "$target" ] || [ -z "$perm" ]) && \
-        die "_store_cp_or_ln some peremeter is empty " "\`$@'"
+    [ $# -eq 5 ] || die "_store: Wrong number arguments. $*"
+    ([ -z "$copy_mode" ] || [ -z "$source" ] || [ -z "$target" ]) && \
+        die "_store some peremeter is empty " "\`$@'"
 
-
-    $copy_mode && msg "try to copy ${target} -> ${source}" || msg "try to link ${target} -> ${source}"
+    msg "try to store ${target} -> ${source}"
+    msg2 "copy_mode $copy_mode"
 
     for t in "$target" "$target/${source##*/}"; do
         if _a_is_link_of_b "$source" "$t"; then
-            msg2 "already linked"
-            _perm_link "$copy_mode" "$t" "$source" "$perm"
+            msg2 "This file is already stored."
+            _perm_link "$copy_mode" "$t" "$source" "$perm" "$dfs_dir"
             return
         fi
     done
-    
-    die_if_link "${source}"
+
+    _die_if_link "${source}"
     _die_if_not_existed "${source}"
 
     local only_restore=false
@@ -123,8 +133,8 @@ _store_cp_or_ln() {
         local new_target="${target%/}/${source##*/}"
         msg2 "$target is already existed"
         msg2 "  1. skip."
-        msg2 "  2. remove target and relink."
-        msg2 "  3. remove source and relink."
+        msg2 "  2. remove target($target) and relink."
+        msg2 "  3. remove source($source) and relink."
         msg2 "  4. store to \`$new_target'"
 
         local ans="$(_read 4 "select one")"
@@ -155,6 +165,7 @@ _store_cp_or_ln() {
             msg2 "moving ${source} to ${target}"
             mv "${source}" "${target}"
         fi
+
         local real_target="$(realpath "${target}")"
         local real_source="$(realpath --no-symlinks "${source}")"
 
@@ -162,67 +173,83 @@ _store_cp_or_ln() {
         ln -s "${real_target}" "${real_source}"
     fi
 
-    _perm_link "$copy_mode" "$target" "$source" "$perm"
-}
-
-_store() {
-    local copy_mode=$1 #true or false
-    local source="$(realpath --no-symlinks $3)"
-    local target="$2"
-    local perm="$4" # save to dfs file, true or false
-    [ -z "$perm" ] && perm=true
-    if $DFS_FILE_MODE; then
-        perm=false
-    fi
-
-    if ! $copy_mode && _has_mv_perm "$source"; then
-        _store_cp_or_ln false "$target" "$source" "$perm"
-    else
-        _store_cp_or_ln true "$target" "$source" "$perm"
-    fi
+    _perm_link "$copy_mode" "$target" "$source" "$dfs_dir"
 }
 
 _perm_link() {
-    local copy_mode=$1 #true or false
-    local source="$(realpath --no-symlinks $3)"
-    local target="$2"
-    local perm="$4" # save to dfs file, true or false
+    local copy_mode source target perm dfs_dir dfs_file dfs_mode
+    copy_mode=$1 #true or false
+    target="$2"
+    source="$(realpath --no-symlinks $3)"
+    perm="$4"
+    dfs_dir="$5"
 
     ## save to dfs file
     if $perm; then
-        local dfs_file="$(_get_dfs_file "$target")"
-        [ -z "$dfs_file" ] && dfs_file="${target%/*}/.dfs"
-        local dfs_mode
+        if [ -z "$dfs_dir" ]; then
+            dfs_dir="$(_get_dfs_dir "$target")"
+            [ -z "$dfs_dir" ] && dfs_dir="${target%/*}"
+        fi
+        dfs_file="${dfs_dir%/}/.dfs"
+
         if  $copy_mode ; then
             dfs_mode="@c"
         else
             dfs_mode="@"
         fi
 
+        if [ ! -f "$dfs_file" ]; then
+            mkdir -p "$dfs_dir"
+            touch "$dfs_file"
+        fi
+
         target="$(realpath -m --relative-to="${dfs_file%.dfs}" "$target")"
         local dfs_line="$(echo $dfs_mode \"$target\" \"$source\" | sed "s#$HOME#\$HOME#g")"
 
-        grep -F "$dfs_line" "$dfs_file" &>/dev/null || (echo "$dfs_line" >> "$dfs_file" && msg2 "saving \n\t$dfs_line \n\tto \n\t$dfs_file")
+        grep -F "$dfs_line" "$dfs_file" &>/dev/null \
+            || (echo "$dfs_line" >> "$dfs_file" \
+                    && msg2 "saving: $dfs_file\n\t------------------------\n\t$dfs_line")
+        ls -lh "$source"
     fi
 }
 
+_store_wrap() {
+    local copy_mode source target perm dfs_dir
+    count=1
+
+    while [ $# -gt 0 ]; do
+        case "$1" in
+            -d|--dfs_dir) dfs_dir="${2%/.dfs}"; shift ;;
+            --copy) copy_mode="$2"; shift ;;
+            --perm) perm="$2"; shift ;;
+            *)
+                case "$count" in
+                    1) target="$1"    ;;
+                    2) source="$1"    ;;
+                esac
+                (( count++ ))                
+                ;;
+        esac
+        shift
+    done
+    
+    _store "$copy_mode" "$target" "$source" "$perm" "$dfs_dir"
+}
 
 store() {
-    _store false "$@"
+    _store_wrap --copy false "$@"
 }
 
 storecp() {
-    _store true "$@"
+    _store_wrap --copy true "$@"
 }
 
-store_dfs_file() {
-    local copy_mode="$1"
-    local dfs_file="$2"
-    local dfs_file_mode="$3"
-
+_storedfs() {
+    local dfs_file="$1"
 
     DFS_FILE_MODE=true
     msg "DFS_FILE_MODE: $DFS_FILE_MODE"
+
     compile="$(mktemp)"
     if  $copy_mode ; then
         sed "s/^@ /storecp /g;s/^@c /storecp /g" "$dfs_file" > "$compile"
@@ -236,29 +263,40 @@ store_dfs_file() {
     bash "$compile" && rm "$compile"
 }
 
-store_with_human() {
-    local copy_mode=false
-    if [ "$1" = "storecp" ] || [ "$1" = "scp" ]; then
-        copy_mode=true
-    fi
-    shift
+storedfs() {
+    local -a dfss
+    local recur
+    recur=false
 
-    # read all .dfs in config directory
-    if [ $# -eq 0 ]; then
-        die "need to implement"
+    while [ $# -gt 0 ]; do
+        case "$1" in
+            -r) recur=true ;;
+            *) dfss=("${dfss[@]}" "$1") ;;
+        esac
+        shift
+    done
 
-    fi
-
-    if _is_all_dfs_files "$@"; then
-        for i in "$@"; do
-            store_dfs_file $copy_mode "$1"
-        done
-    else
-        _store $copy_mode "$1" "$2"
-    fi
+    for dfs in "${dfss[@]}"; do
+        if [ -d "$dfs" ]; then
+            if $recur; then
+                for sdfs in "${dfs%/}"/**/.dfs; do
+                    _storedfs "$sdfs"
+                done
+            else
+                for sdfs in "$dfs" "${dfs%/}/.dfs"; do
+                    if [ -f "$sdfs" ]; then
+                        _storedfs "$sdfs"
+                        break
+                    fi
+                done
+            fi
+        else
+            _storedfs "$dfs"
+        fi
+    done
 }
 
-store_files_in_dir() {
+storedir() {
     local target_dir="$2"
     local source_dir="${3%/}"
     local target ans
@@ -283,13 +321,7 @@ store_files_in_dir() {
 }
 
 help_store() {
-    msg "store mode: store | s"
-    msg2 "non options: read all .dfs in config directory recursively, read the file, and do it.(CHIN_DOTFILE_ROOT:\`$CHIN_DOTFILE_ROOT')"
-    msg2 "foo/.dfs bar/.dfs: only read those .dfs files"
-    msg2 "  @ source target: link these files"
-    msg2 "  @c source target: copy these files"
-    msg2 "store|s|storecp|scp source target: store these, and create .dfs file automatically"
-    msg2 "storedir: set source dir, and save them."
+    msg "Store"
 }
 
 store_edit() {
@@ -303,7 +335,7 @@ restore_ln() {
 
     msg "try to link ${target} -> ${source}"
     _a_is_link_of_b "$source" "$target" && msg2 "already linked" && return
-    die_if_link "${target}"
+    _die_if_link "${target}"
     _die_if_not_existed "${source}"
 
     local source_dir="${source%/*}"
@@ -375,26 +407,16 @@ for func_name in $function_names; do
 done
 
 case "$1" in
-    -h|--help|"help")
-        help_all
-        ;;
-    store|s|storecp|scp)
-        store_with_human "$@"
-        ;;
-    storedir)
-        store_files_in_dir "$@"
-        ;;
-    edit)
-        store_edit "$2"
-        ;;
+    -h|--help|"help") help_all ;;
+    store|s) shift; store "$@" ;;
+    storecp|scp) shift; storecp "$@" ;;
+    sd|storedfs) shift; storedfs "$@" ;;
+    sdir|storedir) shift; storedir "$@" ;;
+    edit) store_edit "$2" ;;
     check)
         check_base "$2"
         check_leaf "$1"
         ;;
-    new)
-        _new "$2"
-        ;;
-    *)
-        die "unknown parameters: $*"
-        ;;
+    new) _new "$2" ;;
+    *) die "unknown parameters: $*" ;;
 esac
