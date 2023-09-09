@@ -15,8 +15,9 @@ msg() {
 }
 
 msg2() {
-    echo -e "  -> \033[33m$*\033[0m"
+    echo -e "  -> \033[34m$*\033[0m"
 }
+
 
 debug() {
     $DEBUG  && echo -e "### \033[36m$*\033[0m"
@@ -40,7 +41,6 @@ _get_dfs_dir() {
         [ -f "$dir/.dfs" ] && echo "$dir" && return 0
         dir="${dir%/*}"
     done
-    return 1
 }
 
 _die_if_not_existed() {
@@ -127,14 +127,15 @@ _store() {
 
     _die_if_link "${source}"
     _die_if_not_existed "${source}"
+    msg2 "Source: $(stat --printf '%F, %y\n\t%n' "${source}")"
 
     local only_restore=false
     if [ -e "$target" ]; then
         local new_target="${target%/}/${source##*/}"
-        msg2 "$target is already existed"
+	msg2 "Target: $(stat --printf '%F, %y\n\t%n' "${target}")"
         msg2 "  1. skip."
-        msg2 "  2. remove target($target) and relink."
-        msg2 "  3. remove source($source) and relink."
+        msg2 "  2. remove stored files and relink."
+        msg2 "  3. remove system files and relink."
         msg2 "  4. store to \`$new_target'"
 
         local ans="$(_read 4 "select one")"
@@ -173,7 +174,7 @@ _store() {
         ln -s "${real_target}" "${real_source}"
     fi
 
-    _perm_link "$copy_mode" "$target" "$source" "$dfs_dir"
+    _perm_link "$copy_mode" "$target" "$source" "${perm}" "$dfs_dir"
 }
 
 _perm_link() {
@@ -188,6 +189,7 @@ _perm_link() {
     if $perm; then
         if [ -z "$dfs_dir" ]; then
             dfs_dir="$(_get_dfs_dir "$target")"
+	    msg2 "dfs_file: ${dfs_file}"
             [ -z "$dfs_dir" ] && dfs_dir="${target%/*}"
         fi
         dfs_file="${dfs_dir%/}/.dfs"
@@ -378,8 +380,9 @@ check_base() {
 check_leaf() {
     local leaf="$1"
     msg2 "checking leaf $leaf"
-    if _get_dfs_file "$leaf"; then
-        die "Some assor has .dfs file"
+    local dfs_dir="$(_get_dfs_dir "$leaf")" 
+    if [ -n "$dfs_dir" ]; then
+        die "$dfs_dir/.dfs is already existed."
     fi
 }
 
