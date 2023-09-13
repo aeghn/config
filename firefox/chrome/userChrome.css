@@ -52,12 +52,12 @@
 }
 
 #urlbar[breakout][breakout-extend] {
-    width: 200% !important;
+    width: 240% !important;
     border: 1px solid #c0c0c0 !important;
     border-radius: 3px;
     box-shadow: none !important;
-    margin-left: 40vw !important;
-    margin-top: 20vh !important;
+    /* margin-left: 40vw !important; */
+    /* margin-top: 20vh !important; */
     background: #efefef !important;
     transition: 0.2s all;
 }
