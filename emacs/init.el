@@ -4,19 +4,17 @@
 (setq custom-file "~/.emacs.d/custom.el")
 (load custom-file 'noerror)
 
+
+
 ;;; Package Settings
 (require 'package)
 (setq-default tsinghua-mirror
               '(("gnu"   . "https://mirrors.bfsu.edu.cn/elpa/gnu/")
                 ("melpa" . "https://mirrors.bfsu.edu.cn/elpa/melpa/")))
 
-
+(setq package-archives tsinghua-mirror)
 (add-to-list 'package-archives
              '("nongnu" . "https://elpa.nongnu.org/nongnu/"))
-
-
-
-(setq package-archives tsinghua-mirror)
 
 (package-initialize)
 
@@ -689,3 +687,4 @@ If popup is focused, kill it."
   (add-to-list 'org-latex-packages-alist '("" "minted")))
 
 (require 'ox-latex)
+
