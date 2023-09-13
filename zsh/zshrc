@@ -24,6 +24,8 @@ else
 export CHIN_TODAY_DIR_BASE="$HOME/days/"
 fi
 
+export GOPROXY=https://proxy.golang.com.cn,direct
+
 source "$ZSH_DIR/onefile"
 alias fda='NO_COLOR=1 fd -I --hidden'
 alias rga='rg --no-ignore'
