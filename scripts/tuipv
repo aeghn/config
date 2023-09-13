@@ -2,24 +2,29 @@
 
 image() {
     if [ -n "$FZF_PREVIEW_LINES" ]; then
-	    chafa "$1" -f sixel -s $((${FZF_PREVIEW_COLUMNS}-1))x$FZF_PREVIEW_LINES --animate false
+        chafa "$1" -f sixel -s ${FZF_PREVIEW_COLUMNS}x$(($FZF_PREVIEW_LINES/2)) --animate false
     else
         chafa "$1" -f sixel --animate false
     fi
 }
 
 highcat() {
-    local file="$1"
-    if command -v highlight > /dev/null 2>&1; then
-        highlight --out-format=ansi "$file"
-    else
-        cat "$file"
-    fi
+    highlight --out-format=ansi "$@"
 }
 
-CACHE="$HOME/.cache/lf/thumbnail.$(realpath "$1" | md5sum | awk '{print $1}')"
+fontcat() {
+    convert -size 800x600 xc:#ffffff -font "$1" -pointsize 48 -gravity center -fill '#000000' \
+            -annotate +0+0 'ABCDEFHIJKLMN\nOPQRSTUVWXYZ\nabcdefhijklmn\nopqrstuvwxyz\n1234567890\n!@#$\%\^&*()_+-=\n\\[]{},./<>?:";'"'" \
+            -flatten "$CACHE"
+    image "$CACHE"
+}
 
-case "$(printf "%s\n" "$(readlink -f "$1")" | awk '{print tolower($0)}')" in
+CACHE="$HOME/.cache/lf/thumbnail.$(realpath "$1" | md5sum | awk '{print $1}').png"
+
+file "$1"
+echo "==="
+
+case "${1,,}" in
     *.tgz|*.tar.gz) tar tzf "$1" ;;
     *.tar.bz2|*.tbz2) tar tjf "$1" ;;
     *.tar.txz|*.txz) xz --list "$1" ;;
@@ -68,6 +73,9 @@ case "$(printf "%s\n" "$(readlink -f "$1")" | awk '{print tolower($0)}')" in
         ;;
     *.ino)
         highcat --language=cpp "$1"
+        ;;
+    *.ttf|*.otf)
+        fontcat "$1"
         ;;
     *)
         highcat "$1"
