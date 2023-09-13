@@ -31,12 +31,13 @@ die() {
 _die_if_link() {
     if [ -L "$1" ]; then
         msg2 "This file $1 is softlink"
+        ls -lh "$1"
         exit 1
     fi
 }
 
 _get_dfs_dir() {
-    local dir="$1"
+    local dir="$(realpath --no-symlinks $1)"
     while [ "$dir" != "" ]; do
         [ -f "$dir/.dfs" ] && echo "$dir" && return 0
         dir="${dir%/*}"
@@ -177,10 +178,11 @@ _store() {
     _perm_link "$copy_mode" "$target" "$source" "${perm}" "$dfs_dir"
 }
 
+
 _perm_link() {
     local copy_mode source target perm dfs_dir dfs_file dfs_mode
     copy_mode=$1 #true or false
-    target="$2"
+    target="$(realpath --no-symlinks $2)"
     source="$(realpath --no-symlinks $3)"
     perm="$4"
     dfs_dir="$5"
