@@ -133,7 +133,7 @@ _store() {
     local only_restore=false
     if [ -e "$target" ]; then
         local new_target="${target%/}/${source##*/}"
-	msg2 "Target: $(stat --printf '%F, %y\n\t%n' "${target}")"
+        msg2 "Target: $(stat --printf '%F, %y\n\t%n' "${target}")"
         msg2 "  1. skip."
         msg2 "  2. remove stored files and relink."
         msg2 "  3. remove system files and relink."
@@ -191,7 +191,7 @@ _perm_link() {
     if $perm; then
         if [ -z "$dfs_dir" ]; then
             dfs_dir="$(_get_dfs_dir "$target")"
-	    msg2 "dfs_file: ${dfs_file}"
+            msg2 "dfs_file: ${dfs_file}"
             [ -z "$dfs_dir" ] && dfs_dir="${target%/*}"
         fi
         dfs_file="${dfs_dir%/}/.dfs"
@@ -231,12 +231,12 @@ _store_wrap() {
                     1) target="$1"    ;;
                     2) source="$1"    ;;
                 esac
-                (( count++ ))                
+                (( count++ ))
                 ;;
         esac
         shift
     done
-    
+
     _store "$copy_mode" "$target" "$source" "$perm" "$dfs_dir"
 }
 
@@ -333,23 +333,146 @@ store_edit() {
 }
 
 ### Restore Part
-restore_ln() {
-    local source="$2"
-    local target="$1"
+_restore() {
+    local copy_mode source target perm
+    copy_mode="$1"
+    target="$2"
+    source="$3"
+    perm="${4:-true}" # save to dfs file, false, true
+    dfs_dir="$5"
 
-    msg "try to link ${target} -> ${source}"
+    if ! $copy_mode && _has_mv_perm "$source"; then
+        copy_mode=false
+    else
+        copy_mode=true
+    fi
+    [ -z "$perm" ] && perm=true
+    $DFS_FILE_MODE && perm=false
+
+    msg "try to restore ${target} -> ${source}"
     _a_is_link_of_b "$source" "$target" && msg2 "already linked" && return
+    _die_if_not_existed "${target}"
     _die_if_link "${target}"
-    _die_if_not_existed "${source}"
+
+    msg2 "Source: $(stat --printf '%F, %y\n\t%n' "${source}")"
+
+    local try_store=false
+    if [ -e "$source" ]; then
+        msg2 "Target: $(stat --printf '%F, %y\n\t%n' "${target}")"
+        msg2 "  1. skip."
+        msg2 "  2. remove stored files and relink."
+        msg2 "  3. remove system files and relink."
+
+        local ans="$(_read 4 "select one")"
+        case "$ans" in
+            1) return ;;
+            2) try_store=true ;;
+            3) rm -r "$source" ;;
+            *) die "unknown option $*" ;;
+        esac
+    fi
 
     local source_dir="${source%/*}"
     create_dir "$source_dir"
-    local real_target="$(realpath "${target}")"
-    local real_source="$(realpath "${source}")"
-    msg2 "re-linking ${real_target} -> ${real_source}"
-    ln -s "${real_target}" "${real_source}"
+    local real_target="$(realpath --no-symlinks "${target}")"
+    local real_source="$(realpath --no-symlinks "${source}")"
+    if $try_store; then
+        _store_wrap --copy $copy_mode "$target" "$source" -d "$dfs_dir"
+    else
+        if $copy_mode; then
+            msg2 "coping ${real_target} -> ${real_source}"
+            rm -rf "${real_source}"
+            cp "${real_target}" "${real_source}"
+        else
+            msg2 "linking ${real_target} -> ${real_source}"
+            ln -s "${real_target}" "${real_source}"
+        fi
+        _perm_link "$copy_mode" "$target" "$source" "${perm}" "$dfs_dir"
+    fi
 }
 
+_restore_wrap() {
+    local copy_mode source target perm dfs_dir
+    count=1
+
+    while [ $# -gt 0 ]; do
+        case "$1" in
+            -d|--dfs_dir) dfs_dir="${2%/.dfs}"; shift ;;
+            --copy) copy_mode="$2"; shift ;;
+            --perm) perm="$2"; shift ;;
+            *)
+                case "$count" in
+                    1) target="$1"    ;;
+                    2) source="$1"    ;;
+                esac
+                (( count++ ))
+                ;;
+        esac
+        shift
+    done
+
+    _restore "$copy_mode" "$target" "$source" "$perm" "$dfs_dir"
+}
+
+restore() {
+    _restore_wrap --copy false "$@"
+}
+
+restorecp() {
+    _restore_wrap --copy true "$@"
+}
+
+_restoredfs() {
+    local dfs_file="$1"
+
+    DFS_FILE_MODE=true
+    msg "DFS_FILE_MODE: $DFS_FILE_MODE"
+
+    compile="$(mktemp)"
+    if  $copy_mode ; then
+        sed "s/^@ /restorecp /g;s/^@c /restorecp /g" "$dfs_file" > "$compile"
+    else
+        sed "s/^@ /restore /g;s/^@c /restorecp /g" "$dfs_file"> "$compile"
+    fi
+    debug "converted file: $compile"
+    if $DEBUG; then
+        cat "$compile"
+    fi
+    bash "$compile" && rm "$compile"
+}
+
+restoredfs() {
+    local -a dfss
+    local recur
+    recur=false
+
+    while [ $# -gt 0 ]; do
+        case "$1" in
+            -r) recur=true ;;
+            *) dfss=("${dfss[@]}" "$1") ;;
+        esac
+        shift
+    done
+
+    for dfs in "${dfss[@]}"; do
+        if [ -d "$dfs" ]; then
+            if $recur; then
+                for sdfs in "${dfs%/}"/**/.dfs; do
+                    _restoredfs "$sdfs"
+                done
+            else
+                for sdfs in "$dfs" "${dfs%/}/.dfs"; do
+                    if [ -f "$sdfs" ]; then
+                        _restoredfs "$sdfs"
+                        break
+                    fi
+                done
+            fi
+        else
+            _restoredfs "$dfs"
+        fi
+    done
+}
 
 ### Check part
 check_base() {
@@ -382,7 +505,7 @@ check_base() {
 check_leaf() {
     local leaf="$1"
     msg2 "checking leaf $leaf"
-    local dfs_dir="$(_get_dfs_dir "$leaf")" 
+    local dfs_dir="$(_get_dfs_dir "$leaf")"
     if [ -n "$dfs_dir" ]; then
         die "$dfs_dir/.dfs is already existed."
     fi
@@ -417,6 +540,9 @@ case "$1" in
     storecp|scp) shift; storecp "$@" ;;
     sd|storedfs) shift; storedfs "$@" ;;
     sdir|storedir) shift; storedir "$@" ;;
+    restore) shift; restore "$@" ;;
+    restorecp) shift; restorecp "$@" ;;
+    restoredfs) shift; restoredfs "$@" ;;
     edit) store_edit "$2" ;;
     check)
         check_base "$2"

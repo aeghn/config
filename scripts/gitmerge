@@ -1,0 +1,12 @@
+#!/usr/bin/env bash
+
+DAY=$(date +%Y%m%d)
+TARGETD="$(git status --porcelain=v2 --branch | grep branch.head | awk '{print $NF}')"
+read -p "Target Branch(${TARGETD}): " TARGET
+read -p "Desc: " DESC
+
+if [ x = "x$TARGET" ]; then
+	TARGET="$TARGETD"
+fi
+
+git checkout -b "$(echo $DAY/$TARGET/$DESC | sed 's/[[:space:]]/_/g')"
