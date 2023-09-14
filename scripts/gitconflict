@@ -1,0 +1,10 @@
+#!/usr/bin/env bash
+
+option=$(rg -l "^===" | fzf)
+
+if [ x = x"$option" ]; then
+exit
+else
+	echo "$option"
+vim "$option"
+fi

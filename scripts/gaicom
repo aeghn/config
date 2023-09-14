@@ -1,0 +1,89 @@
+#!/usr/bin/env bash
+
+msg() {
+    echo -e "\033[31m=> $@\033[0m"
+}
+msg2() {
+    echo -e "\033[33m-> $@\033[0m" | sed 's/^/    /g'
+}
+
+
+LANG=Chinese
+
+
+DIFF="$(git diff --staged --unified=0)"
+export HTTP_PROXY=http://127.0.0.1:7890
+export HTTPS_PROXY=http://127.0.0.1:7890
+
+FILE_DIFF="$(git diff --staged --name-only)"
+
+COUNT=$(echo $DIFF | wc -m)
+if [ $COUNT -lt 5 ]; then
+    msg "diff 可能为空"
+    msg2 $DIFF
+    exit 1
+fi
+
+msg2 "$DIFF"
+MSG="null"
+
+# set -x
+
+get_msg() {
+    local system user
+    system="$1"
+    user="$2"
+    local full="$(curl https://api.openai.com/v1/chat/completions \
+-H "Content-Type: application/json" \
+-H "Authorization: Bearer $OPENAI_API_KEY" \
+-d "{   \"temperature\": 0.7, \"model\": \"gpt-3.5-turbo\", \"messages\": [ { \"role\": \"system\", \"content\": $(echo $system | jq -s -R @json) }, { \"role\": \"user\", \"content\": $(echo $user | jq -s -R @json) } ] }")"
+    MSG="$(echo "$full" | jq -r '.choices[0].message.content'| sed 's/标题：//g; s/描述：//g')"
+    if [ "$MSG" = "null" ]; then
+        echo "$full" >&2
+    fi
+}
+
+get_file_msg() {
+    local system="suggest 5 commit messages based on the diff:\n  \n  \n  commit messages should:\n   - follow conventional commits\n   - message format should be: <type>[scope]: <description>\n\n  \n  examples:\n   - fix(authentication): add password regex pattern\n   - feat(storage): add new test cases\nplease answered in chinese"
+
+    get_msg "$system" "$diff"
+
+}
+
+get_diff_msg() {
+    if [ $COUNT -lt 8000 ]; then
+        msg "diff 数量小于 8000"
+        get_msg "suggest 5 commit messages based on the diff:\n  \n  \n  commit messages should:\n   - follow conventional commits\n   - message format should be: <type>[scope]: <description>\n\n  \n  examples:\n   - fix(authentication): add password regex pattern\n   - feat(storage): add new test cases\nplease answered in chinese" "$DIFF"
+    fi
+
+    if [ "$MSG" = "null" ] ; then
+        get_file_msg
+    fi
+}
+
+
+try_commit() {
+    get_diff_msg
+    local final=""
+    if [ $(echo "$FILE_DIFF" | wc -l) -eq 1 ]; then
+        final="$FILE_DIFF"
+    fi
+
+    msg "use this message: "
+    final="$final $MSG"
+    msg2 "$final"
+
+    echo -n "(y/[n]/e/r):"
+    read ANS
+
+    [ xy = "x$ANS" ] && git commit -m "$final"
+    if [ xe = "x$ANS" ]; then
+        tfile=$(mktemp)
+        echo "$final" > $tfile
+        git commit -eF $tfile
+    elif [ xr = "x$ANS" ]; then
+        try_commit
+    fi
+}
+
+try_commit
