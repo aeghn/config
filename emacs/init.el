@@ -1,4 +1,4 @@
- ;;; -*- lexical-binding: t; -*-
+;;; -*- lexical-binding: t; -*-
 
 ;;; Custom file Settings
 (setq custom-file "~/.emacs.d/custom.el")
@@ -94,12 +94,10 @@
   (set-selection-coding-system 'utf-8))
 
 ;;; Frame settings
-(setq-default truncate-lines nil)
 (setq inhibit-splash-screen t)
 (setq inhibit-startup-message t)
 (menu-bar-mode -1)
 
-(setq truncate-partial-width-windows nil)
 (setq use-dialog-box nil)
 (setq use-short-answers t)
 
@@ -153,7 +151,7 @@
             (funcall first-font-fun prefered-serif-font-list prefered-serif-font))
       (set-fontset-font "fontset-default" '(#xe000 . #xf8ff) "nrss")
       (set-face-attribute 'default nil
-                          :family prefered-mono-font :height 108 :weight 'Regular)
+                          :family prefered-mono-font :height 120 :weight 'Regular)
       (set-face-attribute 'mode-line nil
                           :family prefered-serif-font :height 120 :weight 'Bold)
       (set-face-attribute 'mode-line-inactive nil
@@ -287,7 +285,7 @@
       ;; org-insert-heading-respect-content t
 
       org-src-tab-acts-natively nil
-      
+
       org-adapt-indentation t
       org-hide-leading-stars t
       ;; org-odd-levels-only t
@@ -295,7 +293,7 @@
       ;; Org styling, hide markup etc.
       org-hide-emphasis-markers nil
       org-pretty-entities t
-      org-ellipsis " ▾ "
+      org-ellipsis " ⋯ "
 
       org-export-preserve-breaks t
 
@@ -313,11 +311,12 @@
 
 (require 'org-superstar)
 (setq org-superstar-leading-bullet ?\s)
-(setq org-superstar-headline-bullets-list '(?㊠))
+(setq org-superstar-headline-bullets-list '(?⁂ ?☁ ?∭ ?∬ ?∫ ?∮))
 (setq org-superstar-item-bullet-alist
-      '((?* . ?▷)
-        (?+ . ?◁)
-        (?- . ?∎)))
+      '((?* . ?⁑)
+        (?+ . ?〄)
+        (?- . ?㊠)))
+;; 🅾🄮 ⃝⃞ℓℵ⇒∀∂∃∅∆∇∈∉∊∋∽≌≒⊠⊿⏃⏄⏅⏛▷◯◉●◎◇◈◯♦♥♭♮♯⚠⚽⚾❀✿✽❖⦿〇〠
 
 (custom-set-faces
  '(org-level-1 ((t (:weight normal :height 1.2))))
@@ -383,7 +382,10 @@
         (find-file full-result)
       (find-file (expand-file-name (concat date "-" (replace-regexp-in-string ".org$" "" result) ".org") chin/org-managed-files)))))
 
-
+(add-hook 'prog-mode-hook 'diff-hl-mode)
+(add-hook 'org-mode-hook 'diff-hl-mode)
+(require 'iscroll)
+(add-hook 'org-mode-hook 'iscroll-mode)
 (add-hook 'org-mode-hook 'chin/org-hook-function)
 
 (defun chin/insert-image-from-clipboard ()
@@ -627,11 +629,6 @@ If popup is focused, kill it."
 (require 'term)
 (define-key term-raw-map (kbd "M-=") 'chin/toggle-ansi-term)
 
-(add-hook 'prog-mode-hook 'diff-hl-mode)
-(add-hook 'org-mode-hook 'diff-hl-mode)
-(add-hook 'org-mode-hook 'visual-line-mode)
-(require 'iscroll)
-(add-hook 'org-mode-hook 'iscroll-mode)
 
 (with-eval-after-load 'project
   (add-to-list 'project-vc-ignores ".ccls-cache/")
@@ -687,4 +684,7 @@ If popup is focused, kill it."
   (add-to-list 'org-latex-packages-alist '("" "minted")))
 
 (require 'ox-latex)
+;; (fido-vertical-mode)
 
+(global-visual-line-mode)
+(setq word-wrap-by-category t)
