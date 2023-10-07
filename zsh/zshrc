@@ -18,7 +18,7 @@ export PATH=$HOME/.scripts:$PATH
 
 if [ -d ~/extra ]; then
 export PIP_CACHE_DIR=~/extra/.pip-cache
-export ANDROID_HOME=~/extra/android-home
+#export ANDROID_HOME=~/extra/android-home
 export CHIN_TODAY_DIR_BASE="$HOME/extra/firm/days/"
 else
 export CHIN_TODAY_DIR_BASE="$HOME/days/"
@@ -33,3 +33,4 @@ alias td="mkdir -p \"$CHIN_TODAY_DIR_BASE/$(date +%Y-%m/%d)\" && cd \"$CHIN_TODA
 
 
 [ -f /opt/miniconda3/etc/profile.d/conda.sh ] && source /opt/miniconda3/etc/profile.d/conda.sh
+export NODE_PATH=$HOME/.cache/node_modules
