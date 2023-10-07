@@ -162,19 +162,19 @@
       (setq speed-sidebar-face `(:family "Archivo" :height 120)))))
 
 ;; Toolbar Settings
-(tool-bar-mode -1)
+(tool-bar-mode 1)
 (setq tool-bar-button-margin 8
       tool-bar-images-pixel-height 100)
 
-(defvar chin/show-tool-bar -1)
+(defvar chin/show-tool-bar 1)
 (defun chin/replace-tool-bar (&optional not-show)
   (let ((fw (frame-native-width))
         (fh (frame-native-height))
         (tp (frame-parameter (selected-frame) 'tool-bar-position))
         (pos))
-    ;; (when (or not-show (not chin/show-tool-bar))
-    (setq chin/show-tool-bar nil)
-    ;; )
+    (when (or not-show (not chin/show-tool-bar))
+      (setq chin/show-tool-bar nil)
+      )
     (cond ((not chin/show-tool-bar) (when tool-bar-mode (tool-bar-mode -1)))
           ((< fh 500) (when tool-bar-mode (tool-bar-mode -1)))
           ((< (* fh 5) (* fw 3))
@@ -299,32 +299,29 @@
 
       org-confirm-babel-evaluate nil)
 
-;; Make deletion(obsolote) text foreground with dark gray.
-(add-to-list 'org-emphasis-alist
-             '("+" (:foreground "dark gray"
-                                :strike-through t)))
-;; Make code style around with box.
-(add-to-list 'org-emphasis-alist
-             '("~" (:box (:line-width 1
-                                      :color "grey75"
-                                      :style released-button))))
+;; ;; Make deletion(obsolote) text foreground with dark gray.
+;; (add-to-list 'org-emphasis-alist
+;;              '("+" (:foreground "dark gray"
+;;                                 :strike-through t)))
+;; ;; Make code style around with box.
+;; (add-to-list 'org-emphasis-alist
+;;              '("~" (:box (:line-width 1
+;;                                       :color "grey75"
+;;                                       :style released-button))))
 
 (require 'org-superstar)
 (setq org-superstar-leading-bullet ?\s)
-(setq org-superstar-headline-bullets-list '(?⁂ ?☁ ?∭ ?∬ ?∫ ?∮))
-(setq org-superstar-item-bullet-alist
-      '((?* . ?⁑)
-        (?+ . ?〄)
-        (?- . ?㊠)))
-;; 🅾🄮 ⃝⃞ℓℵ⇒∀∂∃∅∆∇∈∉∊∋∽≌≒⊠⊿⏃⏄⏅⏛▷◯◉●◎◇◈◯♦♥♭♮♯⚠⚽⚾❀✿✽❖⦿〇〠
+(setq org-superstar-headline-bullets-list '(?⁂ ))
+(setq org-superstar-item-bullet-alist '((?* . ?⁑) (?+ . ?〄) (?- . ?☁)))
+;; 🅾🄮 ⃝⃞ℓℵ⇒∀∂∃∅∆∇∈∉∊∋∽≌≒⊠⊿⏃⏄⏅⏛▷◯◉●◎◇◈◯♦♥♭♮♯⚠⚽⚾❀✿✽❖⦿〇〠 ?☁ ?∭ ?∬ ?∫ ?∮
 
 (custom-set-faces
- '(org-level-1 ((t (:weight normal :height 1.2))))
- '(org-level-2 ((t (:weight normal :height 1.0))))
- '(org-level-3 ((t (:weight normal :height 1.0))))
- '(org-level-4 ((t (:weight normal :height 1.0))))
- '(org-level-5 ((t (:weight normal :height 1.0))))
- '(org-level-6 ((t (:weight normal :height 1.0))))
+ '(org-level-1 ((t (:weight normal :height 1.3 ))))
+ '(org-level-2 ((t (:weight normal :height 1.2 ))))
+ '(org-level-3 ((t (:weight normal :height 1.1 ))))
+ '(org-level-4 ((t (:weight normal :height 1.0 ))))
+ '(org-level-5 ((t (:weight normal :height 1.0 ))))
+ '(org-level-6 ((t (:weight normal :height 1.0 ))))
  '(org-level-8 ((t (:weight normal))))
  '(org-block-begin-line ((t (:height 0.8 :slant italic))))
  '(org-block-end-line ((t (:inherit 'org-block-begin-line))))
@@ -346,9 +343,8 @@
                                        (org-verbatim (:family ,mono-font) org-verbatim)
                                        (org-block (:family ,mono-font) org-block)
                                        (org-block-begin-line (:family ,mono-font) org-block)))
-    (setq line-spacing 0.03))
+    (setq line-spacing 0.1))
   (org-superstar-mode 1)
-  ;; (org-visual-indent-mode)
   (olivetti-mode)
   (define-key org-mode-map (kbd "M-h") 'chin/delete-blanks))
 
@@ -587,6 +583,7 @@ If popup is focused, kill it."
 (require 'eglot)
 (define-key eglot-mode-map (kbd "M-RET") 'eglot-code-actions)
 (add-hook 'rust-mode-hook 'eglot-ensure)
+(add-hook 'go-mode-hook 'eglot-ensure)
 
 (custom-set-variables
  '(help-at-pt-timer-delay 0.1)
@@ -688,3 +685,5 @@ If popup is focused, kill it."
 
 (global-visual-line-mode)
 (setq word-wrap-by-category t)
+
+(add-to-list 'auto-mode-alist '("\\.epub\\'" . nov-mode))
