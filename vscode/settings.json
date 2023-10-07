@@ -1,0 +1,39 @@
+{
+    "workbench.colorTheme": "Spacemacs - light",
+    "editor.fontFamily": "'Sarasa Mono SC', 'Rotobo Mono', Consolas, 'Courier New', monospace",
+    "git.ignoreMissingGitWarning": true,
+    "notebook.lineNumbers": "on",
+    "notebook.cellFocusIndicator": "border",
+    "security.workspace.trust.untrustedFiles": "open",
+    "workbench.startupEditor": "none",
+    "git.path": "E:/repos/dotfiles/config/vscode/git-wrap.bat",
+    "editor.wordWrap": "bounded",
+    "[css]": {
+        "editor.defaultFormatter": "vscode.css-language-features"
+    },
+    "[scss]": {
+        "editor.defaultFormatter": "vscode.css-language-features"
+    },
+    "[html]": {
+        "editor.defaultFormatter": "esbenp.prettier-vscode"
+    },
+    "[json]": {
+        "editor.defaultFormatter": "vscode.json-language-features"
+    },
+    "css.completion.completePropertyWithSemicolon": false,
+    "remote.SSH.remotePlatform": {
+    },
+    "mesonbuild.configureOnOpen": true,
+    "editor.accessibilitySupport": "off",
+    "cmake.configureOnOpen": true,
+    "C_Cpp.intelliSenseEngine": "disabled",
+    "graphviz-interactive-preview.renderLockAdditionalTimeout": -1,
+    "window.commandCenter": true,
+    "[python]": {
+        "editor.formatOnType": true
+    },
+    "editor.unicodeHighlight.nonBasicASCII": false,
+    "editor.unicodeHighlight.ambiguousCharacters": false,
+    "editor.unicodeHighlight.invisibleCharacters": false,
+    "files.autoSave": "onWindowChange",
+}
