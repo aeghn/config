@@ -1,1 +1,2 @@
 @ "fontconfig" "$HOME/.config/fontconfig"
+@ "npm/npmrc" "$HOME/.npmrc"
