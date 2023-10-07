@@ -1,0 +1,5 @@
+#!/usr/bin/env bash
+
+export PATH=$JAVA_HOME/bin:$PATH
+
+java -jar /d/wenv/library/jars/jd-gui-1.6.6.jar
