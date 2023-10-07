@@ -1,13 +1,11 @@
 #!/usr/bin/env sh
 
 image() {
-    seq 1 3
     if [ -n "$FZF_PREVIEW_LINES" ]; then
-        chafa "$1" -f sixel -s ${FZF_PREVIEW_COLUMNS}x$(($FZF_PREVIEW_LINES/2)) --animate false
+        chafa "$1" -f sixel -s $((${FZF_PREVIEW_COLUMNS}-4))x$(($FZF_PREVIEW_LINES*2/3)) --animate false
     else
         chafa "$1" -f sixel --animate false
     fi
-    seq 1 10
 }
 
 highcat() {
@@ -23,7 +21,9 @@ fontcat() {
 
 
 file "$1"
-echo "==="
+echo
+echo "============="
+echo
 
 if [ -d "${1}" ]; then
     ls -lh "${1}"
@@ -47,11 +47,14 @@ else
         *.docx) docx2txt "$1" - ;;
         *.xml|*.html) w3m -dump "$1";;
         *.xls|*.xlsx) ssconvert --export-type=Gnumeric_stf:stf_csv "$1" "fd://1" | highcat --language=csv ;;
-        *.wav|*.mp3|*.flac|*.m4a|*.wma|*.ape|*.ac3|*.og[agx]|*.spx|*.opus|*.as[fx]|*.mka) exiftool "$1" ;;
+        *.wav|*.mp3|*.flac|*.m4a|*.wma|*.ape|*.ac3|*.og[agx]|*.spx|*.opus|*.as[fx]|*.mka)
+        # exiftool "$1"
+        ;;
         *.pdf)
-            [ ! -f "${CACHE}.jpg" ] && \
-                pdftoppm -jpeg -f 1 -singlefile "$1" "$CACHE"
-            image "${CACHE}.jpg" "$2" "$3" "$4" "$5"
+		if [ ! -f "${CACHE}.jpg" ]; then
+			pdftoppm -jpeg -f 1 -singlefile "$1" "${CACHE}"
+		fi
+		image "${CACHE}.jpg" "$2" "$3" "$4" "$5"
             ;;
         *.epub)
             [ ! -f "$CACHE" ] && \
