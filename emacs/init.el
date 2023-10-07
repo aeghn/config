@@ -12,7 +12,7 @@
               '(("gnu"   . "https://mirrors.bfsu.edu.cn/elpa/gnu/")
                 ("melpa" . "https://mirrors.bfsu.edu.cn/elpa/melpa/")))
 
-(setq package-archives tsinghua-mirror)
+;; (setq package-archives tsinghua-mirror)
 (add-to-list 'package-archives
              '("nongnu" . "https://elpa.nongnu.org/nongnu/"))
 
@@ -46,7 +46,7 @@
 ;; Packages Initialization
 (defun chin/ensure-all-packages ()
   (interactive)
-  (let* ((packages '(dash magit-section markdown-mode with-editor modus-themes json-mode go-imenu go-mode vala-mode cargo cargo-mode caroline-theme org-download embark-consult embark magit expand-region restclient lua-mode ahk-mode corfu symbol-overlay consult all-the-icons xr ibuffer-project graphviz-dot-mode htmlize xcscope rust-mode ripgrep rainbow-mode meson-mode grey-paper-theme comment-dwim-2 vertico consult vundo)))
+  (let* ((packages '(dash magit-section markdown-mode with-editor modus-themes json-mode go-imenu go-mode vala-mode cargo cargo-mode caroline-theme org-download embark-consult embark magit expand-region restclient lua-mode ahk-mode corfu symbol-overlay consult all-the-icons xr ibuffer-project graphviz-dot-mode htmlize xcscope rust-mode ripgrep rainbow-mode meson-mode grey-paper-theme comment-dwim-2 vertico consult vundo org-superstar diff-hl ob-rust vertico  iscroll )))
     (package-refresh-contents)
     (dolist (p packages)
       (if (package-installed-p p)
@@ -73,7 +73,7 @@
 ;; windows-loader
 (when chin/is-windows
   (let ((msys2root "C:\\msys64\\"))
-    (setenv "WENV" "D:\\wenv")
+    (setenv "WENV" "D:\\wenv")    
     (setenv "PATH" (concat
                     ;; Remember to install `mingw-w64-x86_64-gnupg'
                     "d:\\wenv\\bin;"
@@ -118,7 +118,7 @@
 (setq ring-bell-function 'ignore)
 
 ;; Theme Settings
-(load-theme 'modus-operandi-deuteranopia)
+(load-theme 'modus-operandi)
 ;; (load-theme 'modus-vivendi-tinted)
 
 
@@ -362,7 +362,10 @@
 (add-to-list
  'org-src-lang-modes '("plantuml" . plantuml))
 
-(defvar chin/org-managed-files "~/files/docs/org")
+(defvar chin/org-managed-files
+  (if chin/is-windows
+      "D:\\docs\\org"
+      "~/files/docs/org"))
 
 (defun chin/org-files ()
   (interactive)
@@ -378,8 +381,10 @@
         (find-file full-result)
       (find-file (expand-file-name (concat date "-" (replace-regexp-in-string ".org$" "" result) ".org") chin/org-managed-files)))))
 
+(when (boundp 'diff-hl-mode)
 (add-hook 'prog-mode-hook 'diff-hl-mode)
 (add-hook 'org-mode-hook 'diff-hl-mode)
+)
 (require 'iscroll)
 (add-hook 'org-mode-hook 'iscroll-mode)
 (add-hook 'org-mode-hook 'chin/org-hook-function)
