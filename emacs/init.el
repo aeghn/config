@@ -12,7 +12,7 @@
               '(("gnu"   . "https://mirrors.bfsu.edu.cn/elpa/gnu/")
                 ("melpa" . "https://mirrors.bfsu.edu.cn/elpa/melpa/")))
 
-;; (setq package-archives tsinghua-mirror)
+(setq package-archives tsinghua-mirror)
 (add-to-list 'package-archives
              '("nongnu" . "https://elpa.nongnu.org/nongnu/"))
 
@@ -29,6 +29,8 @@
                  byte-compile-current-file)
                 (:else (buffer-file-name))))
     (file-truename true-file)))
+
+
 
 (defun chin/load-other-file (filename)
   (let ((f (if (file-exists-p filename)
@@ -81,6 +83,7 @@
                     msys2root "mingw64\\x86_64-w64-mingw32\\bin" ";"
                     msys2root "usr\\bin" ";"
                     (getenv "PATH")))
+    (setq-default package-gnupghome-dir (string-replace "c:/" "/c/" (expand-file-name "gnupg" package-user-dir)))
     ;; Without this the new added $PATH value won't be inherite by exec-path
     (setq exec-path (split-string (getenv "PATH") path-separator))
     (setq default-directory "e:/")))
@@ -364,7 +367,7 @@
 
 (defvar chin/org-managed-files
   (if chin/is-windows
-      "D:\\docs\\org"
+      "E:\\files\\docs\\org"
       "~/files/docs/org"))
 
 (defun chin/org-files ()
@@ -692,3 +695,4 @@ If popup is focused, kill it."
 (setq word-wrap-by-category t)
 
 (add-to-list 'auto-mode-alist '("\\.epub\\'" . nov-mode))
+(setq kill-whole-line t)

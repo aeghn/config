@@ -1,0 +1,5 @@
+#!/usr/bin/env bash
+
+[ -e "c:/Windows" ] && _meld="C:/Program Files/Meld/Meld.exe" || _meld="meld"
+
+"$_meld" "$@"

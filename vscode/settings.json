@@ -6,6 +6,7 @@
     "notebook.cellFocusIndicator": "border",
     "security.workspace.trust.untrustedFiles": "open",
     "workbench.startupEditor": "none",
+    "workbench.editor.showTabs": false,
     "git.path": "E:/repos/dotfiles/config/vscode/git-wrap.bat",
     "editor.wordWrap": "bounded",
     "[css]": {
