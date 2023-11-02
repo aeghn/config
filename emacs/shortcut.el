@@ -36,17 +36,15 @@
 (defun chin/today-file (directory)
   (interactive)
   (let* ((ct (current-time))
-         (today (format-time-string "%Y-%m/%d" ct))
-         (dir (expand-file-name today directory))
-         (time
-          (completing-read (concat "Timebased file (" dir "): ")
-                           (if (file-exists-p dir) (directory-files dir) nil)
-                           nil
-                           nil
-                           (format-time-string "t%H%M%S" ct)))
-         (ct-file (expand-file-name time dir)))
-    (mkdir dir t)
-    (find-file ct-file)))
+         (sub-dir (format-time-string "%Y-%m/%d/t%H%M%S" ct))
+         (time (completing-read
+                (concat "Timebased file (" directory "): ")
+                (if (file-exists-p directory)
+                    (directory-files-recursively "~/extra/firm/days" "" t (lambda (x) (not (string-match-p  "/\\." x))))
+                    nil) nil nil sub-dir))
+         (total (expand-file-name time directory)))
+    (mkdir (file-name-parent-directory total) t)
+    (find-file total)))
 
 (global-set-key (kbd "C-<f6>") (lambda () (interactive) (chin/today-file "~/extra/tmps")))
 (global-set-key (kbd "C-<f5>") (lambda () (interactive) (chin/today-file "~/extra/firm/days/")))
