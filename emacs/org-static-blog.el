@@ -74,10 +74,6 @@ When publishing, draft are rendered as HTML, but not included in
 the index, archive, tags, or RSS feed."
   :type '(directory))
 
-(defcustom org-static-blog-publish-filepaths "~/blog/post-paths"
-  "File of some blog post paths."
-  :type '(string))
-
 (defcustom org-static-blog-index-file "index.html"
   "File name of the blog landing page.
 The index page contains the most recent
@@ -345,21 +341,22 @@ N in the table of contents. "
      ("zh" . "文件名：")
      ("ja" . "ファイル名: "))))
 
-(defun concat-to-dir (dir filename)
-  "Concat filename to another path interpreted as a directory."
-  (concat (file-name-as-directory dir) filename))
-
-(defun insert-newline-at-row (row str)
+(defun org-static-blog--insert-newline-at-row (row str)
   "Insert `str' into line `row' as a new line."
   (goto-line row)
   (insert str)
   (newline))
 
-(defun get-org-date ()
+(defun org-static-blog--get-org-date ()
   "Get date string like `<2022-08-16 Tue>'"
   (with-temp-buffer (org-time-stamp nil)))
 
-(defun read-file-lines (filename)
+(defun org-static-blog-ensure-directorys (f)
+  (unless (file-exists-p f)
+    (mkdir f t)
+    (message "Creating %s" f)))
+
+(defun org-static-blog--read-file-lines (filename)
   (if (file-exists-p filename)
       (split-string
        (with-temp-buffer
@@ -369,12 +366,25 @@ N in the table of contents. "
        t)
     '()))
 
-(defun copy-to-file-safe (filepath target)
+(defun org-static-blog--copy-to-file-safe (filepath target)
   (let ((target-dir (file-name-parent-directory target)))
     (when (file-exists-p filepath)
       (unless (file-directory-p target-dir)
         (make-directory target-dir))
       (copy-file filepath target t t))))
+
+(defun org-static-blog-create-symblic-link (target)
+  (org-static-blog-ensure-directorys org-static-blog-posts-directory)
+  (let* ((file-list (directory-files-recursively
+                     org-static-blog-posts-directory
+                     ".*\\.org$"))
+         (file-purename (file-name-nondirectory target))
+         (final-name (completing-read
+                      (format "Target File (%s):" org-static-blog-posts-directory)
+                      file-list nil nil file-purename))
+         (file-abs-path (expand-file-name final-name org-static-blog-posts-directory)))
+    (unless (file-exists-p file-abs-path)
+      (make-symbolic-link (file-truename target) file-abs-path))))
 
 (defun org-static-blog--get-files-dir ()
   (expand-file-name org-static-blog-files-directory-name
@@ -436,7 +446,7 @@ unconditionally."
   (interactive "P")
   (dolist (file (append (org-static-blog-get-post-filenames)
                         (org-static-blog-get-draft-filenames)))
-    (org-static-blog-format-file file))
+    (org-static-blog-insert-publish-headers file))
   (dolist (file (append (org-static-blog-get-post-filenames)
                         (org-static-blog-get-draft-filenames)))
     (when (or force-render (org-static-blog-needs-publishing-p file))
@@ -462,19 +472,13 @@ unconditionally."
 
 (defun org-static-blog-get-post-filenames ()
   "Returns a list of all posts."
-  (let ((file-names '()))
-    (dolist (e (directory-files-recursively org-static-blog-posts-directory ".*\\.org$"))
-      (unless (member e file-names)
-        (push e file-names)))
-    (dolist (e (read-file-lines org-static-blog-publish-filepaths))
-      (unless (member e file-names)
-        (push e file-names)))
-    (dolist (e file-names)
-      (message "need to publish post: %s" e))
-    file-names))
+  (org-static-blog-ensure-directorys org-static-blog-posts-directory)
+  (directory-files-recursively
+   org-static-blog-posts-directory ".*\\.org$"))
 
 (defun org-static-blog-get-draft-filenames ()
   "Returns a list of all drafts."
+  (org-static-blog-ensure-directorys org-static-blog-drafts-directory)
   (directory-files-recursively
    org-static-blog-drafts-directory ".*\\.org$"))
 
@@ -564,7 +568,7 @@ e.g. `(('foo' 'file1.org' 'file2.org') ('bar' 'file2.org'))`"
             (push (cons tag (list post-filename)) tag-tree)))))
     tag-tree))
 
-(defun org-static-blog-format-file (post-filename)
+(defun org-static-blog-insert-publish-headers (post-filename)
   "If the file does not contain date/filetags, add them."
   (save-excursion
     (let* ((current-buffer (current-buffer))
@@ -579,18 +583,18 @@ e.g. `(('foo' 'file1.org' 'file2.org') ('bar' 'file2.org'))`"
       (goto-char (point-min))
       (unless (search-forward-regexp "^\\#\\+[Tt][Ii][Tt][Li][Ee]:[ ]*\\(.+\\)$" nil t)
         (progn (setq title (read-string (format "Add title for %s: " file-pure-name)))
-               (insert-newline-at-row 1 (concat "#+TITLE: " title))))
+               (org-static-blog--insert-newline-at-row 1 (concat "#+TITLE: " title))))
 
       (goto-char (point-min))
       (unless (search-forward-regexp "^\\#\\+[Ff][Ii][Li][Ee][Tt][Aa][Gg][Ss]:[ ]*\\(.+\\)$" nil t)
         (progn (setq tags (read-string (format "Add some tags for %s: " file-pure-name)))
-               (insert-newline-at-row 2 (concat "#+FILETAGS: " tags))))
+               (org-static-blog--insert-newline-at-row 2 (concat "#+FILETAGS: " tags))))
 
       (goto-char (point-min))
       (unless (search-forward-regexp "^\\#\\+[Dd][Aa][Tt][Ee]:[ ]*<\\([^>]+\\)>$" nil t)
-        (setq post-date (get-org-date))
+        (setq post-date (org-static-blog--get-org-date))
         (when (> (length post-date) 5)
-          (insert-newline-at-row 2 (concat "#+DATE: " post-date))))
+          (org-static-blog--insert-newline-at-row 2 (concat "#+DATE: " post-date))))
 
       (basic-save-buffer)
       (unless buffer-exists (kill-buffer))
@@ -685,6 +689,11 @@ the path to the HTML file in publish directory and the url for the post."
   "Publish a single POST-FILENAME.
 The index, archive, tags, and RSS feed are not updated."
   (interactive "f")
+  ;; Try to insert title, tags and date.
+  (org-static-blog-insert-publish-headers post-filename)
+  ;; Try to link to the posts directory
+  (org-static-blog-create-symblic-link post-filename)
+  
   (org-static-blog-with-find-file
    (org-static-blog-matching-publish-filename post-filename)
    (org-static-blog-template
@@ -694,6 +703,11 @@ The index, archive, tags, and RSS feed are not updated."
      (org-static-blog-render-post-content post-filename)
      (org-static-blog-post-postamble post-filename))
     (org-static-blog-get-description post-filename))))
+
+(defun org-static-blog-publish-current-buffer ()
+  (interactive)
+  (save-buffer)
+  (org-static-blog-publish-file (buffer-file-name)))
 
 (defun org-static-blog--embed-latex-previews ()
   "Embed the latex preview images into the webpage by using BASE64."
@@ -820,7 +834,7 @@ Posts are sorted in descending time."
         (replace-match (format "<img src=\"./%s/%s\""
                                org-static-blog-files-directory-name
                                attach-file-format-name))
-        (copy-to-file-safe
+        (org-static-blog--copy-to-file-safe
          attach-file-path
          (expand-file-name attach-file-format-name
                            (org-static-blog--get-files-dir)))))))
