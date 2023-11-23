@@ -50,7 +50,6 @@
     (compress "zip" "7z" "tar" "gz" "xz" "rar" "zst")
     (iso "iso"))
   "")
-
 (defconst mdired-font-icons
   '((ebook     . "")
     (rich-text . "")
@@ -117,14 +116,20 @@
     (find-dired (read-directory-name "Run find in directory: " nil "" t)
                 (read-string "Run find (with args): " find-args
                              '(find-args-history . 1)))
-    (mdired-first-file)
-    (message "begin to refresh ..... %s, %s" (dired-get-filename nil t)
-             (buffer-substring (line-beginning-position) (line-end-position)))
-    (message "begin to refresh: %s" filename)
-    (mdired-build-getter-and-setters)
-    (mdired--set-filename mdired--vector filename)
-    (mdired-refresh mdired--vector t)
-    (mdired-toggle-preview)))
+    (defun find-mdired-first-line (&rest args)
+      (mdired-first-file 10)
+      (let ((filename (dired-get-filename nil t)))
+        (when filename
+          (mdired-build-getter-and-setters)
+          (mdired--set-filename mdired--vector filename)
+          (mdired--find-alternate-file mdired--vector nil t)
+          (mdired-refresh mdired--vector t)
+          (mdired-toggle-preview)
+
+          (remove-hook 'after-change-functions 'find-mdired-first-line t))))
+
+    (add-hook 'after-change-functions 'find-mdired-first-line 0 t)
+    ))
 
 (defun mdired-refresh (vector &optional exclude-main)
   "Refresh this mdired instance."
@@ -166,11 +171,15 @@ and is different from current file."
       (setq index (1+ index)))))
 
 ;;; Helper Functions
-(defun mdired-first-file ()
+(defun mdired-first-file (&optional max-try)
   (goto-char (point-min))
-  (while (and (not (dired-get-filename nil t))
-              (not (eobp)))
-    (dired-next-line 2)))
+  (let ((count 0))
+    (while (and (not (dired-get-filename nil t))
+                (not (eobp))
+                (or (null max-try) (< count max-try)))
+      (when max-try
+        (setq count (1+ count)))
+      (dired-next-line 1))))
 
 (defmacro mdired-ignore-errors (window buffer &rest body)
   "A copy of `ignore-errors'"
@@ -343,7 +352,9 @@ else we will jump into its parent and goto this file."
 (defun mdired--find-alternate-file (vector directory hide-details-mode)
   (let ((kill-buffer-hook nil))
     (setq-local dired-hide-details-mode hide-details-mode)
-    (find-alternate-file directory)
+    (when directory
+      (find-alternate-file directory))
+    
     (mdired-mode)
     (setq-local mdired--vector vector)
     (setq-local dired-hide-details-mode hide-details-mode)
