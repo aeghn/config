@@ -31,7 +31,7 @@
         (chin/org-show-current-heading-tidily)))))
 
 (global-set-key (kbd "<f6>") (lambda () (interactive) (chin/todo chin/writer-dir)))
-(global-set-key (kbd "<f5>") (lambda () (interactive) (chin/todo "~/extra/firm/")))
+(global-set-key (kbd "<f5>") (lambda () (interactive) (chin/todo "~/Nextcloud/days/")))
 
 (defun chin/today-file (directory)
   (interactive)
@@ -40,14 +40,14 @@
          (time (completing-read
                 (concat "Timebased file (" directory "): ")
                 (if (file-exists-p directory)
-                    (directory-files-recursively "~/extra/firm/days" "" t (lambda (x) (not (string-match-p  "/\\." x))))
+                    (directory-files-recursively directory "" t (lambda (x) (not (string-match-p  "/\\." x))))
                     nil) nil nil sub-dir))
          (total (expand-file-name time directory)))
     (mkdir (file-name-parent-directory total) t)
     (find-file total)))
 
-(global-set-key (kbd "C-<f6>") (lambda () (interactive) (chin/today-file "~/extra/tmps")))
-(global-set-key (kbd "C-<f5>") (lambda () (interactive) (chin/today-file "~/extra/firm/days/")))
+;; (global-set-key (kbd "C-<f6>") (lambda () (interactive) (chin/today-file "~/extra/tmps")))
+(global-set-key (kbd "C-<f5>") (lambda () (interactive) (chin/today-file "~/Nextcloud/days/")))
 
 
 (defun chin/number-items ()
