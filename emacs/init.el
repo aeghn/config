@@ -41,10 +41,6 @@
     (when (file-exists-p f)
       (load (file-truename f)))))
 
-(add-to-list
- 'image-load-path
- (expand-file-name "lib/images" (file-name-directory (chin/this-true-file))))
-
 ;; Packages Initialization
 (defun chin/ensure-all-packages ()
   (interactive)
@@ -75,7 +71,7 @@
 ;; windows-loader
 (when chin/is-windows
   (let ((msys2root "C:\\msys64\\"))
-    (setenv "WENV" "D:\\wenv")    
+    (setenv "WENV" "D:\\wenv")
     (setenv "PATH" (concat
                     ;; Remember to install `mingw-w64-x86_64-gnupg'
                     "d:\\wenv\\bin;"
@@ -128,8 +124,8 @@
 ;; Font settings
 (defun chin/set-fonts ()
   (when (display-graphic-p)
-    (let ((prefered-mono-font-list '("IBM Plex Mono" "Jetbrains Mono"))
-          (prefered-chinese-font-list '("Noto Serif CJK SC"))
+    (let ((prefered-mono-font-list '("Martian Mono" "IBM Plex Mono" "Jetbrains Mono"))
+          (prefered-chinese-font-list '("Zhuque Fangsong (technical preview)"  "Noto Serif CJK SC"))
           (prefered-serif-font-list (list "Literata 7pt" "Charter" "Roboto"))
           (first-font-fun (make-symbol "chin/get-first-available-font"))
           prefered-mono-font prefered-chinese-font prefered-serif-font )
@@ -154,11 +150,11 @@
             (funcall first-font-fun prefered-serif-font-list prefered-serif-font))
       (set-fontset-font "fontset-default" '(#xe000 . #xf8ff) "nrss")
       (set-face-attribute 'default nil
-                          :family prefered-mono-font :height 120 :weight 'Regular)
+                          :family prefered-mono-font :height 108 :weight 'Regular)
       (set-face-attribute 'mode-line nil
-                          :family prefered-serif-font :height 120 :weight 'Bold)
+                          :family prefered-serif-font :height 108 :weight 'Bold)
       (set-face-attribute 'mode-line-inactive nil
-                          :family prefered-serif-font :height 120 :weight 'Regular)
+                          :family prefered-serif-font :height 108 :weight 'Regular)
 
       (setq ibuffer-sidebar-use-custom-font t)
       (setq ibuffer-sidebar-face `(:family "Archivo" :height 120))
@@ -301,6 +297,7 @@
       org-export-preserve-breaks t
 
       org-confirm-babel-evaluate nil)
+(setq org-latex-listings t)
 
 ;; ;; Make deletion(obsolote) text foreground with dark gray.
 ;; (add-to-list 'org-emphasis-alist
@@ -319,6 +316,7 @@
 ;; 🅾🄮 ⃝⃞ℓℵ⇒∀∂∃∅∆∇∈∉∊∋∽≌≒⊠⊿⏃⏄⏅⏛▷◯◉●◎◇◈◯♦♥♭♮♯⚠⚽⚾❀✿✽❖⦿〇〠 ?☁ ?∭ ?∬ ?∫ ?∮
 
 (custom-set-faces
+ '(speedbar-directory-face ((t (:foreground "#aa0000" :weight normal))))
  '(org-level-1 ((t (:weight normal :height 1.3 ))))
  '(org-level-2 ((t (:weight normal :height 1.2 ))))
  '(org-level-3 ((t (:weight normal :height 1.1 ))))
@@ -339,13 +337,13 @@
 
 (defun chin/org-hook-function ()
   (interactive)
-  (let ((variable-font "Clear Han Serif")
+  (let ((variable-font "Zhuque Fangsong (technical preview)")
         (mono-font "IBM Plex Mono"))
-    (setq-local face-remapping-alist `((default (:family ,variable-font) variable-pitch)
-                                       (org-code (:family ,mono-font) org-code)
-                                       (org-verbatim (:family ,mono-font) org-verbatim)
-                                       (org-block (:family ,mono-font) org-block)
-                                       (org-block-begin-line (:family ,mono-font) org-block)))
+    ;; (setq-local face-remapping-alist `((default (:family ,variable-font) variable-pitch)
+    ;;                                    (org-code (:family ,mono-font) org-code)
+    ;;                                    (org-verbatim (:family ,mono-font) org-verbatim)
+    ;;                                    (org-block (:family ,mono-font) org-block)
+    ;;                                    (org-block-begin-line (:family ,mono-font) org-block)))
     (setq line-spacing 0.1))
   (org-superstar-mode 1)
   (olivetti-mode)
@@ -385,9 +383,9 @@
       (find-file (expand-file-name (concat date "-" (replace-regexp-in-string ".org$" "" result) ".org") chin/org-managed-files)))))
 
 (when (boundp 'diff-hl-mode)
-(add-hook 'prog-mode-hook 'diff-hl-mode)
-(add-hook 'org-mode-hook 'diff-hl-mode)
-)
+  (add-hook 'prog-mode-hook 'diff-hl-mode)
+  (add-hook 'org-mode-hook 'diff-hl-mode)
+  )
 (require 'iscroll)
 (add-hook 'org-mode-hook 'iscroll-mode)
 (add-hook 'org-mode-hook 'chin/org-hook-function)
@@ -492,16 +490,18 @@
 
 (global-set-key (kbd "C-c i") 'chin/indent-current-buffer)
 
-(defun chin/delete-blanks ()
+(defun chin/delete-blanks (&optional insert-blank-p)
   (interactive)
   (let* ((end-pos (progn (back-to-indentation)
                          (point)))
          (start-pos (1+ (search-backward-regexp "[^\n[:space:]]"))))
     (delete-region start-pos end-pos)
     (forward-char)
-    (insert " ")))
+    (unless insert-blank-p
+      (insert " "))))
 
 (global-set-key (kbd "M-h") 'chin/delete-blanks)
+(global-set-key (kbd "C-M-h") (lambda () (interactive) (chin/delete-blanks t)))
 
 (define-advice set-mark-command (:before-while (arg))
   "Repeat C-SPC to expand region."
@@ -673,6 +673,19 @@ If popup is focused, kill it."
                                         "figlist" "idx" "log" "nav" "out" "ptc"
                                         "run.xml" "snm" "toc" "vrb" "xdv"))
 
+
+  ;; update the list of LaTeX classes and associated header (encoding, etc.)
+  ;; and structure
+  (add-to-list 'org-latex-classes
+               `("beamer"
+                 ,(concat "\\documentclass[presentation]{beamer}\n"
+                          "[DEFAULT-PACKAGES]"
+                          "[PACKAGES]"
+                          "[EXTRA]\n")
+                 ("\\section{%s}" . "\\section*{%s}")
+                 ("\\subsection{%s}" . "\\subsection*{%s}")
+                 ("\\subsubsection{%s}" . "\\subsubsection*{%s}")))
+
   (add-to-list 'org-latex-classes
                '("elegantpaper"
                  "\\documentclass[lang=cn]{elegantpaper}
@@ -696,3 +709,20 @@ If popup is focused, kill it."
 
 (add-to-list 'auto-mode-alist '("\\.epub\\'" . nov-mode))
 (setq kill-whole-line t)
+
+
+(when (file-exists-p "~/Projects/blog/tools/org-static-blog.el")
+  (load-file "~/Projects/blog/tools/org-static-blog.el")
+  (load-file "~/Projects/blog/tools/envir.el"))
+
+
+(defun chin/insert-half-width-space-between-chinese-and-english ()
+  "在中英文之间增加半角空格"
+  (interactive)
+  (save-excursion
+    (goto-char (point-min))
+    (while (re-search-forward "\\([a-zA-Z0-9]\\)\\([^\x00-\xff]\\)" nil t)
+      (replace-match "\\1 \\2"))
+    (goto-char (point-min))
+    (while (re-search-forward "\\([^\x00-\xff]\\)\\([a-zA-Z0-9]\\)" nil t)
+      (replace-match "\\1 \\2"))))
