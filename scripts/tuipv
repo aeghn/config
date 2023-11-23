@@ -2,7 +2,7 @@
 
 image() {
     if [ -n "$FZF_PREVIEW_LINES" ]; then
-        chafa "$1" -f sixel -s $((${FZF_PREVIEW_COLUMNS}-4))x$(($FZF_PREVIEW_LINES*2/3)) --animate false
+        chafa "$1" -f sixel -s $((${FZF_PREVIEW_COLUMNS}-2))x$(($FZF_PREVIEW_LINES/9*10)) --animate false
     else
         chafa "$1" -f sixel --animate false
     fi
@@ -16,14 +16,11 @@ fontcat() {
     convert -size 800x600 xc:#ffffff -font "$1" -pointsize 48 -gravity center -fill '#000000' \
             -annotate +0+0 'ABCDEFHIJKLMN\nOPQRSTUVWXYZ\nabcdefhijklmn\nopqrstuvwxyz\n1234567890\n!@#$\%\^&*()_+-=\n\\[]{},./<>?:";'"'" \
             -flatten "$CACHE"
+    otfinfo --info "$1"
     image "$CACHE"
 }
 
 
-file "$1"
-echo
-echo "============="
-echo
 
 if [ -d "${1}" ]; then
     ls -lh "${1}"
