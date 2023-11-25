@@ -44,7 +44,7 @@ __msg() {
             ;;
     esac
 
-    lvl=$((CURRENT_LEVEL*2 + 2))
+    lvl=$((CURRENT_LEVEL + 1))
 
     printf "%0${lvl}s${fmt}" " " "$*"
 }
@@ -67,15 +67,15 @@ _log_level() {
 }
 
 _debug() {
-    $DEBUG && __msg "-> \033[32m%s\033[0m\n" "$@"
+    $DEBUG && __msg "\033[32m⏺\033[0m %s\n" "$@"
 }
 
 _info() {
-    __msg "=> \033[35m%s\033[0m\n" "$@"
+    __msg "\033[32m⏺\033[0m %s\n" "$@"
 }
 
 _warn() {
-    __msg "!! \033[31m%s\033[0m\n" "$@"
+    __msg "\033[31m⏺\033[0m %s\n" "$@"
 }
 
 _die() {
@@ -123,8 +123,8 @@ _die_if_link() {
 
 # (FILE MSG)
 _die_if_absent() {
-    if [ ! -e "$2" ]; then
-        _die "File \`$2' is not existed: $1"
+    if [ ! -e "$1" ]; then
+        _die "File \`$1' is not existed: $2"
     fi
 }
 
@@ -152,6 +152,27 @@ _is_link_of() {
     local b="$(realpath "$2")"
 
     [ "$a" = "$b" ]
+}
+
+# (file_a, file_b)
+_diff() {
+    local fa fb viewer
+    fa="$1"
+    fb="$2"
+
+    if which delta; then
+        viewer="delta"
+    else
+        viewer="diff"
+    fi
+
+    if [ -f "$fa" ] && [ -f "$fb" ]; then
+        $viewer "$fa" "$fb"
+    elif [ -d "$fa" ] && [ -d "$fb" ]; then
+        $viewer <(tree "$fa") <(tree "$fb")
+    else
+        _warn "Can not compare them."
+    fi
 }
 
 # Args: file
@@ -184,10 +205,12 @@ _git_file_up_to_date() {
 ## Store Part
 _store() {
     _info "begin to store"
+    _die_if_link "$MAINLAND"
+    _die_if_absent "$MAINLAND"
 
     if $COPY_MODE; then
-        _info cp -r "$ISLAND" "$MAINLAND"
-        cp -r "$ISLAND" "$MAINLAND"
+        _info cp -r "$MAINLAND" "$ISLAND"
+        cp -r "$MAINLAND" "$ISLAND"
     else
         _info mv "$MAINLAND" "$ISLAND"
         mv "$MAINLAND" "$ISLAND"
@@ -198,9 +221,13 @@ _store() {
 _restore() {
     _info "begin to restore"
 
+    _die_if_link "$ISLAND"
+    _die_if_absent "$ISLAND"
+
+
     if $COPY_MODE; then
-        _info cp -r "$MAINLAND" "$ISLAND"
-        cp -r "$MAINLAND" "$ISLAND"
+        _info cp -r "$ISLAND" "$MAINLAND"
+        cp -r "$ISLAND" "$MAINLAND"
     else
         _info ln -s "$ISLAND" "$MAINLAND"
         ln -s "$ISLAND" "$MAINLAND"
@@ -211,11 +238,11 @@ _restore() {
 # Restore Part
 _wrapper() {
     local answer new_world new_island
-    
+
     _info 1 "MAINLAND: $(stat --printf '%15F, %.19y -- %n' "${MAINLAND}" 2>&1)"
     _info "  ISLAND: $(stat --printf '%15F, %.19y -- %n' "${ISLAND}" 2>&1)"
     _log_level +
-    
+
 
     if [ -z "$MAINLAND" ] || [ -z "$ISLAND" ]; then
         _die "Nothing to do because MAINLAND or ISLAND is empty."
@@ -238,9 +265,9 @@ _wrapper() {
             _log_level +
 
             if [ ! -L "$MAINLAND" ]; then
-                _info "[s]tore Remove ISLAND: \`$PWD/$ISLAND'."
+                _info "[s]tore Remove ISLAND: \`$(realpath --no-symlinks "$ISLAND")'."
             fi
-            _info "[r]estore Remove MAINLAND: \`$PWD/$MAINLAND'."
+            _info "[r]estore Remove MAINLAND: \`$(realpath --no-symlinks  "$MAINLAND")'."
             if [ -d "${MAINLAND}" ]; then
                 new_world="${MAINLAND%/}/${ISLAND##*/}"
                 _info "Restore to [n]ew [w]orld($new_world)."
@@ -250,49 +277,63 @@ _wrapper() {
                 _info "store to [n]ew [i]sland($new_island)."
             fi
 
-            answer="$(_read - "How to do with this file? [n]othing")"
-            case "$answer" in
-                s)
-                    WORK_MODE=store
-                    _die_if_link "$MAINLAND"
+            _info "[view] differences."
 
-                    if _git_file_up_to_date "$ISLAND"; then
-                        rm -ri "$ISLAND"
-                    else
-                        if _y_or_n "ISLAND is dirty, really delete it?"; then
+            while true; do
+                retry=false
+                answer="$(_read - "How to do with this file? [n]othing")"
+                case "$answer" in
+                    s)
+                        WORK_MODE=store
+                        _die_if_link "$MAINLAND"
+
+                        if _git_file_up_to_date "$ISLAND"; then
                             rm -ri "$ISLAND"
                         else
-                            _warn "Cancelled"
-                            return
+                            if _y_or_n "ISLAND is dirty, really delete it?"; then
+                                rm -ri "$ISLAND"
+                            else
+                                _warn "Cancelled"
+                                return
+                            fi
                         fi
-                    fi
-                    ;;
-                r)
-                    WORK_MODE=restore
-                    if _y_or_n "really delete the file in the MAINLAND?"; then
-                        rm -ri "$ISLAND"
-                    else
-                        _die "Cancelled"
-                    fi
-                    ;;
-                nw)
-                    MAINLAND="$new_world"
+                        ;;
+                    r)
+                        WORK_MODE=restore
+                        if _y_or_n "really delete the file in the MAINLAND?"; then
+                            rm -ri "$MAINLAND"
+                        else
+                            _die "Cancelled"
+                        fi
+                        ;;
+                    nw)
+                        MAINLAND="$new_world"
 
-                    # Resolve it recursively
-                    _wrapper
+                        # Resolve it recursively
+                        _wrapper
 
-                    WORK_MODE=restore_new
-                    ;;
-                ni)
-                    ISLAND="$new_island"
+                        WORK_MODE=restore_new
+                        ;;
+                    ni)
+                        ISLAND="$new_island"
 
-                    # Resolve it recursively
-                    _wrapper
-                    WORK_MODE=store_new
-                    ;;
-                *) _info "Skip this process"
-                   return;;
-            esac
+                        # Resolve it recursively
+                        _wrapper
+                        WORK_MODE=store_new
+                        ;;
+                    v)
+                        _diff "$ISLAND" "$MAINLAND"
+                        retry=true
+                        ;;
+                    *)
+                        _info "Skip this process"
+                        return
+                        ;;
+
+                esac
+
+                $retry || break
+            done
         fi
     fi
 
@@ -309,6 +350,11 @@ _wrapper() {
             _restore
             ;;
     esac
+
+    if [ -n "$DFM_FILE" ]; then
+        mkdir -p "${DFM_FILE%/*}"
+        _perm_mapping
+    fi
 }
 
 # Mapping Part
