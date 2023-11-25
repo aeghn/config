@@ -224,13 +224,18 @@ _restore() {
     _die_if_link "$ISLAND"
     _die_if_absent "$ISLAND"
 
+    local mainland_parent
+    mainland_parent="${MAINLAND%/}"
+    mainland_parent="${mainland_parent%/*}"
+
+    mkdir -p "$mainland_parent"
 
     if $COPY_MODE; then
         _info cp -r "$ISLAND" "$MAINLAND"
         cp -r "$ISLAND" "$MAINLAND"
     else
-        _info ln -s "$ISLAND" "$MAINLAND"
-        ln -s "$ISLAND" "$MAINLAND"
+        _info ln -s "$(realpath --no-symlink $ISLAND)" "$MAINLAND"
+        ln -s "$(realpath --no-symlink $ISLAND)" "$MAINLAND"
     fi
 
 }

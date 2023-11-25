@@ -3,20 +3,47 @@
 FILEPATH="$(realpath --no-symlinks "$1")"
 
 CONFIG_ISLAND_DIR="$HOME/files/config"
-CONFIG_MAINLAND_DIR="$(realpath $HOME/.config)/"
 
-if echo "$FILEPATH" | grep "^$CONFIG_MAINLAND_DIR" &>/dev/null; then
-    CONFIG_MAINLAND_DIR="${CONFIG_MAINLAND_DIR%/}/"
+RELATIONS=(
+    path "~/.local/share/fonts" "fonts"
+    path "~/.emacs.d" "emacs"
+    base "~/.config" "/"
+)
 
-    SUFFIX="${FILEPATH/$CONFIG_MAINLAND_DIR/}"
+dfs_store() {
+    local method prefix relative suffix
+    for ((i=0; i < ${#RELATIONS}; i=i+3)); do
+        method="${RELATIONS[i]}"
+        prefix="${RELATIONS[i+1]}"
+        relative="${RELATIONS[i+2]}"
+        config_dir="${CONFIG_ISLAND_DIR%/}"
 
-    NUT_DIR_NAME="${SUFFIX%/*}"
+        if echo "$FILEPATH" | grep "^$(realpath --no-symlink "$prefix")/" &>/dev/null; then
+            if [ "$method" = base ]; then
+                suffix="${FILEPATH/$prefix/}"
+                dir_name="${suffix%/*}"
 
-    NUT_DIR_PATH="$CONFIG_ISLAND_DIR/$NUT_DIR_NAME"
+                island="$config_dir/$suffix"
+                mainland="${FILENAME}"
+                dfs="$config_dir/$dir_name/.dfs"
+            elif [ "$method" = path ]; then
+                suffix="${FILEPATH/$prefix/}"
+                island="${config_dir}/$relative/$suffix"
+                dfs="$config_dir/$relative/.dfs"
+            fi
 
-    NUT_DFS_PATH="$NUT_DIR_PATH/.dfs"
+            dfm "$island" "$mainland" -f "$dfs"
+            break
+        fi
+    done
+}
 
-    dfm "$CONFIG_ISLAND_DIR/$SUFFIX" "$FILEPATH" -f "$NUT_DFS_PATH"
+dfs_restore() {
+    :
+}
+
+if echo "$FILEPATH" | grep "^$(realpath --no-symlink "$CONFIG_ISLAND_DIR")/" &>/dev/null; then
+    dfs_restore
+else
+    dfs_restore
 fi
-
-
