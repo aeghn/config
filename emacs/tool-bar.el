@@ -5,7 +5,6 @@
  'image-load-path
  (expand-file-name "lib/images" (file-name-directory (chin/this-true-file))))
 
-
 ;;; Global map
 
 ;; Control the sequence of icons.
