@@ -149,6 +149,7 @@
 ;;; Help Mode
 (setq help-mode-tool-bar-map
       (let ((map (make-sparse-keymap)))
+         (require 'help-mode)
          (tool-bar-local-item "close" 'quit-window 'quit map
                               :help "Quit help"
                               :vert-only t
