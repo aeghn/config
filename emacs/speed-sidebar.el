@@ -180,11 +180,9 @@ buffer if buffer has a window attached to it."
              (process t))
     (with-current-buffer (speed-sidebar--buffer)
       (goto-char (point-min))
-      (while (and (< (point) (point-max))
-                  process)
+      (while (and (< (point) (point-max)) process)
         (let ((f (speedbar-line-file)))
-          (when (and f (file-directory-p f)
-                     (string-prefix-p (concat f "/") buffer-file))
+          (when (and f (file-directory-p f) (string-prefix-p (concat f "/") buffer-file))
             (save-excursion (speedbar-expand-line)))
           (if (string= buffer-file f)
               (setq process nil)
@@ -193,17 +191,16 @@ buffer if buffer has a window attached to it."
 (defun speed-sidebar-refresh-buffer (&optional force)
   "Refresh the sidebar buffer"
   (interactive)
-  (when-let* ((buffer (speed-sidebar--buffer))
-              (window (get-buffer-window buffer))
+  (when-let* ((buffer (current-buffer))
+              (speed-buffer (speed-sidebar--buffer))
+              (window (get-buffer-window speed-buffer))
               (file-or-force (or (buffer-file-name) force)))
-    (setq speedbar-indentation-width 4)
+
     (setq default-directory (speed-sidebar--find-root))
     (speedbar-refresh)
-    (setq-local cursor-in-non-selected-windows nil)
-    (speed-sidebar--set-icons)
-    (speed-sidebar--set-mode-line)
-    (with-selected-window window
-      (unless (booleanp file-or-force)
+    (unless (booleanp file-or-force)
+      (with-selected-window window
+        (setq-local cursor-in-non-selected-windows nil)
         (speed-sidebar--expand-to-current-file file-or-force)
         (when speed-sidebar-selected-line-overlay
           (delete-overlay speed-sidebar-selected-line-overlay))
@@ -211,16 +208,20 @@ buffer if buffer has a window attached to it."
               (make-overlay (line-beginning-position) (1+ (line-end-position))))
         (overlay-put speed-sidebar-selected-line-overlay
                      'face 'speed-sidebar-selected-face)
-        (beginning-of-line)
-        (speedbar-recenter)))))
+        (speedbar-recenter)
+        (let ((current-directory (file-name-directory file-or-force)))
+          (when current-directory
+            (with-current-buffer buffer
+              (setq default-directory current-directory))))))))
+
 
 (defun speed-sidebar--find-root ()
   "Find the project root of current file, which should as
 the default directory of speed-sidebar buffer"
   (if-let* ((pc (project-current))
             (dir (if (fboundp 'project-root)
-                    (project-root pc)
-                  (car (with-no-warnings (project-roots pc))))))
+                     (project-root pc)
+                   (car (with-no-warnings (project-roots pc))))))
       dir
     (expand-file-name default-directory)))
 
@@ -244,7 +245,8 @@ the default directory of speed-sidebar buffer"
             speedbar-use-images nil
             speedbar-last-selected-file nil
             speedbar-update-flag nil
-            speedbar-update-flag-disable t)
+            speedbar-update-flag-disable t
+            truncate-lines t)
       (set-buffer speedbar-buffer)
       (speedbar-mode)
       (speedbar-update-contents)
