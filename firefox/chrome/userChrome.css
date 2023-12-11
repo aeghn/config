@@ -99,7 +99,7 @@
     padding-top: 10px;
     padding-left: 5px;
     overflow-y: unset;
-    height: 200px;
+    height: 100px !important;
     top: 80px;
     border-radius: 0px 0px 10px 10px;
     border-bottom: 1px solid #aaa;
