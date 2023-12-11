@@ -1,0 +1,21 @@
+[O#!/usr/bin/env bash
+
+set -e
+set -o pipefail
+
+THRESHOLD_SIZE=$((2000*1024))
+
+git lfs install
+
+git ls-files --modified --others --exclude-standard | while read file; do
+    if [ $(file --mime-encoding -b "$file") = "binary" ] && [ $(stat -c %s "$file") -gt $THRESHOLD_SIZE ]; then
+        git lfs track "$file"
+        git add "$file"
+        echo "Added $file to Git LFS."
+    else
+        git add "$file"
+        echo "Added $file to Git."
+    fi
+done
+
+git commit -m "gwl: add"
