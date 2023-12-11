@@ -34,3 +34,4 @@ alias td="mkdir -p \"$CHIN_TODAY_DIR_BASE/$(date +%Y-%m/%d)\" && cd \"$CHIN_TODA
 
 [ -f /opt/miniconda3/etc/profile.d/conda.sh ] && source /opt/miniconda3/etc/profile.d/conda.sh
 export NODE_PATH=$HOME/.cache/node_modules
+[ -d ~/.cargo/bin ] && export PATH=$HOME/.cargo/bin:$PATH
