@@ -44,7 +44,7 @@
 ;; Packages Initialization
 (defun chin/ensure-all-packages ()
   (interactive)
-  (let* ((packages '(dash magit-section markdown-mode with-editor modus-themes json-mode go-imenu go-mode vala-mode cargo cargo-mode caroline-theme org-download embark-consult embark magit expand-region restclient lua-mode ahk-mode corfu symbol-overlay consult all-the-icons xr ibuffer-project graphviz-dot-mode htmlize xcscope rust-mode ripgrep rainbow-mode meson-mode grey-paper-theme comment-dwim-2 vertico consult vundo org-superstar diff-hl ob-rust vertico  iscroll )))
+  (let* ((packages '(dash magit-section markdown-mode with-editor modus-themes json-mode go-imenu go-mode vala-mode cargo cargo-mode caroline-theme org-download embark-consult embark magit expand-region restclient lua-mode ahk-mode corfu symbol-overlay consult all-the-icons xr ibuffer-project graphviz-dot-mode htmlize xcscope rust-mode ripgrep rainbow-mode meson-mode grey-paper-theme comment-dwim-2 vertico consult vundo diff-hl ob-rust vertico  iscroll )))
     (package-refresh-contents)
     (dolist (p packages)
       (if (package-installed-p p)
@@ -61,6 +61,9 @@
 (chin/load-other-file "damer.el")
 (chin/load-other-file "tool-bar.el")
 (chin/load-other-file "shortcut.el")
+(chin/load-other-file "org-visual-indent.el")
+(chin/load-other-file "org-roam-helper.el")
+
 
 ;;; Platform Settings
 (defconst chin/is-linux   (eq system-type 'gnu/linux))
@@ -124,7 +127,7 @@
 ;; Font settings
 (defun chin/set-fonts ()
   (when (display-graphic-p)
-    (let ((prefered-mono-font-list '("Martian Mono" "IBM Plex Mono" "Jetbrains Mono"))
+    (let ((prefered-mono-font-list '("Martian Mono Nr Rg" "IBM Plex Mono" "Jetbrains Mono"))
           (prefered-chinese-font-list '("Zhuque Fangsong (technical preview)"  "Noto Serif CJK SC"))
           (prefered-serif-font-list (list "Literata 7pt" "Charter" "Roboto"))
           (first-font-fun (make-symbol "chin/get-first-available-font"))
@@ -275,6 +278,8 @@
 ;; Org-mode settings
 (require 'org)
 (require 'org-tempo)
+(require 'org-tidy)
+;; (require 'org-visual-indent)
 (setq org-special-ctrl-a/e t
       ;; Edit settings
       ;; org-auto-align-tags nil
@@ -299,57 +304,43 @@
       org-confirm-babel-evaluate nil)
 (setq org-latex-listings t)
 
-;; ;; Make deletion(obsolote) text foreground with dark gray.
-;; (add-to-list 'org-emphasis-alist
-;;              '("+" (:foreground "dark gray"
-;;                                 :strike-through t)))
-;; ;; Make code style around with box.
-;; (add-to-list 'org-emphasis-alist
-;;              '("~" (:box (:line-width 1
-;;                                       :color "grey75"
-;;                                       :style released-button))))
-
-(require 'org-superstar)
-(setq org-superstar-leading-bullet ?\s)
-(setq org-superstar-headline-bullets-list '(?⁂ ))
-(setq org-superstar-item-bullet-alist '((?* . ?⁑) (?+ . ?〄) (?- . ?☁)))
 ;; 🅾🄮 ⃝⃞ℓℵ⇒∀∂∃∅∆∇∈∉∊∋∽≌≒⊠⊿⏃⏄⏅⏛▷◯◉●◎◇◈◯♦♥♭♮♯⚠⚽⚾❀✿✽❖⦿〇〠 ?☁ ?∭ ?∬ ?∫ ?∮
-
-(custom-set-faces
- '(speedbar-directory-face ((t (:foreground "#aa0000" :weight normal))))
- '(org-level-1 ((t (:weight normal :height 1.3 ))))
- '(org-level-2 ((t (:weight normal :height 1.2 ))))
- '(org-level-3 ((t (:weight normal :height 1.1 ))))
- '(org-level-4 ((t (:weight normal :height 1.0 ))))
- '(org-level-5 ((t (:weight normal :height 1.0 ))))
- '(org-level-6 ((t (:weight normal :height 1.0 ))))
- '(org-level-8 ((t (:weight normal))))
- '(org-block-begin-line ((t (:height 0.8 :slant italic))))
- '(org-block-end-line ((t (:inherit 'org-block-begin-line))))
- '(org-superstar-header-bullet ((t (:weight normal :foreground "#aa0000" :height 1.0))))
- '(org-superstar-item ((t (:weight normal :foreground "#4466ee" :height 1.0)))))
-;; ㊟
 
 ;; Agenda styling
 (setq org-log-done 'time)
 (setq org-todo-keywords
       '((sequence "TODO(t)" "STARTED(s)" "WAIT(w)" "|" "DONE(d)" "CANCELED(c)")))
 
+;;; Org Faces and Symbols
+(custom-set-faces
+ '(speedbar-directory-face ((t (:foreground "#aa0000" :weight normal))))
+ '(org-document-title ((t (:weight normal :height 2.0))))
+ '(org-level-1 ((t (:weight normal :height 1.1 ))))
+ '(org-level-2 ((t (:weight normal :height 1.05 ))))
+ '(org-level-3 ((t (:weight normal :height 1.05 ))))
+ '(org-level-4 ((t (:weight normal :height 1.0 ))))
+ '(org-level-5 ((t (:weight normal :height 1.0 ))))
+ '(org-level-6 ((t (:weight normal :height 1.0 ))))
+ '(org-level-8 ((t (:weight normal)))))
+
+(require 'org-visual-indent)
+(org-visual-indent-mode)
+
+(defun chin/org-face-hook ()
+  (let ((variable-font "Zhuque Fangsong (technical preview)"))
+    (setq-local face-remapping-alist
+                `((default (:family ,variable-font :height 144) variable-pitch)
+                  (org-block (:family "Martian Mono Nr Rg" :height 108) org-block))
+                line-spacing 0.2)
+    (olivetti-mode)
+    (org-visual-indent-mode)
+    (org-tidy-mode)))
+
+
 (defun chin/org-hook-function ()
-  (interactive)
-  (let ((variable-font "Zhuque Fangsong (technical preview)")
-        (mono-font "IBM Plex Mono"))
-    ;; (setq-local face-remapping-alist `((default (:family ,variable-font) variable-pitch)
-    ;;                                    (org-code (:family ,mono-font) org-code)
-    ;;                                    (org-verbatim (:family ,mono-font) org-verbatim)
-    ;;                                    (org-block (:family ,mono-font) org-block)
-    ;;                                    (org-block-begin-line (:family ,mono-font) org-block)))
-    (setq line-spacing 0.1))
-  (org-superstar-mode 1)
-  (olivetti-mode)
+  (chin/org-face-hook)
   (define-key org-mode-map (kbd "M-h") 'chin/delete-blanks))
 
-;; Copied from https://github.com/lijigang/100-questions-about-orgmode
 
 (setq org-plantuml-exec-mode 'plantuml)
 ;; https://orgmode.org/worg/org-contrib/babel/languages/ob-doc-plantuml.html
@@ -366,7 +357,7 @@
 (defvar chin/org-managed-files
   (if chin/is-windows
       "E:\\files\\docs\\org"
-      "~/files/docs/org"))
+    "~/files/docs/org"))
 
 (defun chin/org-files ()
   (interactive)
@@ -384,13 +375,65 @@
 
 (when (boundp 'diff-hl-mode)
   (add-hook 'prog-mode-hook 'diff-hl-mode)
-  (add-hook 'org-mode-hook 'diff-hl-mode)
-  )
+  (add-hook 'org-mode-hook 'diff-hl-mode))
+
 (require 'iscroll)
 (add-hook 'org-mode-hook 'iscroll-mode)
 (add-hook 'org-mode-hook 'chin/org-hook-function)
 
-(defun chin/insert-image-from-clipboard ()
+(with-eval-after-load 'ox-latex
+  ;; http://orgmode.org/worg/org-faq.html#using-xelatex-for-pdf-export
+  ;; latexmk runs pdflatex/xelatex (whatever is specified) multiple times
+  ;; automatically to resolve the cross-references.
+  (setenv "TEXMFHOME" "/home/chin/Repos/tex_config/texmfhome")
+  (setq org-latex-pdf-process '("xelatex -interaction=batchmode -shell-escape -f %f")
+        org-latex-remove-logfiles t
+        org-latex-logfiles-extensions '("aux" "bcf" "blg" "fdb_latexmk" "fls"
+                                        "figlist" "idx" "log" "nav" "out" "ptc"
+                                        "run.xml" "snm" "toc" "vrb" "xdv"))
+
+
+  ;; update the list of LaTeX classes and associated header (encoding, etc.)
+  ;; and structure
+  (add-to-list 'org-latex-classes
+               `("beamer"
+                 ,(concat "\\documentclass[presentation]{beamer}\n"
+                          "[DEFAULT-PACKAGES]"
+                          "[PACKAGES]"
+                          "[EXTRA]\n")
+                 ("\\section{%s}" . "\\section*{%s}")
+                 ("\\subsection{%s}" . "\\subsection*{%s}")
+                 ("\\subsubsection{%s}" . "\\subsubsection*{%s}")))
+
+  (add-to-list 'org-latex-classes
+               '("elegantpaper"
+                 "\\documentclass[lang=cn]{elegantpaper}
+                  \\bigskip
+                 [NO-DEFAULT-PACKAGES]
+                 [PACKAGES]
+                 [EXTRA]"
+                 ("\\section{%s}" . "\\section*{%s}")
+                 ("\\subsection{%s}" . "\\subsection*{%s}")
+                 ("\\subsubsection{%s}" . "\\subsubsection*{%s}")
+                 ("\\paragraph{%s}" . "\\paragraph*{%s}")
+                 ("\\subparagraph{%s}" . "\\subparagraph*{%s}")))
+  (setq org-latex-listings 'minted)
+  (add-to-list 'org-latex-packages-alist '("" "minted")))
+
+(require 'ox-latex)
+;; (fido-vertical-mode)
+
+(require 'org-roam)
+(setq org-roam-directory "~/files/docs/org")
+(setq org-roam-extract-new-file-path "%<%y-%m-%d>-${slug}.org")
+(setq org-roam-capture-templates
+      '(("d" "default" plain "%?"
+         :target (file+head "%<%y-%m-%d>-${slug}.org"
+                            "#+title: ${title}\n")
+         :unnarrowed t)))
+(add-hook 'after-init-hook 'org-roam-db-autosync-mode)
+
+(defun chin/org-insert-image-from-clipboard ()
   (interactive)
   (let* ((pure-filename (file-name-sans-extension
                          (file-name-nondirectory
@@ -662,47 +705,6 @@ If popup is focused, kill it."
 (savehist-mode)
 
 
-(with-eval-after-load 'ox-latex
-  ;; http://orgmode.org/worg/org-faq.html#using-xelatex-for-pdf-export
-  ;; latexmk runs pdflatex/xelatex (whatever is specified) multiple times
-  ;; automatically to resolve the cross-references.
-  (setenv "TEXMFHOME" "/home/chin/Repos/tex_config/texmfhome")
-  (setq org-latex-pdf-process '("xelatex -interaction=batchmode -shell-escape -f %f")
-        org-latex-remove-logfiles t
-        org-latex-logfiles-extensions '("aux" "bcf" "blg" "fdb_latexmk" "fls"
-                                        "figlist" "idx" "log" "nav" "out" "ptc"
-                                        "run.xml" "snm" "toc" "vrb" "xdv"))
-
-
-  ;; update the list of LaTeX classes and associated header (encoding, etc.)
-  ;; and structure
-  (add-to-list 'org-latex-classes
-               `("beamer"
-                 ,(concat "\\documentclass[presentation]{beamer}\n"
-                          "[DEFAULT-PACKAGES]"
-                          "[PACKAGES]"
-                          "[EXTRA]\n")
-                 ("\\section{%s}" . "\\section*{%s}")
-                 ("\\subsection{%s}" . "\\subsection*{%s}")
-                 ("\\subsubsection{%s}" . "\\subsubsection*{%s}")))
-
-  (add-to-list 'org-latex-classes
-               '("elegantpaper"
-                 "\\documentclass[lang=cn]{elegantpaper}
-                  \\bigskip
-                 [NO-DEFAULT-PACKAGES]
-                 [PACKAGES]
-                 [EXTRA]"
-                 ("\\section{%s}" . "\\section*{%s}")
-                 ("\\subsection{%s}" . "\\subsection*{%s}")
-                 ("\\subsubsection{%s}" . "\\subsubsection*{%s}")
-                 ("\\paragraph{%s}" . "\\paragraph*{%s}")
-                 ("\\subparagraph{%s}" . "\\subparagraph*{%s}")))
-  (setq org-latex-listings 'minted)
-  (add-to-list 'org-latex-packages-alist '("" "minted")))
-
-(require 'ox-latex)
-;; (fido-vertical-mode)
 
 (global-visual-line-mode)
 (setq word-wrap-by-category t)

@@ -3,7 +3,8 @@
 
 (add-to-list
  'image-load-path
- (expand-file-name "lib/images" user-emacs-directory))
+ (expand-file-name "lib/images" (file-name-directory (chin/this-true-file))))
+
 
 ;;; Global map
 

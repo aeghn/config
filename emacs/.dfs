@@ -1,1 +1,2 @@
 @ "lib" "$HOME/.emacs.d/lib"
+@ ~/files/config/emacs/org-visual-indent.el ~/.emacs.d/org-visual-indent.el
