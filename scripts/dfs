@@ -5,26 +5,25 @@ FILEPATH="$(realpath --no-symlinks "$1")"
 CONFIG_ISLAND_DIR="$HOME/files/config"
 
 RELATIONS=(
-    path "~/.local/share/fonts" "fonts"
-    path "~/.emacs.d" "emacs"
-    base "~/.config" "/"
+    path "$HOME/.emacs.d" "emacs"
+    base "$HOME/.config" "/"
 )
 
 dfs_store() {
     local method prefix relative suffix
     for ((i=0; i < ${#RELATIONS}; i=i+3)); do
         method="${RELATIONS[i]}"
-        prefix="${RELATIONS[i+1]}"
+        prefix="${RELATIONS[i+1]%/}/"
         relative="${RELATIONS[i+2]}"
         config_dir="${CONFIG_ISLAND_DIR%/}"
 
         if echo "$FILEPATH" | grep "^$(realpath --no-symlink "$prefix")/" &>/dev/null; then
+            mainland="${FILEPATH}"
             if [ "$method" = base ]; then
                 suffix="${FILEPATH/$prefix/}"
                 dir_name="${suffix%/*}"
 
                 island="$config_dir/$suffix"
-                mainland="${FILENAME}"
                 dfs="$config_dir/$dir_name/.dfs"
             elif [ "$method" = path ]; then
                 suffix="${FILEPATH/$prefix/}"
@@ -45,5 +44,5 @@ dfs_restore() {
 if echo "$FILEPATH" | grep "^$(realpath --no-symlink "$CONFIG_ISLAND_DIR")/" &>/dev/null; then
     dfs_restore
 else
-    dfs_restore
+    dfs_store
 fi
