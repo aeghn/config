@@ -15,9 +15,9 @@
     (org-show-entry)
     (show-children)))
 
-(defun chin/todo (directory)
+(defun chin/todo (filename)
   (interactive)
-  (when-let ((buf (find-file (expand-file-name "todo.org" directory))))
+  (when-let ((buf (find-file filename)))
     (with-current-buffer buf
       (let* ((today (format-time-string "%Y-%m-%d" (current-time)))
              (pos (org-find-exact-headline-in-buffer today nil t)))
@@ -31,7 +31,6 @@
         (chin/org-show-current-heading-tidily)))))
 
 (global-set-key (kbd "<f6>") (lambda () (interactive) (chin/todo chin/writer-dir)))
-(global-set-key (kbd "<f5>") (lambda () (interactive) (chin/todo "~/Nextcloud/days/")))
 
 (defun chin/today-file (directory)
   (interactive)
@@ -47,8 +46,6 @@
     (find-file total)))
 
 ;; (global-set-key (kbd "C-<f6>") (lambda () (interactive) (chin/today-file "~/extra/tmps")))
-(global-set-key (kbd "C-<f5>") (lambda () (interactive) (chin/today-file "~/Nextcloud/days/")))
-
 
 (defun chin/number-items ()
   (interactive)
