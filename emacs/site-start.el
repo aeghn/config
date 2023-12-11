@@ -1,5 +1,4 @@
-(setenv "HOME" "C:\\msys64\\home\\w")
-
-(setq user-init-file "E:/repos/dotfiles/config/emacs/init.el")
-
+(setq user-init-file "E:/files/config/emacs/init.el")
+(setq work-init-file "E:/files/config/emacs/work.el")
 (load user-init-file)
+(load work-init-file)
