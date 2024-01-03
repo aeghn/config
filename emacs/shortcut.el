@@ -1,4 +1,4 @@
-(defcustom chin/writer-dir (expand-file-name "~/files/docs/org") "")
+(defcustom chin/writer-dir (if chin/is-windows "e:/files/docs/org" (expand-file-name "~/files/docs/org")) "")
 
 (defun chin/org-show-current-heading-tidily ()
   (interactive)  ;Inteactive
@@ -15,9 +15,9 @@
     (org-show-entry)
     (show-children)))
 
-(defun chin/todo (filename)
+(defun chin/todo (dirpath)
   (interactive)
-  (when-let ((buf (find-file filename)))
+  (when-let ((buf (find-file (expand-file-name "todo.org" dirpath))))
     (with-current-buffer buf
       (let* ((today (format-time-string "%Y-%m-%d" (current-time)))
              (pos (org-find-exact-headline-in-buffer today nil t)))
@@ -46,6 +46,13 @@
     (find-file total)))
 
 ;; (global-set-key (kbd "C-<f6>") (lambda () (interactive) (chin/today-file "~/extra/tmps")))
+
+(defun chin/org-agenda-current-file ()
+  (interactive)
+  (unless (eq major-mode 'org-mode)
+    (throw "Use Org-agenda-current-file in org-mode only!"))
+  (let ((org-agenda-files (list (buffer-file-name))))
+    (org-agenda)))
 
 (defun chin/number-items ()
   (interactive)
