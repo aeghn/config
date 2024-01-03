@@ -11,6 +11,12 @@ export PATH=$HOME/.scripts:$PATH
 [ -f "$ZSH_CONFIG_DIR/onefile" ] && source "$ZSH_CONFIG_DIR/onefile"
 [ -f "$ZSH_CONFIG_DIR/onefile" ] && source "$ZSH_CONFIG_DIR/environment"
 
+chin_fzf_history_file() {
+    (tac "${DIR_HISTORY_FILE}"; printf "$PWD/%s\n" *) \
+    | awk 'arr[$0]++ == 0' \
+    | FZF_DEFAULT_OPTS="--height ${FZF_TMUX_HEIGHT:-40%} --reverse $FZF_DEFAULT_OPTS $FZF_ALT_C_OPTS $CHIN_FZF_DIR_OPTS" fzf -q "$1"
+}
+
 j() {
     local folder option
     option="$(chin_fzf_history_file "$1" | sed -r 's/\r?\n?$//g')"

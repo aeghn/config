@@ -89,13 +89,6 @@ function osc7 {
 }
 add-zsh-hook -Uz chpwd osc7
 
-
-chin_fzf_history_file() {
-    (tac "${DIR_HISTORY_FILE}"; printf "$PWD/%s\n" *) \
-    | awk 'arr[$0]++ == 0' \
-    | FZF_DEFAULT_OPTS="--height ${FZF_TMUX_HEIGHT:-40%} --reverse $FZF_DEFAULT_OPTS $FZF_ALT_C_OPTS $CHIN_FZF_DIR_OPTS" fzf -q "$1"
-}
-
 ########################################
 ### Frame
 ########################################
