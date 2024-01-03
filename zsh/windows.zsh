@@ -1,0 +1,1 @@
+[ -d "/d/Tools/cmd" ] && export PATH=/d/Tools/cmd:$PATH

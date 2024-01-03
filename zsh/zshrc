@@ -1,6 +1,7 @@
-zmodload zsh/zprof
+[ -e /c ] && export CHIN_IS_WINDOWS=true || export CHIN_IS_WINDOWS=false
 
 ZSH_CONFIG_DIR="$HOME/.config/zsh"
+$CHIN_IS_WINDOWS && ZSH_CONFIG_DIR="$(dirname $(realpath "$0"))"
 
 # PATH Settings
 export PATH=$HOME/.scripts:$PATH
@@ -34,6 +35,10 @@ j() {
 
 [ -f /usr/share/fzf/key-bindings.zsh ] && . /usr/share/fzf/key-bindings.zsh
 
+
+### Windows Settings
+$CHIN_IS_WINDOWS && source "$ZSH_CONFIG_DIR/windows.zsh"
+
 ## Aliases
 alias ls='ls --color=auto --hyperlink=auto'
 alias rga="rg --path-separator // --no-ignore-files --no-ignore --hidden -i"
@@ -44,6 +49,5 @@ alias aria2n='aria2c --no-conf=true -j4 -x4 -s4'
 
 alias pc='proxychains -q'
 alias hpx='export HTTP_PROXY=http://127.0.0.1:7890; export HTTPS_PROXY=http://127.0.0.1:7890'
-
 
 alias td="mkdir -p \"$CHIN_CACHE_DIR/$(date +%Y-%m/%d)\" && cd \"$CHIN_CACHE_DIR/$(date +%Y-%m/%d)\""
