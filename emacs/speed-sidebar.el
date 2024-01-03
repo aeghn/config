@@ -234,7 +234,8 @@ the default directory of speed-sidebar buffer"
             (existing-buffer (get-buffer name)))
       existing-buffer
     (let ((new-buffer (generate-new-buffer name))
-          (current-window (selected-window)))
+          (current-window (selected-window))
+          (truncate-lines t))
       (setq speedbar-buffer new-buffer
             speedbar-frame (selected-frame)
             dframe-attached-frame (selected-frame)

@@ -23,9 +23,9 @@
 (defun org-roam-helper-get-roam-alias ()
   (let ((title (org-roam-helper-get-org-file-title))
         (lines  (org-roam-helper-get-headlines-ancentors)))
-    (cond ((and title lines) (concat title "/" (string-join lines "/")))
+    (cond ((and title lines) (string-replace "_" " " (concat title "/" (string-join lines "/"))))
           (title title)
-          (lines (string-join lines "/")))))
+          (lines (string-replace "_" " " (string-join lines "/"))))))
 
 (defun org-roam-helper-turn-to-node ()
   (interactive)
@@ -34,7 +34,7 @@
              (p (point)))
     (setq id (org-id-get-create))
     (unless (org-entry-get p "ROAM_ALIASES")
-      (org-entry-put p "ROAM_ALIASES" title))
+      (org-roam-alias-add title))
     `(,id ,title)))
 
 (defun org-roam-helper-grep ()
@@ -58,11 +58,12 @@
   (interactive)
   (if other-window
       (let ((org-link-frame-setup (quote
-                               ((vm . vm-visit-folder)
-                                (vm-imap . vm-visit-imap-folder)
-                                (gnus . gnus)
-                                (file . find-file)
-                                (wl . wl)))
-                              ))
+                                   ((vm . vm-visit-folder)
+                                    (vm-imap . vm-visit-imap-folder)
+                                    (gnus . gnus)
+                                    (file . find-file)
+                                    (wl . wl)))
+                                  ))
         (org-open-at-point))
     (org-open-at-point)))
+

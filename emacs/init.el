@@ -4,7 +4,10 @@
 (setq custom-file "~/.emacs.d/custom.el")
 (load custom-file 'noerror)
 
-
+;;; Platform Settings
+(defconst chin/is-linux   (eq system-type 'gnu/linux))
+(defconst chin/is-windows (memq system-type '(cygwin windows-nt ms-dos)))
+(defconst chin/is-android (string-match-p "-linux-android$" system-configuration))
 
 ;;; Package Settings
 (require 'package)
@@ -64,12 +67,6 @@
 (chin/load-other-file "org-visual-indent.el")
 (chin/load-other-file "org-roam-helper.el")
 
-
-;;; Platform Settings
-(defconst chin/is-linux   (eq system-type 'gnu/linux))
-(defconst chin/is-windows (memq system-type '(cygwin windows-nt ms-dos)))
-(defconst chin/is-android (string-match-p "-linux-android$" system-configuration))
-
 ;; Windows-nt specific settings
 ;; windows-loader
 (when chin/is-windows
@@ -78,6 +75,7 @@
     (setenv "PATH" (concat
                     ;; Remember to install `mingw-w64-x86_64-gnupg'
                     "d:\\wenv\\bin;"
+                    "e:\\lhome\\.local\\bin;"
                     msys2root "mingw64\\bin" ";"
                     msys2root "mingw64\\x86_64-w64-mingw32\\bin" ";"
                     msys2root "usr\\bin" ";"
@@ -161,7 +159,8 @@
 
       (setq ibuffer-sidebar-use-custom-font t)
       (setq ibuffer-sidebar-face `(:family "Archivo" :height 120))
-      (setq speed-sidebar-face `(:family "Archivo" :height 120)))))
+      (setq speed-sidebar-face `(:family "Archivo" :height 120))))
+  )
 
 ;; Toolbar Settings
 (tool-bar-mode 1)
@@ -329,7 +328,7 @@
 (defun chin/org-face-hook ()
   (let ((variable-font "Zhuque Fangsong (technical preview)"))
     (setq-local face-remapping-alist
-                `((default (:family ,variable-font :height 144) variable-pitch)
+                `((default (:family ,variable-font :height 120) variable-pitch)
                   (org-block (:family "Martian Mono Nr Rg" :height 108) org-block))
                 line-spacing 0.2)
     (olivetti-mode)
@@ -358,11 +357,6 @@
   (if chin/is-windows
       "E:\\files\\docs\\org"
     "~/files/docs/org"))
-
-(defun chin/org-files ()
-  (interactive)
-  (find-file
-   (completing-read "Org files: " (directory-files chin/org-managed-files nil ".*org$"))))
 
 (defun chin/org-file-open ()
   (interactive)
@@ -424,7 +418,7 @@
 ;; (fido-vertical-mode)
 
 (require 'org-roam)
-(setq org-roam-directory "~/files/docs/org")
+(setq org-roam-directory chin/org-managed-files)
 (setq org-roam-extract-new-file-path "%<%y-%m-%d>-${slug}.org")
 (setq org-roam-capture-templates
       '(("d" "default" plain "%?"
