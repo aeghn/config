@@ -158,9 +158,8 @@
                           :family prefered-serif-font :height 108 :weight 'Regular)
 
       (setq ibuffer-sidebar-use-custom-font t)
-      (setq ibuffer-sidebar-face `(:family "Archivo" :height 120))
-      (setq speed-sidebar-face `(:family "Archivo" :height 120))))
-  )
+      (setq ibuffer-sidebar-face `(:family "Jost*" :height 120))
+      (setq speed-sidebar-face `(:family "Jost*" :height 120)))))
 
 ;; Toolbar Settings
 (tool-bar-mode 1)
