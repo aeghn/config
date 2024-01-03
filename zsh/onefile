@@ -1,21 +1,12 @@
-autoload -U add-zsh-hook
-
-## Aliases
-alias ls='ls --color=auto --hyperlink=auto'
-alias rga="rg --path-separator // --no-ignore-files --no-ignore --hidden -i"
-alias rm='rm -I'
-alias mpa='mpv --no-video'
-alias aria2n='aria2c --no-conf=true -j4 -x4 -s4'
-
-alias pc='proxychains -q'
-alias hpx='export HTTP_PROXY=http://127.0.0.1:7890; export HTTPS_PROXY=http://127.0.0.1:7890'
+## Zsh Only Configuration
 
 export CHIN_ZSH_CACHE_DIR="${XDG_CACHE_HOME:-$HOME/.cache}/zsh"
-export CHIN_ZSH_CONFIG_DIR="$(dirname "$(realpath "$0")")"
 
-[ -e "$CHIN_ZSH_CACHE_DIR" ] || mkdir -p "$CHIN_ZSH_CACHE_DIR"
+autoload -U add-zsh-hook
 
-## Editor
+########################################
+### Editor
+########################################
 # Finally, make sure the terminal is in application mode, when zle is
 # active. Only then are the values from $terminfo valid.
 if (( ${+terminfo[smkx]} )) && (( ${+terminfo[rmkx]} )); then
@@ -36,10 +27,14 @@ bindkey -e # use Emacs keybindings
 [[ -n "${terminfo[khome]}" ]] && bindkey -- "${terminfo[khome]}" beginning-of-line
 
 
-## Completion
-autoload -Uz compinit
+
+########################################
+### Completion
+########################################
+autoload -Uz compinit bashcompinit
 
 compinit
+bashcompinit
 
 export EDITOR=vim
 
@@ -59,13 +54,13 @@ SAVEHIST=100000
 
 setopt EXTENDED_HISTORY
 setopt HIST_EXPIRE_DUPS_FIRST
-setopt HIST_IGNORE_DUPS # ignore duplication command history list
+setopt HIST_IGNORE_DUPS
 setopt HIST_IGNORE_SPACE
-setopt HIST_IGNORE_SPACE # 在命令前添加空格，不将此命令添加到记录文件中
+setopt HIST_IGNORE_SPACE
 setopt HIST_SAVE_NO_DUPS
 setopt HIST_VERIFY
 setopt INC_APPEND_HISTORY
-setopt SHARE_HISTORY # share command history data
+setopt SHARE_HISTORY
 
 autoload -Uz up-line-or-beginning-search down-line-or-beginning-search
 zle -N up-line-or-beginning-search
@@ -86,7 +81,7 @@ add-zsh-hook -Uz chpwd chin-chpwd-append-dir
 function osc7 {
     local LC_ALL=C
     export LC_ALL
-
+    
     setopt localoptions extendedglob
     input=( ${(s::)PWD} )
     uri=${(j::)input/(#b)([^A-Za-z0-9_.\!~*\'\(\)-\/])/%${(l:2::0:)$(([##16]#match))}}
@@ -95,43 +90,21 @@ function osc7 {
 add-zsh-hook -Uz chpwd osc7
 
 
-chin_get_history_pwd_file() {
+chin_fzf_history_file() {
     (tac "${DIR_HISTORY_FILE}"; printf "$PWD/%s\n" *) \
-        | awk 'arr[$0]++ == 0' \
-        | FZF_DEFAULT_OPTS="--height ${FZF_TMUX_HEIGHT:-40%} --reverse $FZF_DEFAULT_OPTS $FZF_ALT_C_OPTS $CHIN_FZF_DIR_OPTS" fzf -q "$1"
+    | awk 'arr[$0]++ == 0' \
+    | FZF_DEFAULT_OPTS="--height ${FZF_TMUX_HEIGHT:-40%} --reverse $FZF_DEFAULT_OPTS $FZF_ALT_C_OPTS $CHIN_FZF_DIR_OPTS" fzf -q "$1"
 }
 
-j() {
-    local dir
-    local opt="$(chin_get_history_pwd_file "$1" | sed -r 's/\r?\n?$//g')"
-
-    if [[ -z "$opt" ]]; then
-        return 0
-    fi
-
-    if [ -d "${opt}" ]; then
-        dir="$opt"
-    elif [ -e "${opt}" ]; then
-        printf "Open its parent dir: \n\t%s\033[31m/%s\033[0m\n" "${opt%/*}" "${opt##*/}"
-        dir="${opt%/*}"
-    else
-        printf "Unknown opt: \`$opt'\n"
-        return
-    fi
-
-    cd "$dir"
-    unset dir opt
-}
-
-[ -f /usr/share/fzf/key-bindings.zsh ] && . /usr/share/fzf/key-bindings.zsh
-
-## FRAME
-fpath=("$CHIN_ZSH_CONFIG_DIR/functions" "$fpath[@]")
+########################################
+### Frame
+########################################
+fpath=("$ZSH_CONFIG_DIR/functions" "$fpath[@]")
 autoload -Uz promptinit
 promptinit
 
 ## To list all available prompt themes by: prompt -l
-if [ -f "$CHIN_ZSH_CONFIG_DIR/functions/prompt_chin_setup" ]; then
+if [ -f "$ZSH_CONFIG_DIR/functions/prompt_chin_setup" ]; then
     prompt chin
 else
     export PROMPT="%(?..%F{red}[%?]%f )%(1j.%F{cyan}(%j)%f .)%B%F{yellow}%n%f%b at %B%F{blue}%m%f%b in %B%F{green}%~%f%b${prompt_newline}> "
@@ -152,7 +125,11 @@ function chin-clear-scrollback-buffer {
 zle -N chin-clear-scrollback-buffer
 bindkey '^L' chin-clear-scrollback-buffer
 
-# Title
+
+
+########################################
+### Title
+########################################
 function xterm_title_precmd () {
     print -Pn -- '\e]2;%n@%m %~\a'
     [[ "$TERM" == 'screen'* ]] && print -Pn -- '\e_\005{g}%n\005{-}@\005{m}%m\005{-} \005{B}%~\005{-}\e\\'
