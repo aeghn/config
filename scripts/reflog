@@ -1,0 +1,69 @@
+#!/usr/bin/env bash
+
+WIDTH=$(tput cols)
+
+PLACE_HOLDERS=(SHORT_HASH COMMITER_NAME COMMIT_DATE REFLOG_SELECTOR ACTION COMMIT_LOG)
+
+LENGTH["SHORT_HASH"]=7
+LENGTH["COMMITER_NAME"]=30
+LENGTH["COMMIT_DATE"]=20
+LENGTH["REFLOG_SELECTOR"]=40
+LENGTH["ACTION"]=60
+LENGTH["COMMIT_LOG"]=100
+
+MARKER["SHORT_HASH"]=%h
+MARKER["COMMITER_NAME"]=%cn
+MARKER["COMMIT_DATE"]=%cd
+MARKER["REFLOG_SELECTOR"]=%gd
+MARKER["ACTION"]=%gs
+MARKER["COMMIT_LOG"]=%s
+
+COLOR["SHORT_HASH"]=%h
+COLOR["COMMITER_NAME"]=%cn
+COLOR["COMMIT_DATE"]=%cd
+COLOR["REFLOG_SELECTOR"]=%gd
+COLOR["ACTION"]=%gs
+COLOR["COMMIT_LOG"]=%s
+
+
+git reflog --all --format="%C(auto)%h
+%<|(20)%gd
+%C(blue)%cd%C(reset)
+%cn
+%C(red)%gs%Creset (%s)%n%n" --date="format:%y-%m-%d %H:%M"
+
+
+contains() {
+    local arr="$1"
+    local key="$2"
+
+    for i in "${$arr[@]}"; do
+        if [ "x$i" = "x$key" ]; then
+            return 0
+        fi
+    done
+    return 1
+}
+
+
+INCLUDE_HOLDERS=()
+FORMAT=""
+while true; do
+    COUNT=0
+    for k in "${PLACE_HOLDERS[@]}"; do 
+        if contains "INCLUDE_HOLDERS" "$k"; then
+            continue
+        fi
+
+        NEW_COUNT=$(($COUNT + LENGTHS["$k"]))
+        if [ $NEW_COUNT -le $WIDTH ]; then
+            INCLUDE_HOLDERS=("${INCLUDE_HOLDERS[@]}" "$k")
+            COUNT="$NEW_COUNT"
+            FORMAT="${FORMAT}%><($LENGTH[$k])"
+        fi
+    done
+    
+    
+done
+
+

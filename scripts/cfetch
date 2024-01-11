@@ -1,0 +1,168 @@
+#!/usr/bin/env bash
+
+NAME_LEN=15
+VALUE_LEN=80
+
+
+_split() {
+    local len value
+    len=$1
+    value="$2"
+
+    echo "$value" | awk -v max_length=$len '{
+    words = split($0, arr, " ");
+    current_line = arr[1];
+    for (i = 2; i <= words; i++) {
+        if (length(current_line) + length(arr[i]) + 1 <= max_length) {
+            current_line = current_line " " arr[i];
+        } else {
+            print current_line
+            if (length(arr[i]) > max_length) {
+                current_line="";
+                split_word = arr[i];
+                while (length(split_word) > max_length) {
+                    split_length = max_length - length(current_line) - 1;
+                    print substr(split_word, 1, split_length);
+                    split_word = substr(split_word, split_length + 1);
+                }
+                current_line = split_word;
+            } else {
+                current_line = arr[i];
+            }
+        }
+    }
+    print current_line;
+    }'
+}
+
+echo_line() {
+    local name value
+    name="$1"
+    value="$2"
+
+    local -a name_lines value_lines
+
+    IFS=$'\n' read -d '' -ra name_lines <<< "$(_split $NAME_LEN "$name")"
+    IFS=$'\n' read -d '' -ra value_lines <<< "$(_split $VALUE_LEN "$value")"
+
+    local sep=" = "
+    for ((i=0; 1; i++)); do
+        [ -z "${name_lines[$i]}" ] && [ -z "${value_lines[$i]}" ] && break
+        [ $i -gt 0 ] && sep=" : "
+        printf " \e[34m%0${NAME_LEN}s\e[0m$sep\e[3m\e[35m%s\e[0m\n" "${name_lines[$i]}" "${value_lines[$i]}"
+    done
+}
+
+echo_title() {
+    printf "* \e[31m\e[1m$*\e[0m \n"
+}
+
+
+get_hardware_memory() {
+    while IFS=":" read -r a b; do
+        case $a in
+            "MemTotal") ((mem_used+=${b/kB})); mem_total="${b/kB}" ;;
+            "Shmem") ((mem_used+=${b/kB}))  ;;
+            "MemFree" | "Buffers" | "Cached" | "SReclaimable")
+                mem_used="$((mem_used-=${b/kB}))"
+                ;;
+        esac
+    done < /proc/meminfo
+
+    mem_used="$((mem_used / 1024))"
+    mem_total="$((mem_total / 1024))"
+
+    echo "$mem_used/$mem_total MB"
+}
+
+get_hardware_disk() {
+    local disks=$(df -h | awk '/^\/dev\/nvme/ {print $1, $5}')
+
+    NAMES[ha_disk]="$(echo "$disks" | grep -oE 'nvme[^ ]*' | tr '\n' '/' | sed 's@/$@@g')"
+    VALUES[ha_disk]="$(echo "$disks" | grep -oE '[0-9]*%' | tr '\n' '/' | sed 's@/$@@g')"
+}
+
+get_hardware_cpu() {
+    cat /proc/cpuinfo | grep 'model name' | sort -u | cut -d ':' -f2 | sed -r 's/^[[:space:]]+|[[:space:]]+$//g'
+}
+
+get_os_name() {
+    eval local $(sed -n '2p' /etc/os-release)
+    echo "$PRETTY_NAME"
+}
+
+get_os_upgrade_time() {
+    sed -n -e '/upgrade$/x;${x;s/.\([0-9-]*\).*/\1/p}' /var/log/pacman.log | tr 'T' ' '
+}
+
+get_os_uptime() {
+    if [[ -r /proc/uptime ]]; then
+        s=$(< /proc/uptime)
+        s=${s/.*}
+    else
+        boot=$(date -d"$(uptime -s)" +%s)
+        now=$(date +%s)
+        s=$((now - boot))
+    fi
+
+    d="$((s / 60 / 60 / 24)) days"
+    h="$((s / 60 / 60 % 24)) hours"
+    m="$((s / 60 % 60)) minutes"
+
+    # Remove plural if < 2.
+    ((${d/ *} == 1)) && d=${d/s}
+    ((${h/ *} == 1)) && h=${h/s}
+    ((${m/ *} == 1)) && m=${m/s}
+
+    # Hide empty fields.
+    ((${d/ *} == 0)) && unset d
+    ((${h/ *} == 0)) && unset h
+    ((${m/ *} == 0)) && unset m
+
+    uptime=${d:+$d, }${h:+$h, }$m
+    uptime=${uptime%', '}
+    uptime=${uptime:-$s seconds}
+
+    echo $uptime
+}
+
+get_os_kernel() {
+    uname -srm
+}
+
+get_pacman_package_num() {
+    echo "$(pacman -Q | wc -l), $(pacman -Qm | wc -l)(foreign)"
+}
+
+
+echo_title Hardware
+echo_line "CPU" "$(get_hardware_cpu)"
+echo_line "GPU" "$(lspci | grep ' VGA '| cut -d: -f3)"
+echo_line "Memory" "$(get_hardware_memory)"
+echo_line "Disk" "$(df -h | grep ^/dev)"
+
+echo
+
+
+echo_title System
+echo_line "OS" "$(get_os_name)"
+echo_line "Kernel" "$(get_os_kernel)"
+echo_line "Kernel Version" "$(uname -v)"
+echo_line "Package" "$(get_pacman_package_num)"
+echo_line "Rolling" "$(get_os_upgrade_time)"
+echo_line WM "Hyprland $(hyprctl version | sed -n '2p' | awk '{print $2}')"
+echo
+
+echo_title Language And Softwares
+echo_line Firefox "$(firefox --version)"
+echo_line Terminal "$(foot --version)"
+echo_line "GNU/Emacs" "$(emacs --version | grep "build date")"
+echo_line Zsh "$(zsh --version)"
+echo_line GNU/Bash "$(bash --version | head -1)"
+echo_line GNU/GCC "$(gcc --version | head -1)"
+echo_line Rust "$(rustc --version | head -1)"
+echo_line Python "$(python --version | head -1)"
+echo_line Go "$(go version)"
+echo_line NodeJS "$(node --version)"
+echo_line Java "$(java --version | head -1)"
+echo

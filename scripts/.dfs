@@ -1,2 +1,5 @@
-@ "tuipv" "$HOME/.scripts/tuipv"
-@ "gitmerge" "$HOME/.scripts/gitmerge"
+### manual
+
+for i in *; do
+    @ "$i" "$HOME/.scripts/${i##*/}"
+done

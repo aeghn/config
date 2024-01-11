@@ -1,0 +1,251 @@
+#!/usr/bin/env bash
+
+DOWNLOAD_DIR=/home/chin/Videos/yta
+YTA_FILE=$HOME/.cache/yta_list
+
+# set -x
+
+LOCK_DIR="/tmp"
+RETRY_TIMES=5
+RETRY_WORNG=true
+PARAL_NUM=1
+LOCK_PREFIX="ytad_"
+IF='|'
+
+edit_list() {
+    vim "$YTA_FILE"
+}
+
+add_new() {
+    local link="$1"
+    local id=$(awk -F"${IF}" 'BEGIN{M=0} {if ($1 > M) {M=$1}} END{print M+1}' "${YTA_FILE}")
+
+    [ "x" = "x$id" ] && id=1
+
+    if grep -F "$link" "$YTA_FILE"; then
+        warn " ^^^ Contain this link. "
+        return 1
+    fi
+
+    log "add: $id -> $link"
+    echo "${id}${IF}todo${IF}$link${IF}$(current_time)" >> "${YTA_FILE}"
+}
+
+add_file() {
+    if [ -f "$1" ]; then
+        cat "$1" | sort -u | while read link; do
+            if [[ "$link" =~ ^[[:space:]]*$  ]]; then
+                continue
+            fi
+            add_new "$link"
+        done
+    fi
+}
+
+add_temp_file() {
+    tmp_file="/tmp/$(uuidgen)"
+
+    vim $tmp_file
+
+    add_file $tmp_file
+}
+
+current_time() {
+    date +"%y-%m-%d %H:%M:%S"
+}
+
+get_next() {
+    local r=$(get_specific_next doing)
+    [ "x" != "x$r" ] && echo "$r" && return
+
+    local r=$(get_specific_next todo)
+    [ "x" != "x$r" ] && echo "$r" && return
+
+    if $RETRY_WORNG; then
+        local r=$(get_specific_next wrong)
+        [ "x" != "x$r" ] && echo "$r" && return
+    fi
+}
+
+get_specific_next() {
+    local type="$1"
+    IFS=$'\n' records=($(awk -F"${IF}" "\$2 == \"$type\" {print}" "$YTA_FILE"))
+    local count=${#records[@]}
+    if [ $count -gt 0 ]; then
+        log "type: $type, count: $count" 1>&2
+    fi
+    for r in "${records[@]}"; do
+        echo "$r" && return
+    done
+
+    return 1
+}
+
+append_queue() {
+    local r="$(get_next)"
+    prepare_to_download "$r"
+
+}
+
+prepare_to_download() {
+    [ x = "x$1" ] && return
+    local id=$(get_id "$1")
+    local url=$(get_url "$1")
+
+    set_status "$id" "doing"
+    for ((i=1; i<=${RETRY_TIMES}; i++)); do
+        echo  > /tmp/yta-log
+
+        log "[$i --> $RETRY_TIMES] $url"
+        log "dir: $DOWNLOAD_DIR"
+        if (set -o pipefail && download "$url" 2>&1 | tee /tmp/yta-log); then
+            set_status "$id" "done"
+            log "finished: $url"
+            break
+        fi
+
+        if [ $i -eq ${RETRY_TIMES} ]; then
+            set_status "$id" "wrong"
+        fi
+
+        if cat /tmp/yta-log | grep -e 'video has been terminated' -e ' Video unavailable' -e 'sexual content' >/dev/null; then
+            set_status "$id" "wrongPerm"
+            warn "$url cannot retry"
+            break
+        fi
+
+        if cat /tmp/yta-log | grep 'Sign in to confirm your age' >/dev/null; then
+            set_status "$id" "agen"
+            break
+        fi
+
+        sleep 10
+    done
+}
+
+download() {
+    if [ "x$1" = "x" ]; then
+        return
+    fi
+
+    sleep 5
+    download_youtube_dl "$1"
+}
+
+download_you_get() {
+    cd "$DOWNLOAD_DIR"
+
+    you-get "$1"
+
+    return $?
+}
+
+download_youtube_dl() {
+    cd "$DOWNLOAD_DIR"
+
+    local args=(
+        -r '4.2M'                                          # max speed
+        --no-mtime                                         # without update time
+        -o '[%(upload_date)s][%(id)s]%(title).40s.%(ext)s' # file name
+        -N 4
+    )
+
+    if echo "$@" | grep -i youtu &>/dev/null; then
+      #  args+=("--proxy" "http://127.0.0.1:7890")
+:
+    fi
+
+    args+=("$@")
+
+    echo "yt-dlp: " "${args[@]}"
+    proxychains -q yt-dlp "${args[@]}"
+    
+}
+
+set_status() {
+    local id="$1"
+    local status="$2"
+
+    set_field "$id" 2 "$status"
+}
+
+get_id() {
+    get_field "$1" 1
+}
+
+get_status() {
+    get_field "$1" 2
+}
+
+get_url() {
+    get_field "$1" 3
+}
+
+# get field from one record
+get_field() {
+    echo "$1" | awk -F"${IF}" "{print \$$2}" | trim
+}
+
+set_field() {
+    local id="$1"
+    local field="$2"
+    local new_value="$3"
+
+    awk -i inplace -F"${IF}" "BEGIN{OFS=FS}; \$1 == $id {\$${field} = \"${new_value}\"}; {print}" "${YTA_FILE}"
+}
+
+trim() {
+    sed -r 's/(^[[:blank:]]*)|([[:blank:]]*$)//g'
+}
+
+
+get_lock_file() {
+    echo "${LOCK_DIR}/${LOCK_PREFIX}$1"
+}
+
+get_lock_count() {
+    ls "${LOCK_DIR}" | grep "${LOCK_PREFIX}" | wc -l
+}
+
+log() {
+    echo -e "\033[32m * [$(date)] INFO\033[0m - $@"
+}
+
+warn() {
+    echo -e "\033[31m * [$(date)] WARN\033[0m - $@"
+}
+
+main() {
+    # cat_lock_logs &             #
+    while true; do
+        append_queue
+    done
+}
+
+[ -f "$YTA_FILE" ] || touch "$YTA_FILE"
+[ -d "$DOWNLOAD_DIR" ] || mkdir -p "$DOWNLOAD_DIR"
+
+while [ $# -gt 0 ]; do
+    case "$1" in
+        -a)
+            if ! add_new "${2}"; then
+                exit 1
+            fi
+            shift
+            ;;
+        -d) main ;;
+        -e) edit_list ;;
+        -t) add_temp_file ;;
+        -f)
+            add_file "${2}"
+            shift
+            ;;
+        -s)
+            download "$2"
+            shift
+            ;;
+    esac
+    shift
+done
+
+# add_new

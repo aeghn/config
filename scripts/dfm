@@ -1,7 +1,6 @@
 #!/usr/bin/env bash
 
 set -e
-
 SCRIPT="${0##*/}"
 
 # Nut Properties
@@ -49,6 +48,10 @@ __msg() {
     printf "%0${lvl}s${fmt}" " " "$*"
 }
 
+_intent() {
+    sed "s/^/$(printf "%0$((CURRENT_LEVEL + 4))s" ' ')/g"
+}
+
 _log_level() {
     case "$1" in
         -)
@@ -67,15 +70,15 @@ _log_level() {
 }
 
 _debug() {
-    $DEBUG && __msg "\033[32m⏺\033[0m %s\n" "$@"
+    $DEBUG && __msg "\033[32m->\033[0m %s\n" "$@"
 }
 
 _info() {
-    __msg "\033[32m⏺\033[0m %s\n" "$@"
+    __msg "\033[32m->\033[0m %s\n" "$@"
 }
 
 _warn() {
-    __msg "\033[31m⏺\033[0m %s\n" "$@"
+    __msg "\033[31m\033[1m=> %s\033[0m\n" "$@"
 }
 
 _die() {
@@ -86,7 +89,7 @@ _die() {
 _read() {
     local readr
 
-    __msg "<- %s: " "$@" >&2
+    __msg "<< %s: " "$@" >&2
 
     read -r readr
     echo "$readr"
@@ -104,7 +107,7 @@ _edit_temp() {
 _y_or_n() {
     local readr
 
-    __msg "<- %s: y/[n]" "$@" >&2
+    __msg "<< %s: y/[n] " "$@" >&2
 
     read -r readr
 
@@ -224,11 +227,22 @@ _restore() {
     _die_if_link "$ISLAND"
     _die_if_absent "$ISLAND"
 
-    local mainland_parent
-    mainland_parent="${MAINLAND%/}"
-    mainland_parent="${mainland_parent%/*}"
 
-    mkdir -p "$mainland_parent"
+    # If the path is only a file name, we should not create
+    # any parent directoty.
+    local create_parent=false
+    case "${MAINLAND}" in
+        /*) create_parent=true ;;
+        */*) create_parent=true ;;
+    esac
+
+    if $create_parent; then
+        local mainland_parent
+        mainland_parent="${MAINLAND%/}"
+        mainland_parent="${mainland_parent%/*}"
+
+        mkdir -p "$mainland_parent"
+    fi
 
     if $COPY_MODE; then
         _info cp -r "$ISLAND" "$MAINLAND"
@@ -244,9 +258,8 @@ _restore() {
 _wrapper() {
     local answer new_world new_island
 
-    _info 1 "MAINLAND: $(stat --printf '%15F, %.19y -- %n' "${MAINLAND}" 2>&1)"
-    _info "  ISLAND: $(stat --printf '%15F, %.19y -- %n' "${ISLAND}" 2>&1)"
-    _log_level +
+    _info 1 "mainland: $(stat --printf '%15F, %.19y %n' "${MAINLAND}" 2>&1)"
+    _info   "  island: $(stat --printf '%15F, %.19y %n' "${ISLAND}" 2>&1)"
 
 
     if [ -z "$MAINLAND" ] || [ -z "$ISLAND" ]; then
@@ -256,14 +269,14 @@ _wrapper() {
     elif ! _file_exist "$MAINLAND" && _file_exist "$ISLAND"; then
         WORK_MODE=restore
     elif ! _file_exist "$MAINLAND" && ! _file_exist "$ISLAND"; then
-        _warn "Nothing to do because MAINLAND and ISLAND is not existed."
+        _warn "Nothing to do because MAINLAND and ISLAND are not existed."
         exit 1
     else
-        _warn "Both MAINLAND and ISLAND are existed."
+        _warn "both mainland and island are existed."
 
         if _is_link_of "${MAINLAND}" "${ISLAND}"; then
-            _info "Already Linked"
-            _info "$(ls -lh $MAINLAND)"
+            _info "The mainland is pointed to the right file."
+            ls -lh $MAINLAND | _intent
             WORK_MODE=linked
         else
 
@@ -354,18 +367,23 @@ _wrapper() {
         restore)
             _restore
             ;;
+	linked) 
+	    ;;
     esac
 
     if [ -n "$DFM_FILE" ]; then
         mkdir -p "${DFM_FILE%/*}"
         _perm_mapping
+    else
+	_debug "Don't save to dfm file"
     fi
+    return 0
 }
 
 # Mapping Part
 _modify_mapping_path() {
     # replace $HOME with ~
-    echo "$*" | sed "s#^$HOME#~#g"
+    echo "$(realpath --no-symlink "$*")" | sed "s#^$HOME#~#g"
 }
 
 _perm_mapping() {
@@ -389,7 +407,7 @@ _perm_mapping() {
     line="$operator $island $mainland"
 
     _info "$line"
-    would=$(_read "Would you like to add this line to $DFM_FILE y/[n]/(e)dit")
+    would=$(_read "Add it to $DFM_FILE y/[n]/(e)dit")
 
     case "$would" in
         y)
@@ -429,7 +447,7 @@ _run() {
     while [ $# -gt 0 ]; do
         case "$1" in
             -f)
-                DFM_FILE="$2"
+		DFM_FILE="$(realpath "$2")"
                 shift
                 ;;
             -c)
