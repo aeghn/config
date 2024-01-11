@@ -49,7 +49,8 @@ $CHIN_IS_WINDOWS && source "$ZSH_CONFIG_DIR/windows.zsh"
 alias ls='ls --color=auto --hyperlink=auto'
 alias rga="rg --path-separator // --no-ignore-files --no-ignore --hidden -i"
 alias fda='NO_COLOR=1 fd -I --hidden'
-alias rm='rm -I'
+alias rmi='noglob rm -I -r'
+alias rm="printf 'Avoid using rm, use rmi instead.\n'"
 alias mpa='mpv --no-video'
 alias aria2n='aria2c --no-conf=true -j4 -x4 -s4'
 
