@@ -8,6 +8,7 @@ ISLAND=""
 MAINLAND=""
 COPY_MODE=false
 DFM_FILE=""
+STORE_ONLY=false
 
 WORK_MODE=
 
@@ -19,6 +20,32 @@ free_nut() {
     MAINLAND=""
     COPY_MODE=false
     DFM_FILE=""
+    STORE_ONLY=false
+}
+
+
+fullpath() {
+    awk -v target="$1" -v pwd="$PWD" 'BEGIN { t=target;c=pwd;if(substr(t,1,1)!="/"){t=c"/"t;}gsub("/\\.?/","/",t);while(match(t,"/[^./]+/\\.\\./")){t=substr(t,1,RSTART-1)"/"substr(t,RSTART+RLENGTH);}print t; }'
+}
+
+_create_parent() {
+    local p="$1"
+
+    # If the path is only a file name, we should not create
+    # any parent directoty.
+    local create_parent=false
+    case "${p}" in
+        /*) create_parent=true ;;
+        */*) create_parent=true ;;
+    esac
+
+    if $create_parent; then
+        local parent
+        parent="${p%/}"
+        parent="${parent%/*}"
+
+        mkdir -p "$parent"
+    fi
 }
 
 ## In/Out
@@ -211,10 +238,11 @@ _store() {
     _die_if_link "$MAINLAND"
     _die_if_absent "$MAINLAND"
 
-    if $COPY_MODE; then
+    if $COPY_MODE || $STORE_ONLY; then
         _info cp -r "$MAINLAND" "$ISLAND"
         cp -r "$MAINLAND" "$ISLAND"
     else
+        _create_parent "$ISLAND"
         _info mv "$MAINLAND" "$ISLAND"
         mv "$MAINLAND" "$ISLAND"
         _restore
@@ -228,21 +256,7 @@ _restore() {
     _die_if_absent "$ISLAND"
 
 
-    # If the path is only a file name, we should not create
-    # any parent directoty.
-    local create_parent=false
-    case "${MAINLAND}" in
-        /*) create_parent=true ;;
-        */*) create_parent=true ;;
-    esac
-
-    if $create_parent; then
-        local mainland_parent
-        mainland_parent="${MAINLAND%/}"
-        mainland_parent="${mainland_parent%/*}"
-
-        mkdir -p "$mainland_parent"
-    fi
+    _create_parent "$MAINLAND"
 
     if $COPY_MODE; then
         _info cp -r "$ISLAND" "$MAINLAND"
@@ -279,7 +293,14 @@ _wrapper() {
             ls -lh $MAINLAND | _intent
             WORK_MODE=linked
         else
+            # We need to check if these two file is the same file, this is abnormal,
+            # maybe one ancestor of the mainland file is linked to the island
+            if [ "$(realpath "$MAINLAND")" = "$(realpath "$ISLAND")" ]; then
+                _die "Check the ancestors of $MAINLAND, maybe someone of them is softlink."
+                
+            fi
 
+            
             _log_level +
 
             if [ ! -L "$MAINLAND" ]; then
@@ -367,15 +388,15 @@ _wrapper() {
         restore)
             _restore
             ;;
-	linked) 
-	    ;;
+        linked)
+            ;;
     esac
 
     if [ -n "$DFM_FILE" ]; then
         mkdir -p "${DFM_FILE%/*}"
         _perm_mapping
     else
-	_debug "Don't save to dfm file"
+        _debug "Don't save to dfm file"
     fi
     return 0
 }
@@ -447,8 +468,11 @@ _run() {
     while [ $# -gt 0 ]; do
         case "$1" in
             -f)
-		DFM_FILE="$(realpath "$2")"
+                DFM_FILE="$(fullpath "$2")"
                 shift
+                ;;
+            --so)
+                STORE_ONLY=true
                 ;;
             -c)
                 COPY_MODE=true
