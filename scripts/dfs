@@ -1,48 +1,48 @@
 #!/usr/bin/env bash
 
-FILEPATH="$(realpath --no-symlinks "$1")"
 
-CONFIG_ISLAND_DIR="$HOME/files/config"
-
-RELATIONS=(
-    path "$HOME/.emacs.d" "emacs"
-    base "$HOME/.config" "/"
-)
-
-dfs_store() {
-    local method prefix relative suffix
-    for ((i=0; i < ${#RELATIONS}; i=i+3)); do
-        method="${RELATIONS[i]}"
-        prefix="${RELATIONS[i+1]%/}/"
-        relative="${RELATIONS[i+2]}"
-        config_dir="${CONFIG_ISLAND_DIR%/}"
-
-        if echo "$FILEPATH" | grep "^$(realpath --no-symlink "$prefix")/" &>/dev/null; then
-            mainland="${FILEPATH}"
-            if [ "$method" = base ]; then
-                suffix="${FILEPATH/$prefix/}"
-                dir_name="${suffix%/*}"
-
-                island="$config_dir/$suffix"
-                dfs="$config_dir/$dir_name/.dfs"
-            elif [ "$method" = path ]; then
-                suffix="${FILEPATH/$prefix/}"
-                island="${config_dir}/$relative/$suffix"
-                dfs="$config_dir/$relative/.dfs"
-            fi
-
-            dfm "$island" "$mainland" -f "$dfs"
-            break
-        fi
-    done
+can_handle() {
+	[[ "$FILEPATH" =~ "$1" ]] && return 0 || return 122
 }
 
-dfs_restore() {
-    :
+dfs_home_dotsciprts() {
+    # We check if this function could handle the path.
+    can_handle "$HOME/.scripts/" "$0" || return 122
+
+    local filename="${FILEPATH##*/}"
+    local island_file="${CONFIG_ISLAND_DIR%/}/scripts/$filename"
+    dfm "$island_file" "$FILEPATH"
 }
 
-if echo "$FILEPATH" | grep "^$(realpath --no-symlink "$CONFIG_ISLAND_DIR")/" &>/dev/null; then
-    dfs_restore
-else
-    dfs_store
-fi
+dfs_home_dotconfig() {
+    can_handle "$HOME/.config/" "$0" || return 122
+
+}
+
+
+fullpath() {
+    awk -v target="$1" -v pwd="$PWD" 'BEGIN { t=target;c=pwd;if(substr(t,1,1)!="/"){t=c"/"t;}gsub("/\\.?/","/",t);while(match(t,"/[^./]+/\\.\\./")){t=substr(t,1,RSTART-1)"/"substr(t,RSTART+RLENGTH);}print t; }'
+}
+
+
+for i in "$@"; do
+	FILEPATH="$(fullpath "$i")"
+
+	CONFIG_ISLAND_DIR="$HOME/files/config"
+	echo "==> FILEPATH: $FILEPATH"
+	for func in $(compgen -A function); do
+		if [[ ! "$func" =~ dfs_.* ]]; then
+			continue
+		fi
+		echo "=> Try: $func"
+		eval "$func"
+		exit_status="$?"
+		if [ "_$exit_status" = _122 ]; then
+			continue
+		elif [ "_$exit_status" != _0 ]; then
+			echo "unknown exit status: $exit_status"
+			exit 1
+		fi
+	done
+	echo "==========================="
+done

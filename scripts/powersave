@@ -1,0 +1,73 @@
+#!/usr/bin/env bash
+
+_msg1() {
+    echo -e "=> $@"
+}
+
+_msg2() {
+    echo -e "  -> $@"
+}
+
+indent() {
+    sed "s/^/$(printf "%${1}s" " ")/g"
+}
+
+refresh() {
+    _msg1 "Changing refresh"
+    local flag="$1"
+    local refresh
+
+    if [ "$flag" = "low" ]; then
+        refresh=60
+    else
+        refresh=165.003
+    fi
+
+    _msg2 "Change refresh rate to $refresh"
+    wlr-randr --output eDP-1 --mode 2560x1440@$refresh --pos 2560,0 --scale 1.4
+}
+
+brightness() {
+    _msg1 "Changing backlight"
+    local flag="$1"
+    local v=200
+
+    if [ "$flag" = "low" ]; then
+        brightnessctl s $v |& indent 4
+    else
+        :
+    fi
+    _msg2 "Change backlight to $v"
+}
+
+cpupower() {
+    flag="$1"
+
+    if [ "$flag" = "low" ]; then
+        sudo cpupower frequency-set -g powersave
+    else
+        sudo cpupower frequency-set -g performance
+    fi
+}
+
+aspm() {
+	flag=$1
+	local arg
+
+	if [ "$flag" = "low" ]; then
+	    arg="powersupersave"
+	else
+	    arg="default"
+	fi
+	echo $arg | sudo tee /sys/module/pcie_aspm/parameters/policy
+}
+
+_low() {
+	aspm low
+	brightness low
+	refresh low
+}
+
+if [ $# -eq 0 ]; then
+	_low
+fi

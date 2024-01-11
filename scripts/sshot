@@ -1,0 +1,49 @@
+#!/usr/bin/env bash
+
+F="$HOME/Pictures/grim/$(date +%y-%m-%d_%H.%M.%S).png"
+
+screenshot_all() {
+    if grim "$F"; then
+        notify
+    fi
+}
+
+screenshot_range() {
+    if grim -g "$(slurp)" "$F"; then
+        notify
+    fi
+}
+
+set -x
+
+screenshot_hypr_win() {
+    x="$1"
+    y="$2"
+    w="$3"
+    h="$4"
+    if grim -g "$x,$y ${w}x${h}" "$F"; then
+        notify
+    fi
+}
+
+screenshot_win() {
+    screenshot_hypr_win "$@"
+}
+
+notify() {
+    notify-send "Screenshot" "Save Screenshot into \n${F}" -i /usr/share/icons/Papirus/64x64/apps/applets-screenshooter.svg
+}
+
+get_color() {
+    local c=$(grim -g "$(slurp -p)" -t ppm - | convert - -format '%[pixel:p{0,0}]' txt:- | tail -1 | awk '{print $3}')
+    local f="/tmp/$(date +%y-%m-%d_%H.%M.%S).png"
+    convert -size 100x100 xc:"$c" "$f"
+
+    notify-send -i "$f" Color "$c"
+}
+
+if [ "$1" == "-w" ]; then
+    screenshot_win $(hyprctl activewindow -j | jq -c '.at[0]-5, .at[1]-5, .size[0]+10, .size[1]+30')
+else
+    screenshot_range
+fi

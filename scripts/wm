@@ -1,0 +1,46 @@
+#!/usr/bin/env bash
+#
+#
+
+set -e
+
+export PASSWORD_STORE_DIR="/home/chin/.private/box0/password-store"
+export SDL_VIDEODRIVER=wayland
+export GTK_THEME=adw-gtk3
+export MOZ_ENABLE_WAYLAND=1
+
+export GRADLE_USER_HOME=$HOME/Supply/gradle
+export ANDROID_SDK_ROOT=$HOME/Supply/Android/Sdk
+export GTK_USE_PORTAL=0
+
+Hyprland
+
+#dbus-run-session ~/Projects/dwl/dwl -s /home/chin/Projects/somebar/build/somebar > /tmp/dwl.log 2>&1 &!
+
+# #~/Projects/linux-utils/build/statusline > /tmp/statusline.log 2>&1  &!
+
+# gsettings set org.gnome.desktop.interface icon-theme Stein-Lumine
+
+# dunst > /tmp/dunst.log 2>&1 &!
+
+# STARTX=0
+# STARTY=0
+# if wlr-randr | grep ^DP-1; then
+#     wlr-randr --output DP-1 --pos ${STARTX},0
+#     STARTX=2560
+#     STARTY=440
+# fi
+
+# if wlr-randr | grep eDP-1; then
+#     wlr-randr --output eDP-1 --scale 1.4 --mode 2560x1440 --pos $STARTX,$STARTY
+#     swaybg -m fill -o eDP-1 -i $HOME/files/pics/wallpapers/v2-29a2f9ba9f41effd9d20139e4416addd_r.jpg >/tmp/swaybg.log 2>&1 &!
+# fi
+
+
+# delay() {
+#     sleep 5;
+#     export WAYLAND_DISPLAY=wayland-0
+#     wl-clipboard-history -t >/tmp/clipboard.log 2>&1 &!
+# }
+
+# delay &
