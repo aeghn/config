@@ -31,11 +31,9 @@
 }
 
 #nav-bar,
-#urlbar-container,
-#PersonalToolbar>#personal-bookmarks {
+#urlbar-container {
     width: 302px !important;
     left: 9px;
-    background-color: #fff !important;
 }
 
 #nav-bar {
@@ -45,36 +43,27 @@
     top: 10px;
     overflow: visible !important;
     height: 40px !important;
-    border-radius: 10px 10px 0px 0px;
-    border-top: 1px solid #aaa !important;;
-    border-left: 1px solid #aaa !important;
-    border-right: 1px solid #aaa !important;
 }
 
 #urlbar-container {
+    background-color: #00000000;
     display: flex;
     position: absolute !important;
     left: -6px;
     top: 40px;
     height: 30px !important;
-    z-index: 101;
-    border-left: 1px solid #aaa;
-    border-right: 1px solid #aaa;
 }
 
 #urlbar[breakout][breakout-extend] {
     width: 240% !important;
-    border: 1px solid #c0c0c0 !important;
-    border-radius: 3px;
     box-shadow: none !important;
-    background: #efefef !important;
     transition: 0.2s all;
 }
 
-#urlbar-input > div {
-  text-wrap: wrap !important;
-  max-height: 100px !important;;
-  height: 100px !important;
+#urlbar-input {
+    text-wrap: wrap !important;
+    max-height: 100px !important;
+    height: 100px !important;
 }
 
 #urlbar #urlbar-background,
@@ -83,63 +72,5 @@
 #searchbar,
 .searchbar-textbox {
     box-shadow: none !important;
-    border: none !important;
     font-size: 12px;
 }
-
-#PersonalToolbar {
-    overflow-y: auto;
-    height: 300px;
-    font-size: 90%;
-}
-
-#PersonalToolbar>#personal-bookmarks {
-    display: flex;
-    position: absolute !important;
-    padding-top: 10px;
-    padding-left: 5px;
-    overflow-y: unset;
-    height: 100px !important;
-    top: 80px;
-    border-radius: 0px 0px 10px 10px;
-    border-bottom: 1px solid #aaa;
-    border-left: 1px solid #aaa;
-    border-right: 1px solid #aaa;
-}
-
-#PlacesToolbar,
-#PlacesToolbarDropIndicatorHolder {
-    flex-direction: column;
-    width: 300px !important;
-}
-
-#PersonalToolbar #PlacesToolbarItems {
-    display: flex !important;
-    flex-direction: column;
-    overflow-y: auto;
-    width: 300px !important;
-}
-
-#PersonalToolbar>toolbaritem {
-    justify-content: right;
-    width: 300px !important;
-}
-
-#PersonalToolbar #PlacesToolbarItems {
-    display: -webkit-box !important;
-    -webkit-box-orient: vertical !important;
-    width: 300px !important;
-}
-
-toolbarbutton.bookmark-item {
-    min-width: 90%;
-    padding: 0.1em;
-    font-size: 100%;
-}
-
-#PlacesChevron {
-    top: 50px !important;
-    position: absolute;
-}
-
-
