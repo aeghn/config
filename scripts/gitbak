@@ -1,4 +1,4 @@
-#!/usr/bin/env bash
+#!/usr/bin/env bash 
 
 GIT_ROOT="$(git rev-parse --show-toplevel)"
 if [ $? -ne 0 ]; then

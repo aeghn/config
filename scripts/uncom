@@ -1,0 +1,66 @@
+#!/usr/bin/env bash
+
+FILE="$1"
+
+die() {
+    echo -e "\033[1m\033[31m$*\033[0m"
+    exit 1
+}
+
+list_files() {
+    :
+}
+
+list_only_files() {
+    local fn
+    fn="$1"
+    
+    case "${fn,,}" in
+        *.tar.*|*.tar)
+            tar -tf "$fn"
+            ;;
+        *.zip)
+            unzip -Z1 "$fn"
+            ;;
+        *)
+            die "Unknown file type: \`$fn'"
+    esac
+}
+
+# Check the top level if have many files
+has_many_files_top_lvl() {
+    local fn
+    fn="$1"
+
+    [ $(list_only_files "$fn" | awk -F/ '{print $1}' | sort -u | wc -l) -gt 1 ] && return 0 || return 1
+}
+
+# src des
+uncompress() {
+    local src des
+
+    src="$1"
+    des="$2"
+
+    case "${src,,}" in
+        *.gz)
+            
+        ;;
+        *.xz)
+        ;;
+        *.zst)
+        ;;
+        *zip)
+        ;;
+    esac
+}
+
+test() {
+    if has_many_files_top_lvl "$1"; then
+        echo "many files"
+    else
+        echo "one file"
+    fi
+}
+
+test "$1"

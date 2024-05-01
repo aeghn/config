@@ -15,13 +15,10 @@ dfs_home_dotsciprts() {
 }
 
 _read_dirname() {
-    if which fzf 2>/dev/null; then
-        ls "$CONFIG_ISLAND_DIR" | fzf
-    else
-        ls "$CONFIG_ISLAND_DIR"
+	echo "reading $CONFIG_ISLAND_DIR"
+	ls "$CONFIG_ISLAND_DIR"
         read -p "Read: " _dir
         echo "$_dir"
-    fi
 }
 
 dfs_home_dotconfig() {

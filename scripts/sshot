@@ -44,6 +44,8 @@ get_color() {
 
 if [ "$1" == "-w" ]; then
     screenshot_win $(hyprctl activewindow -j | jq -c '.at[0]-5, .at[1]-5, .size[0]+10, .size[1]+30')
+elif [ "$1" == "-c" ]; then
+	get_color
 else
     screenshot_range
 fi

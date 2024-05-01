@@ -1,0 +1,16 @@
+#!/usr/bin/env bash
+
+export HOME=$HOME/.fake_home
+
+mkdir -p "$HOME"
+
+case "$1" in
+    f)
+        firefox --no-remote &!
+        ;;
+    l)
+	    export HTTP_PROXY=http://127.0.0.1:7890; export HTTPS_PROXY=http://127.0.0.1:7890
+        /usr/bin/logseq &!
+        #/usr/bin/logseq --enable-features=UseOzonePlatform --ozone-platform=wayland --enable-wayland-ime &!
+        ;;
+esac
