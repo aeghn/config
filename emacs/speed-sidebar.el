@@ -198,6 +198,7 @@ buffer if buffer has a window attached to it."
 
     (setq default-directory (speed-sidebar--find-root))
     (speedbar-refresh)
+    (setq truncate-lines t)
     (unless (booleanp file-or-force)
       (with-selected-window window
         (setq-local cursor-in-non-selected-windows nil)
@@ -235,8 +236,7 @@ the default directory of speed-sidebar buffer"
             (existing-buffer (get-buffer name)))
       existing-buffer
     (let ((new-buffer (generate-new-buffer name))
-          (current-window (selected-window))
-          (truncate-lines t))
+          (current-window (selected-window)))
       (setq speedbar-buffer new-buffer
             speedbar-frame (selected-frame)
             dframe-attached-frame (selected-frame)
@@ -245,8 +245,7 @@ the default directory of speed-sidebar buffer"
             speedbar-use-images nil
             speedbar-last-selected-file nil
             speedbar-update-flag nil
-            speedbar-update-flag-disable t
-            truncate-lines t)
+            speedbar-update-flag-disable t)
       (set-buffer speedbar-buffer)
       (speedbar-mode)
       (speedbar-update-contents)

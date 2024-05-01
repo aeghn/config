@@ -16,8 +16,8 @@
                 ("melpa" . "https://mirrors.bfsu.edu.cn/elpa/melpa/")))
 
 (setq package-archives tsinghua-mirror)
-(add-to-list 'package-archives
-             '("nongnu" . "https://elpa.nongnu.org/nongnu/"))
+;; (add-to-list 'package-archives
+;;              '("nongnu" . "https://elpa.nongnu.org/nongnu/"))
 
 (package-initialize)
 
@@ -66,6 +66,8 @@
 (chin/load-other-file "shortcut.el")
 (chin/load-other-file "org-visual-indent.el")
 (chin/load-other-file "org-roam-helper.el")
+(chin/load-other-file "org-datamanager.el")
+;; (chin/load-other-file "org-margin.el")
 
 ;; Windows-nt specific settings
 ;; windows-loader
@@ -118,7 +120,8 @@
 (setq ring-bell-function 'ignore)
 
 ;; Theme Settings
-(load-theme 'modus-operandi)
+(when (display-graphic-p)
+  (load-theme 'modus-operandi))
 ;; (load-theme 'modus-vivendi-tinted)
 
 
@@ -295,7 +298,7 @@
       ;; Org styling, hide markup etc.
       org-hide-emphasis-markers nil
       org-pretty-entities t
-      org-ellipsis " ⋯ "
+      org-ellipsis " ... "
 
       org-export-preserve-breaks t
 
@@ -325,14 +328,15 @@
 (org-visual-indent-mode)
 
 (defun chin/org-face-hook ()
-  (let ((variable-font "Zhuque Fangsong (technical preview)"))
+  (let ((variable-font "Sarasa Mono SC"))
     (setq-local face-remapping-alist
                 `((default (:family ,variable-font :height 120) variable-pitch)
                   (org-block (:family "Martian Mono Nr Rg" :height 108) org-block))
                 line-spacing 0.2)
-    (olivetti-mode)
+    ;; (olivetti-mode)
     (org-visual-indent-mode)
-    (org-tidy-mode)))
+    (org-tidy-mode)
+    ))
 
 
 (defun chin/org-hook-function ()
@@ -482,8 +486,13 @@
 
 (defconst chin/hist-files-file "~/.hist-files")
 
+(defun chin/is-private-file (filename)
+  (string-match-p ".*/private/.*" filename))
+
 (defun chin/add-visited-file ()
-  (write-region (concat (buffer-file-name) "\n") nil chin/hist-files-file t))
+  (let ((filename (buffer-file-name)))
+    (unless (chin/is-private-file filename)
+      (write-region (concat filename "\n") nil chin/hist-files-file t))))
 
 (defun chin/read-visited-files ()
   (dolist (f (split-string
@@ -721,3 +730,10 @@ If popup is focused, kill it."
     (goto-char (point-min))
     (while (re-search-forward "\\([^\x00-\xff]\\)\\([a-zA-Z0-9]\\)" nil t)
       (replace-match "\\1 \\2"))))
+
+
+(global-set-key (kbd "C-<right>") 'windmove-right)
+(global-set-key (kbd "C-<left>") 'windmove-left)
+(global-set-key (kbd "C-<up>") 'windmove-up)
+(global-set-key (kbd "C-<down>") 'windmove-down)
+(put 'upcase-region 'disabled nil)
