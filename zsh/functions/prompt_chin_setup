@@ -21,12 +21,12 @@ prompt_chin_head() {
     pr_name='%B%F{yellow}%n%f%b'
 
 
-    printf  "%s"  "${pr_state}${pr_bgpg}${pr_name} at ${pr_host} in ${pr_dir}"
+    printf  "%s"  "${pr_state}${pr_bgpg}${pr_name}@${pr_host} ${pr_dir}"
 }
 
 prompt_chin_tail() {
     setopt localoptions noxtrace nowarncreateglobal
-    local pr_prompt pr_post pr_al
+    local pr_prompt pr_post pr_al pr_his
 
     pr_prompt='%F{red}%(!,%K{red}#%k,$) '
     pr_post='%b%f%k'
@@ -34,8 +34,12 @@ prompt_chin_tail() {
     if [ -n "$CONDA_PROMPT_MODIFIER" ]; then
         pr_al="${prompt_newline}> C${CONDA_PROMPT_MODIFIER}"
     fi
+    
+    if [ -z "$HISTFILE" ]; then
+       pr_his="??"
+    fi
 
-    echo "${pr_al}${prompt_newline}${pr_prompt}${pr_post}"
+    echo "${pr_al}${prompt_newline}${pr_his}${pr_prompt}${pr_post}"
 }
 
 ## Extended prompt part: git
@@ -48,21 +52,25 @@ prompt_chin_git_status() {
     }
 
     local -a parts
-    local fd line operation head tag ahead behind conflicts staged changed untracked
+    local fd line operation stashp head tag ahead behind conflicts staged changed untracked
 
     if [ -d "$gdir/rebase-apply" ] || [ -d "$gdir/rebase-merge" ]; then
-        operation="REBASE,"
+        operation="REBASE|"
     elif [ -f "$gdir/MERGE_HEAD" ]; then
-        operation="MERGING,"
+        operation="MERGING|"
     elif test -f "$gdir/CHERRY_PICK_HEAD"; then
-        operation="CHERRY-PICK,"
+        operation="CHERRY-PICK|"
     elif test -f "$gdir/REVERT_HEAD"; then
-        operation="REVERT,"
+        operation="REVERT|"
     elif [ -f "$gdir/BISECT_LOG" ]; then
-        operation="BISECT,"
+        operation="BISECT|"
     fi
 
-    parts+="%F{red}${operation}%f"
+    if [ -f "$gdir/refs/stash" ]; then
+        stashp="SH|"
+    fi
+
+    parts+="%F{red}${operation}${stashp}%f"
 
 
     exec {fd}< <(git status --porcelain=v2 --branch 2>&-)
@@ -113,7 +121,7 @@ prompt_chin_git_status() {
     [[ $untracked > 0 ]] && working_info+=" %F{red}+$untracked%f"
     parts+="${(j::)working_info}"
 
-    echo -n "on git:(${(j::)parts})"
+    echo -n "g[${(j::)parts}]"
 }
 
 prompt_chin_git_assemble() {
@@ -147,7 +155,7 @@ prompt_chin_precmd() {
 
     if [[ -v PROMPT_CHIN_LAST_TIME ]]; then
       local cost_time=$(($SECONDS - $PROMPT_CHIN_LAST_TIME))
-      [[ $cost_time -gt 10 ]] && cost_time=" to %F{red}%D{%H:%M:%S} ${cost_time}s%f" || cost_time=""
+      [[ $cost_time -gt 10 ]] && cost_time=" [%F{red}%D{%H:%M:%S}~${cost_time}s%f]" || cost_time=""
     fi
 
     unset PROMPT_CHIN_LAST_TIME

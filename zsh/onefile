@@ -74,7 +74,8 @@ zle -N down-line-or-beginning-search
 export DIR_HISTORY_FILE="$CHIN_ZSH_CACHE_DIR/hist-files"
 
 function chin-chpwd-append-dir() {
-    echo "$PWD" >> "$DIR_HISTORY_FILE"
+
+    [ -n  "$HISTFILE" ] && echo "$PWD" >> "$DIR_HISTORY_FILE"
 }
 add-zsh-hook -Uz chpwd chin-chpwd-append-dir
 
