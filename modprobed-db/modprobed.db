@@ -1,3 +1,4 @@
+
 ac97_bus
 acpi_call
 acpi_pad
@@ -25,6 +26,7 @@ cec
 cfg80211
 cmac
 cmdlinepart
+CONFIG_NF_NAT_REDIRECT
 coretemp
 crc16
 crc32c_generic
@@ -42,9 +44,7 @@ drm
 drm_buddy
 drm_display_helper
 drm_dp_helper
-drm_exec
 drm_kms_helper
-drm_ttm_helper
 ecc
 ecdh_generic
 efi_pstore
@@ -134,12 +134,13 @@ nf_nat
 nf_nat_pptp
 nfnetlink
 nf_reject_ipv4
+nf_tables
 nls_ascii
 ntfs3
+numa
 nvidiafb
 nvidia_wmi_ec_backlight
 nvme
-nvme_auth
 nvme_common
 nvme_core
 pcspkr
