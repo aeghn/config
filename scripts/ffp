@@ -1,0 +1,10 @@
+#!/usr/bin/env bash
+
+fzf --preview 'tuipv {}' --preview-window=wrap:border-left "$@" \
+	--bind "right:execute(open {})" \
+	--bind "alt-right:execute(open {} &)" \
+
+
+
+
+

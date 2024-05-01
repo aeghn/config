@@ -1,12 +1,20 @@
 #!/usr/bin/env bash
 
+open_windows() {
 if [ $# -lt 1 ]; then
-	explorer .
-else 
-  if [ -d "$1" ]; then
-    cd "$1"
     explorer .
-  elif [ -f "$1" ]; then
-    start "$1"
-  fi
+else
+    if [ -d "$1" ]; then
+        cd "$1"
+        explorer .
+    elif [ -f "$1" ]; then
+        start "$1"
+    fi
 fi
+}
+
+open_linux() {
+xdg-open "$1"
+}
+
+open_linux "$@"

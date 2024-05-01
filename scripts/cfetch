@@ -1,8 +1,7 @@
 #!/usr/bin/env bash
 
-NAME_LEN=15
-VALUE_LEN=80
-
+NAME_LEN=12
+VALUE_LEN=66
 
 _split() {
     local len value
@@ -36,25 +35,27 @@ _split() {
 }
 
 echo_line() {
-    local name value
-    name="$1"
-    value="$2"
+    local name value color
+    color="$1"
+    name="$2"
+    value="$3"
 
     local -a name_lines value_lines
 
     IFS=$'\n' read -d '' -ra name_lines <<< "$(_split $NAME_LEN "$name")"
     IFS=$'\n' read -d '' -ra value_lines <<< "$(_split $VALUE_LEN "$value")"
 
-    local sep=" = "
+    local sep=" "
     for ((i=0; 1; i++)); do
         [ -z "${name_lines[$i]}" ] && [ -z "${value_lines[$i]}" ] && break
-        [ $i -gt 0 ] && sep=" : "
-        printf " \e[34m%0${NAME_LEN}s\e[0m$sep\e[3m\e[35m%s\e[0m\n" "${name_lines[$i]}" "${value_lines[$i]}"
+        [ $i -gt 0 ] && sep=" "
+	printf "│ \e[3m%-${NAME_LEN}s\e[0m│ \e[1m%s\e[0m\n" "${name_lines[$i]^^}$sep" "${value_lines[$i]}"
     done
 }
 
 echo_title() {
-    printf "* \e[31m\e[1m$*\e[0m \n"
+	:
+    #printf "*** \e[31m\e[1m\e[3m$*\e[0m \n"
 }
 
 
@@ -135,34 +136,32 @@ get_pacman_package_num() {
 }
 
 
-echo_title Hardware
-echo_line "CPU" "$(get_hardware_cpu)"
-echo_line "GPU" "$(lspci | grep ' VGA '| cut -d: -f3)"
-echo_line "Memory" "$(get_hardware_memory)"
-echo_line "Disk" "$(df -h | grep ^/dev)"
+echo "╭─────────────╮"
+echo_line "31" "CPU" "$(get_hardware_cpu)"
+echo_line "31" "GPU" "$(lspci | grep ' VGA '| cut -d: -f3)"
+echo_line "31" "Memory" "$(get_hardware_memory)"
+echo_line "31" "Disk" "$(df -h | grep ^/dev)"
 
-echo
+echo_line "32" "OS" "$(get_os_name)"
+echo_line "32" "Kernel" "$(get_os_kernel)"
+echo_line "32" "Version" "$(uname -v)"
+echo_line "32" "Rolling" "$(get_os_upgrade_time)"
+echo_line "32" "Uptime" "$(get_os_uptime)"
+echo_line "32" WM "Hyprland $(hyprctl version | sed -n '2p' | awk '{print $2}')"
 
+echo_line "32" "Pacman Pkgs" "$(get_pacman_package_num)"
+echo_line "32" "Cargo Pkgs" "$(cargo install --list | grep "^[^ ]"  | wc -l)"
+echo_line "34" Firefox "$(firefox --version)"
+echo_line "34" Terminal "$(foot --version)"
+echo_line "34" "GNU/Emacs" "$(emacs --version | grep "build date")"
+echo_line "34" Zsh "$(zsh --version)"
 
-echo_title System
-echo_line "OS" "$(get_os_name)"
-echo_line "Kernel" "$(get_os_kernel)"
-echo_line "Kernel Version" "$(uname -v)"
-echo_line "Package" "$(get_pacman_package_num)"
-echo_line "Rolling" "$(get_os_upgrade_time)"
-echo_line WM "Hyprland $(hyprctl version | sed -n '2p' | awk '{print $2}')"
-echo
+echo_line "34" GNU/Bash "$(bash --version | head -1)"
+echo_line "34" GNU/GCC "$(gcc --version | head -1)"
+echo_line "34" Rust "$(rustc --version | head -1)"
+echo_line "34" Python "$(python --version | head -1)"
+echo_line "34" Go "$(go version)"
+echo_line "34" NodeJS "$(node --version)"
+echo_line "34" Java "$(java --version | head -1)"
 
-echo_title Language And Softwares
-echo_line Firefox "$(firefox --version)"
-echo_line Terminal "$(foot --version)"
-echo_line "GNU/Emacs" "$(emacs --version | grep "build date")"
-echo_line Zsh "$(zsh --version)"
-echo_line GNU/Bash "$(bash --version | head -1)"
-echo_line GNU/GCC "$(gcc --version | head -1)"
-echo_line Rust "$(rustc --version | head -1)"
-echo_line Python "$(python --version | head -1)"
-echo_line Go "$(go version)"
-echo_line NodeJS "$(node --version)"
-echo_line Java "$(java --version | head -1)"
-echo
+echo "╰─────────────╯"

@@ -1,3 +1,0 @@
-#/usr/bin/env bash
-
-"/E/opt/apache-maven-3.6.3/bin/mvn.cmd" "$@"

@@ -24,7 +24,7 @@ refresh() {
     fi
 
     _msg2 "Change refresh rate to $refresh"
-    wlr-randr --output eDP-1 --mode 2560x1440@$refresh --pos 2560,0 --scale 1.4
+    wlr-randr --output eDP-1 --mode 2560x1440@$refresh --pos 2560,0
 }
 
 brightness() {

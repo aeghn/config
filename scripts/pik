@@ -1,0 +1,57 @@
+#!/usr/bin/env bash
+
+declare -a ARGS
+
+F_NO_CONFIRM=false
+F_WITHOUT_SEARCH=false
+F_PROXY=false
+
+log() {
+    echo -e "\033[32m * [$(date)] INFO\033[0m - $@"
+}
+
+warn() {
+    echo -e "\033[31m * [$(date)] WARN\033[0m - $@"
+}
+
+parse_flag() {
+    local str="$1"
+
+    for (( i=0; i<${#str}; i++ )); do
+        c="${str:$i:1}"
+	case $c in
+	esac
+    done
+}
+
+f_pikaur() {
+    local ea=""
+    local pa=""
+    if $F_NO_CONFIRM; then
+        ea="--noconfirm "
+    fi
+    if $F_WITHOUT_SEARCH; then
+        ea+="-S "
+    fi
+
+    if $F_PROXY; then
+       pa="proxychains -q"
+    fi
+    
+    log "$pa pikaur $ea ${ARGS[@]}"
+    
+    $pa python ~/Projects/pikaur/pikaur.py $ea "${ARGS[@]}"
+}
+
+for arg in "$@"; do
+    case "$arg" in
+	    -f) F_NO_CONFIRM=true ;;
+	    -d) F_WITHOUT_SEARCH=true ;;
+	    -p) F_PROXY=true  ;;
+	    *) ARGS=("${ARGS[@]}" "$arg") ;;
+    esac
+done
+
+
+
+f_pikaur
