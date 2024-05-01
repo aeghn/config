@@ -15,9 +15,9 @@
     (org-show-entry)
     (show-children)))
 
-(defun chin/todo (dirpath)
+(defun chin/todo (dirpath filename)
   (interactive)
-  (when-let ((buf (find-file (expand-file-name "todo.org" dirpath))))
+  (when-let ((buf (find-file (expand-file-name filename dirpath))))
     (with-current-buffer buf
       (let* ((today (format-time-string "%Y-%m-%d" (current-time)))
              (pos (org-find-exact-headline-in-buffer today nil t)))
@@ -30,7 +30,9 @@
           (insert "* " today))
         (chin/org-show-current-heading-tidily)))))
 
-(global-set-key (kbd "<f6>") (lambda () (interactive) (chin/todo chin/writer-dir)))
+(global-set-key (kbd "<f6>") (lambda () (interactive) (chin/todo chin/writer-dir "todo.org")))
+(global-set-key (kbd "<f5>") (lambda () (interactive) (chin/todo chin/writer-dir "todo-work.org")))
+
 
 (defun chin/today-file (directory)
   (interactive)
