@@ -64,7 +64,7 @@
 (chin/load-other-file "damer.el")
 (chin/load-other-file "tool-bar.el")
 (chin/load-other-file "shortcut.el")
-(chin/load-other-file "org-visual-indent.el")
+;; (chin/load-other-file "org-visual-indent.el")
 (chin/load-other-file "org-roam-helper.el")
 (chin/load-other-file "org-datamanager.el")
 ;; (chin/load-other-file "org-margin.el")
@@ -128,7 +128,7 @@
 ;; Font settings
 (defun chin/set-fonts ()
   (when (display-graphic-p)
-    (let ((prefered-mono-font-list '("Martian Mono Nr Rg" "IBM Plex Mono" "Jetbrains Mono"))
+    (let ((prefered-mono-font-list '("Sarasa Mono SC" "IBM Plex Mono" "Jetbrains Mono"))
           (prefered-chinese-font-list '("Zhuque Fangsong (technical preview)"  "Noto Serif CJK SC"))
           (prefered-serif-font-list (list "Literata 7pt" "Charter" "Roboto"))
           (first-font-fun (make-symbol "chin/get-first-available-font"))
@@ -154,11 +154,11 @@
             (funcall first-font-fun prefered-serif-font-list prefered-serif-font))
       (set-fontset-font "fontset-default" '(#xe000 . #xf8ff) "nrss")
       (set-face-attribute 'default nil
-                          :family prefered-mono-font :height 108 :weight 'Regular)
+                          :family prefered-mono-font :height 120 :weight 'Regular)
       (set-face-attribute 'mode-line nil
-                          :family prefered-serif-font :height 108 :weight 'Bold)
+                          :family prefered-serif-font :height 120 :weight 'Bold)
       (set-face-attribute 'mode-line-inactive nil
-                          :family prefered-serif-font :height 108 :weight 'Regular)
+                          :family prefered-serif-font :height 120 :weight 'Regular)
 
       (setq ibuffer-sidebar-use-custom-font t)
       (setq ibuffer-sidebar-face `(:family "Jost*" :height 120))
@@ -324,8 +324,8 @@
  '(org-level-6 ((t (:weight normal :height 1.0 ))))
  '(org-level-8 ((t (:weight normal)))))
 
-(require 'org-visual-indent)
-(org-visual-indent-mode)
+;;(require 'org-visual-indent)
+;;(org-visual-indent-mode)
 
 (defun chin/org-face-hook ()
   (let ((variable-font "Sarasa Mono SC"))
@@ -334,7 +334,7 @@
                   (org-block (:family "Martian Mono Nr Rg" :height 108) org-block))
                 line-spacing 0.2)
     ;; (olivetti-mode)
-    (org-visual-indent-mode)
+    ;; (org-visual-indent-mode)
     (org-tidy-mode)
     ))
 
@@ -487,7 +487,7 @@
 (defconst chin/hist-files-file "~/.hist-files")
 
 (defun chin/is-private-file (filename)
-  (string-match-p ".*/private/.*" filename))
+  (and filename (string-match-p ".*/private/.*" filename)))
 
 (defun chin/add-visited-file ()
   (let ((filename (buffer-file-name)))
