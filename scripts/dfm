@@ -297,10 +297,10 @@ _wrapper() {
             # maybe one ancestor of the mainland file is linked to the island
             if [ "$(realpath "$MAINLAND")" = "$(realpath "$ISLAND")" ]; then
                 _die "Check the ancestors of $MAINLAND, maybe someone of them is softlink."
-                
+
             fi
 
-            
+
             _log_level +
 
             if [ ! -L "$MAINLAND" ]; then
@@ -447,10 +447,12 @@ show_help() {
 $SCRIPT -- A tool for file mapping
 
 Basic Usage
-  $SCRIPT <ISLAND> <MAINLAND> -- <ISLAND> is standing for dotfile collections, <MAINLAND> is where we referring the file in the daily usage.
+  $SCRIPT -i <ISLAND> -m <MAINLAND> [-c] [-f <PATH>]
 
-  -f <PATH> the dfm file.
-  -c copy the file instand of making symlink.
+  -f <PATH>       the dfm file.
+  -c copy         the file instand of making symlink.
+  -i <ISLAND>     is standing for dotfile collections.
+  -m <MAINLAND>   is where we referring the file in the daily usage.
 EOF
 }
 
@@ -477,15 +479,22 @@ _run() {
             -c)
                 COPY_MODE=true
                 ;;
-            *)
-                if [ -z "$ISLAND" ]; then
-                    ISLAND="$1"
-                elif [ -z "$MAINLAND" ]; then
-                    MAINLAND="$1"
-                fi
+            -i)
+                ISLAND="$2"
+                shift
+                ;;
+            -m)
+                MAINLAND="$2"
+                shift
+                ;;
         esac
         shift
     done
+
+    if [ -z "$ISLAND" ] || [ -z "$MAINLAND" ]; then
+        show_help
+        exit 1
+    fi
 
     _wrapper
 }
