@@ -1,0 +1,24 @@
+#!/usr/bin/env bash
+
+
+VALUE="$2"
+
+MONITOR_ID=$(hyprctl activeworkspace -j | jq .monitorID)
+NEW_ID=$(($MONITOR_ID * 10 + $VALUE))
+
+focus() {
+    hyprctl dispatch workspace $NEW_ID
+}
+
+movetoworkspace() {
+    hyprctl dispatch movetoworkspace $NEW_ID
+}
+
+case "$1" in
+    focus)
+        focus
+        ;;
+    movetoworkspace)
+        movetoworkspace
+        ;;
+esac
