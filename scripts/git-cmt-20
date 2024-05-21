@@ -1,0 +1,12 @@
+#!/usr/bin/env bash
+
+CURR=$(($(date +%H) * 60 + $(date +%M)))
+LIT="$((CURR * 4 / 20))"
+HOUR="$((LIT/60+20))"
+MINUTE="$((LIT%60))"
+
+TIME="$(date +%Y-%m-%d) ${HOUR}:${MINUTE}:$(date +%S)"
+
+GIT_AUTHOR_DATE="$TIME" \
+    GIT_COMMITTER_DATE="$TIME" \
+    git commit "$@"

@@ -1,0 +1,5 @@
+#!/usr/bin/env bash
+
+for i in "$@"; do
+kill $(netstat -anp |& grep ":$i " | awk '{print $NF}' | awk -F/ '{print $1}' | grep -E '^[0-9]*$' | sort -u)
+done

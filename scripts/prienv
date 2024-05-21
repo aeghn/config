@@ -1,0 +1,32 @@
+#!/usr/bin/env bash
+
+# CHIN_PRIVATE_DIR/values/common_infos: to store private info without decryption.
+# CHIN_PRIVATE_DIR/values/passstore: use pass to read infos
+
+# usage: FUNC KEY
+common_infos() {
+    local key filepath
+    key="$1"
+    filepath="$CHIN_PRIVATE_DIR/values/common_infos"
+    if [ ! -f "$filepath" ]; then
+        echo "Unable to read common infos from $filepath!" >&2
+        exit 1
+    fi
+    source "$filepath"
+    value="$(eval 'echo ${'$key'}')"
+    if [ _ = "_$value" ]; then
+	    echo "KEY: $key is empty" >&2
+    fi
+    printf "%s" "$value"
+}
+
+pass_infos() {
+    echo "TODO"
+    exit 1
+}
+
+if [ "_$1" = "_-p" ]; then
+    pass_infos "$2"
+else
+    common_infos "$1"
+fi

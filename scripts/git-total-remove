@@ -1,0 +1,21 @@
+#!/usr/bin/env bash
+
+if [ $# -eq 0 ]; then
+    exit 1
+fi
+
+echo -e "This script will total messed up your local repo, do you really want to do it? (press C-c to cancel)"
+echo -e "Remove $@"
+
+COUNT=5
+while [ $COUNT -gt 0 ]; do
+    echo -n "...${COUNT}"
+    sleep 1
+    COUNT=$((COUNT-1))
+done
+
+if [ $COUNT -eq 0 ]; then
+    git filter-repo --invert-paths --path "$@"
+else
+    echo "Cancelled"
+fi

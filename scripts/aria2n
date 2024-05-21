@@ -1,0 +1,3 @@
+#!/usr/bin/env bash
+
+aria2c --no-conf -j 4 -x 4 -s 4 "$@"

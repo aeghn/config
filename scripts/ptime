@@ -1,0 +1,1 @@
+awk '{ print strftime("%m/%d/%Y %H:%M:%S >", systime()), $0 }'
