@@ -184,6 +184,7 @@ snd_hda_codec_realtek
 snd_hda_core
 snd_hda_ext_core
 snd_hda_intel
+snd_hda_scodec_component
 snd_hrtimer
 snd_hwdep
 snd_intel_dspcfg
