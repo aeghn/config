@@ -15,7 +15,7 @@
     (org-show-entry)
     (show-children)))
 
-(defun chin/todo (dirpath filename)
+(defun chin/todo-sub (dirpath filename)
   (interactive)
   (when-let ((buf (find-file (expand-file-name filename dirpath))))
     (with-current-buffer buf
@@ -29,6 +29,20 @@
           (newline)
           (insert "* " today))
         (chin/org-show-current-heading-tidily)))))
+
+(defconst chin/todo-prefix (rx (seq bol (one-or-more "*") (opt " " (= 4 (any "A-Z"))) (opt " " (seq (= 4 (any "0-9")) "-" (= 2 (any "0-9)")))) (opt " .") (opt " ") eol)))
+
+(defun chin/todo (dirpath filename)
+  (interactive)
+  (when-let ((buf (find-file (expand-file-name filename dirpath))))
+    (with-current-buffer buf
+      (let* ((today (format-time-string "%y%m-%d" (current-time))))        
+        (goto-char (point-min))
+        (replace-regexp chin/todo-prefix "")
+        (goto-char (point-max))
+        (newline)
+        (delete-blank-lines)
+        (insert "* TODO " today " . ")))))
 
 (global-set-key (kbd "<f6>") (lambda () (interactive) (chin/todo chin/writer-dir "todo.org")))
 (global-set-key (kbd "<f5>") (lambda () (interactive) (chin/todo chin/writer-dir "todo-work.org")))
