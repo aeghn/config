@@ -11,41 +11,34 @@ dfs_home_dotsciprts() {
 
     local filename="${FILEPATH##*/}"
     local island_file="${CONFIG_ISLAND_DIR%/}/scripts/$filename"
-    dfm "$island_file" "$FILEPATH"
-}
-
-_read_dirname() {
-	echo "reading $CONFIG_ISLAND_DIR"
-	ls "$CONFIG_ISLAND_DIR"
-        read -p "Read: " _dir
-        echo "$_dir"
+    dfm -i "$island_file" -m "$FILEPATH"
 }
 
 dfs_home_dotconfig() {
     can_handle "$HOME/.config/" || return 122
 
     local filename _dir _island
-    filename="${FILEPATH##*/}"
+    filename="${FILEPATH%/}"
+    filename="${filename##*/}"
 
     # check if just regular file in ~/.config
     if [ "_$HOME/.config/$filename" = "_$FILEPATH" ] && [ -f "${FILEPATH}" ]; then
-        _dir="$(_read_dirname)"
-        _island="${_dir}/$filename"
+        read _dir
+        _island="/${_dir#/}/$filename"
     else
-        _island="${FILEPATH#$HOME/.config/}"
+        _island="/${FILEPATH#$HOME/.config/}"
     fi
-
 
     local dfs_file="${CONFIG_ISLAND_DIR%/}/${_island%/*}/.dfs"
     local island_file="${CONFIG_ISLAND_DIR%/}/$_island"
-    dfm "$island_file" "$FILEPATH" -f "$dfs_file"
+    dfm -i "$island_file" -m "$FILEPATH" -f "$dfs_file"
 }
 
 dfs_home_font() {
     local prefix prefix1 prefix2
     prefix1="$HOME/.local/share/fonts/"
     prefix2="/usr/share/fonts/"
-    
+
     if can_handle "$prefix1"; then
         prefix="$prefix1"
     elif can_handle "$prefix2"; then
@@ -55,11 +48,11 @@ dfs_home_font() {
     fi
 
     _island="${FILEPATH#$prefix}"
-        
+
     local island_file="${CONFIG_ISLAND_DIR%/}/fonts/$_island"
     dfm "$island_file" "$FILEPATH" --so
 
-    dfm "$island_file" "$prefix1/$_island"
+    dfm -i "$island_file" -m "$prefix1/$_island"
 }
 
 
@@ -72,12 +65,11 @@ for i in "$@"; do
     FILEPATH="$(fullpath "$i")"
 
     CONFIG_ISLAND_DIR="$HOME/files/config"
-    echo "==> FILEPATH: $FILEPATH"
+    echo "=> FILEPATH: $FILEPATH"
     for func in $(compgen -A function); do
         if [[ ! "$func" =~ dfs_.* ]]; then
             continue
         fi
-        echo "=> Try: $func"
         eval "$func"
         exit_status="$?"
         if [ "_$exit_status" = _122 ]; then
@@ -87,5 +79,5 @@ for i in "$@"; do
             exit 1
         fi
     done
-    echo "==========================="
+    echo "===="
 done
