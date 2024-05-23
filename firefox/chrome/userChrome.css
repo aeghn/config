@@ -39,6 +39,7 @@
 #nav-bar {
     display: flex;
     box-shadow: none !important;
+    border: none !important;
     position: absolute !important;
     top: 10px;
     overflow: visible !important;
