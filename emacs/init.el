@@ -165,11 +165,11 @@
       (setq speed-sidebar-face `(:family "Jost*" :height 120)))))
 
 ;; Toolbar Settings
-(tool-bar-mode 1)
+(tool-bar-mode -1)
 (setq tool-bar-button-margin 8
       tool-bar-images-pixel-height 100)
 
-(defvar chin/show-tool-bar 1)
+(defvar chin/show-tool-bar -1)
 (defun chin/replace-tool-bar (&optional not-show)
   (let ((fw (frame-native-width))
         (fh (frame-native-height))
