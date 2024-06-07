@@ -1,5 +1,16 @@
 @namespace url(http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul);
 
+:root {
+    --transition: all var(--trans-dur) ease-out;
+    --bg-color: var(--lwt-accent-color);
+    --toolbar-item-height: 40px;
+
+    --buttonbox-left-width: 0px;
+    --sdbr-wdt: 300px;
+    --left-margin: 40px;
+}
+
+
 #navigator-toolbox {
     max-height: 0px;
 }
@@ -26,13 +37,14 @@
     display: none;
 }
 
-#TabsToolbar>.titlebar-buttonbox-container {
+#TabsToolbar > .titlebar-buttonbox-container {
     display: none !important;
 }
 
 #nav-bar,
-#urlbar-container {
-    width: 302px !important;
+#urlbar-container,
+#PersonalToolbar {
+    width: 305px !important;
     left: 9px;
 }
 
@@ -41,7 +53,7 @@
     box-shadow: none !important;
     border: none !important;
     position: absolute !important;
-    top: 10px;
+    top: 6px !important;
     overflow: visible !important;
     height: 40px !important;
 }
@@ -51,7 +63,7 @@
     display: flex;
     position: absolute !important;
     left: -6px;
-    top: 40px;
+    top: 50px !important;
     height: 30px !important;
 }
 
@@ -61,12 +73,11 @@
     transition: 0.2s all;
 }
 
-#urlbar-input {
+#urlbar-input-container {
     text-wrap: wrap !important;
-    max-height: 100px !important;
-    height: 100px !important;
+    margin-left: 10px !important;
+    padding-right: 10px !important;
 }
-
 
 #urlbar #urlbar-background,
 #urlbar,
@@ -77,23 +88,48 @@
     font-size: 12px;
 }
 
-#sidebar-splitter {
+#identity-box,
+#tracking-protection-icon-container {
     display: none;
 }
 
-#appcontent browser {
-    border-radius: 8px !important;
-    margin: 6px 6px 6px 6px !important;
-    transition: border 0.3s ease;
-    clip-path: circle(80%) !important;
+#star-button-box {
+    top: 12px !important;
+    left: 170px !important;
 
-    --tw-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1);
-    --tw-shadow-colored: 0 1px 3px 0 var(--tw-shadow-color), 0 1px 2px -1px var(--tw-shadow-color);
-    box-shadow: var(--tw-ring-offset-shadow, 0 0 #0000), var(--tw-ring-shadow, 0 0 #0000), var(--tw-shadow);
+    position: fixed;
+
 }
 
+#PersonalToolbar {
+    top: 100px !important;
 
-.browserStack {
-    background-color: #f5f5f5 !important;
+    position: fixed;
 
+    transition: var(--transition) !important;
+    background-color: var(--bg-color) !important;
+
+    & > * {
+        transition: var(--transition) !important;
+    }
+
+    visibility: visible !important;
+    height: var(--toolbar-item-height) !important;
+
+    margin-left: var(--buttonbox-left-width);
+
+    padding-top: 3px !important;
+    padding-bottom: 3px !important;
+
+    &[collapsed="true"] {
+        display: none;
+    }
+}
+
+#PlacesToolbarItems {
+    display: flex;
+}
+
+#sidebar-splitter {
+    width: 0px !important;
 }
