@@ -189,7 +189,7 @@
              (set-frame-parameter nil 'tool-bar-position 'top))
            (unless tool-bar-mode (tool-bar-mode 1))))))
 
-(add-hook 'window-state-change-hook #'chin/replace-tool-bar)
+;; (add-hook 'window-state-change-hook #'chin/replace-tool-bar)
 
 ;; Mode-line settings
 (add-hook 'after-init-hook #'column-number-mode)
