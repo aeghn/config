@@ -9,8 +9,8 @@ export PATH=$HOME/.scripts:$PATH
 [ -d "$HOME/vendor/node_modules/bin/" ] && export PATH=$HOME/vendor/node_modules/bin:$PATH
 
 [ -f "$HOME/.profile" ] && source $HOME/.profile
-[ -f "$ZSH_CONFIG_DIR/onefile" ] && source "$ZSH_CONFIG_DIR/onefile"
-[ -f "$ZSH_CONFIG_DIR/onefile" ] && source "$ZSH_CONFIG_DIR/environment"
+[ -f "$ZSH_CONFIG_DIR/init.zsh" ] && source "$ZSH_CONFIG_DIR/init.zsh"
+[ -f "$ZSH_CONFIG_DIR/envs.zsh" ] && source "$ZSH_CONFIG_DIR/envs.zsh"
 
 chin_fzf_history_file() {
     (tac "${DIR_HISTORY_FILE}"; printf "$PWD/%s\n" *) \
