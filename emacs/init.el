@@ -338,9 +338,14 @@
     (org-tidy-mode)
     ))
 
+(defun chin/insert-date ()
+  (interactive)
+  (insert (format-time-string "%y%m-%d ")))
+
 
 (defun chin/org-hook-function ()
   (chin/org-face-hook)
+  (define-key org-mode-map (kbd "M-.") 'chin/insert-date)
   (define-key org-mode-map (kbd "M-h") 'chin/delete-blanks))
 
 
