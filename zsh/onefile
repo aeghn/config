@@ -26,6 +26,7 @@ bindkey -e # use Emacs keybindings
 [[ -n "${terminfo[kend]}" ]] && bindkey -- "${terminfo[kend]}" end-of-line
 [[ -n "${terminfo[khome]}" ]] && bindkey -- "${terminfo[khome]}" beginning-of-line
 
+WORDCHARS='*?_-[]~&;!#$%^(){}<>|'
 
 
 ########################################
@@ -49,8 +50,10 @@ setopt COMPLETE_ALIASES
 
 ## COMMAND HISTORY
 HISTFILE="$CHIN_ZSH_CACHE_DIR/cmd_hist"
-HISTSIZE=10000
-SAVEHIST=100000
+# Modify this to make startup faster
+HISTSIZE=5000
+SAVEHIST=5000
+HISTDUP=erase               #Erase duplicates in the history file
 
 setopt EXTENDED_HISTORY
 setopt HIST_EXPIRE_DUPS_FIRST
@@ -59,8 +62,10 @@ setopt HIST_IGNORE_SPACE
 setopt HIST_IGNORE_SPACE
 setopt HIST_SAVE_NO_DUPS
 setopt HIST_VERIFY
-setopt INC_APPEND_HISTORY
-setopt SHARE_HISTORY
+setopt APPENDHISTORY     #Append history to the history file (no overwriting)
+setopt SHAREHISTORY      #Share history across terminals
+setopt INCAPPENDHISTORY  #Immediately append to the history file, not just when a term is killed
+
 
 autoload -Uz up-line-or-beginning-search down-line-or-beginning-search
 zle -N up-line-or-beginning-search
@@ -82,7 +87,7 @@ add-zsh-hook -Uz chpwd chin-chpwd-append-dir
 function osc7 {
     local LC_ALL=C
     export LC_ALL
-    
+
     setopt localoptions extendedglob
     input=( ${(s::)PWD} )
     uri=${(j::)input/(#b)([^A-Za-z0-9_.\!~*\'\(\)-\/])/%${(l:2::0:)$(([##16]#match))}}
