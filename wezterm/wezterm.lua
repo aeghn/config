@@ -15,8 +15,6 @@ window_padding = {
    window_decorations = "INTEGRATED_BUTTONS|RESIZE",
    use_fancy_tab_bar = false,
    set_environment_variables = {
-      CHERE_INVOKING = 'enabled_from_arguments',
-      HOME = 'E:\\lhome',
-      WENV = 'D:\\wenv'
+      CHERE_INVOKING = 'enabled_from_arguments'
    }
 }
