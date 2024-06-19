@@ -16,11 +16,8 @@
                 ("melpa" . "https://mirrors.bfsu.edu.cn/elpa/melpa/")))
 
 (setq package-archives tsinghua-mirror)
-;; (add-to-list 'package-archives
-;;              '("nongnu" . "https://elpa.nongnu.org/nongnu/"))
 
 (package-initialize)
-
 
 ;; Seamlessly stolen from https://github.com/rejeep/f.el/blob/master/f.el
 (defun chin/this-true-file ()
@@ -32,8 +29,6 @@
                  byte-compile-current-file)
                 (:else (buffer-file-name))))
     (file-truename true-file)))
-
-
 
 (defun chin/load-other-file (filename)
   (let ((f (if (file-exists-p filename)
@@ -54,6 +49,16 @@
           (package-upgrade p)
         (package-install p)))))
 
+;; Define some basic variables here.
+;; We should not specify any full path below, they should be the sub directory of
+;; thos basic dirs.
+(setq-default chin/playground-data-dir "~/playground/playground-data"
+              chin/docs-dir "~/files/docs")
+
+;; We could override some variables here.
+(when chin/is-windows
+  (chin/load-other-file "windows.el"))
+
 (chin/load-other-file "point-stack.el")
 (chin/load-other-file "base-sidebar.el")
 (chin/load-other-file "org-static-blog.el")
@@ -62,36 +67,13 @@
 (chin/load-other-file "damer.el")
 (chin/load-other-file "tool-bar.el")
 (chin/load-other-file "shortcut.el")
-;; (chin/load-other-file "org-visual-indent.el")
 (chin/load-other-file "org-roam-helper.el")
-(chin/load-other-file "org-datamanager.el")
-;; (chin/load-other-file "org-margin.el")
-
-;; Windows-nt specific settings
-;; windows-loader
-(when chin/is-windows
-  (let ((msys2root "C:\\msys64\\"))
-    (setenv "WENV" "D:\\wenv")
-    (setenv "PATH" (concat
-                    ;; Remember to install `mingw-w64-x86_64-gnupg'
-                    "d:\\wenv\\bin;"
-                    "e:\\lhome\\.local\\bin;"
-                    msys2root "mingw64\\bin" ";"
-                    msys2root "mingw64\\x86_64-w64-mingw32\\bin" ";"
-                    msys2root "usr\\bin" ";"
-                    (getenv "PATH")))
-    (setq-default package-gnupghome-dir (string-replace "c:/" "/c/" (expand-file-name "gnupg" package-user-dir)))
-    ;; Without this the new added $PATH value won't be inherite by exec-path
-    (setq exec-path (split-string (getenv "PATH") path-separator))
-    (setq default-directory "e:/")))
 
 ;; Locale Settings
 (when (fboundp 'set-charset-priority)
   (set-charset-priority 'unicode))
 (prefer-coding-system 'utf-8)
 (setq system-time-locale "C")
-(unless (eq system-type 'windows-nt)
-  (set-selection-coding-system 'utf-8))
 
 ;;; Frame settings
 (setq inhibit-splash-screen t)
@@ -113,50 +95,11 @@
 (defalias 'scroll-up-command 'pixel-scroll-interpolate-down)
 (defalias 'scroll-down-command 'pixel-scroll-interpolate-up)
 
-
 ;; Disable the annoying bell.
 (setq ring-bell-function 'ignore)
 
-(defun chin/set-fonts ()
-  (when (display-graphic-p)
-    (let ((focus-bg "#d9d9d9")
-          (bg "#e0e0e0")
-          (focus-fg "#202020")
-          (fg "#404040"))
-    (set-fontset-font "fontset-default" '(#xe000 . #xf8ff) "nrss")
-    (set-face-attribute 'default nil
-                        :family "Martian Mono" :height 108 :weight 'Regular)
-    (custom-set-faces
-     `(mode-line ((t (:background ,focus-bg :foreground ,focus-fg :box (:line-width 4 :color ,focus-bg)))))
-     `(mode-line-inactive ((t (:background ,bg :foreground ,fg :box (:line-width 4 :color ,bg)))))))))
-
-
 ;; Toolbar Settings
 (tool-bar-mode -1)
-(setq tool-bar-button-margin 8
-      tool-bar-images-pixel-height 100)
-
-(defvar chin/show-tool-bar -1)
-(defun chin/replace-tool-bar (&optional not-show)
-  (let ((fw (frame-native-width))
-        (fh (frame-native-height))
-        (tp (frame-parameter (selected-frame) 'tool-bar-position))
-        (pos))
-    (when (or not-show (not chin/show-tool-bar))
-      (setq chin/show-tool-bar nil)
-      )
-    (cond ((not chin/show-tool-bar) (when tool-bar-mode (tool-bar-mode -1)))
-          ((< fh 500) (when tool-bar-mode (tool-bar-mode -1)))
-          ((< (* fh 5) (* fw 3))
-           (unless (string= tp 'left)
-             (set-frame-parameter nil 'tool-bar-position 'left))
-           (unless tool-bar-mode (tool-bar-mode 1)))
-          ((> fh fw)
-           (unless (string= tp 'top)
-             (set-frame-parameter nil 'tool-bar-position 'top))
-           (unless tool-bar-mode (tool-bar-mode 1))))))
-
-;; (add-hook 'window-state-change-hook #'chin/replace-tool-bar)
 
 ;; Mode-line settings
 (add-hook 'after-init-hook #'column-number-mode)
@@ -175,12 +118,27 @@
                                       (string-match-p
                                        "^\\(%\\[\\|%\\]\\)$" s))))
                           mode-line-modes))
+(defun chin/set-mode-line ()
+  (let ((focus-bg "#d9d9d9")
+        (bg "#e0e0e0")
+        (focus-fg "#202020")
+        (fg "#404040"))
+    (custom-set-faces
+     `(mode-line ((t (:background ,focus-bg :foreground ,focus-fg :box (:line-width 4 :color ,focus-bg)))))
+     `(mode-line-inactive ((t (:background ,bg :foreground ,fg :box (:line-width 4 :color ,bg))))))))
+
+
 
 ;; Seamlessly copied from: https://github.com/minad/org-modern
 ;; Add frame borders and window dividers
 (modify-all-frames-parameters
  '((right-divider-width . 0)
    (internal-border-width . 20)))
+
+(defun chin/set-fonts ()
+  (set-fontset-font "fontset-default" '(#xe000 . #xf8ff) "nrss")
+  (set-face-attribute 'default nil
+                      :family "Martian Mono" :height 108 :weight 'Regular))
 
 (defun chin/set-divider ()
   (dolist (face '(window-divider
@@ -190,26 +148,26 @@
     (set-face-foreground face (face-attribute 'default :background)))
   (set-face-background 'fringe (face-attribute 'default :background)))
 
-(defun chin/set-gui-emacs ()
+(defun chin/tweak-gui ()
   (when (display-graphic-p)
-    (progn
-      (chin/set-fonts)
-      (chin/set-divider))))
+    (chin/set-mode-line)
+    (chin/set-fonts)
+    (chin/set-divider)))
 
 (add-hook 'after-make-frame-functions
           (lambda (frame)
             (select-frame frame)
-            (chin/set-gui-emacs)))
+            (chin/tweak-gui)))
 
-(chin/set-gui-emacs)
+(chin/tweak-gui)
 
 ;; Frame title settings
 (setq frame-title-format "Emacs - %b  %f")
+
+
 (setq backup-directory-alist `(("." . "~/.emacs-saves")))
 
-;;; Sidebar Settings
 (global-set-key (kbd "M-j") 'base-sidebar-select-window)
-
 
 ;; Paren Settings
 (show-paren-mode)
@@ -317,23 +275,32 @@
 (add-to-list
  'org-src-lang-modes '("plantuml" . plantuml))
 
-(defvar chin/org-managed-files
-  (if chin/is-windows
-      "E:\\files\\docs\\org"
-    "~/files/docs/org"))
-
+(defvar chin/org-dir (expand-file-name "org" chin/docs-dir))
 (defun chin/org-file-open ()
   (interactive)
   (let* ((date (format-time-string "%y-%m-%d"))
-         (result (completing-read "Org files: " (directory-files chin/org-managed-files nil ".*\\.org")))
-         (full-result (expand-file-name result chin/org-managed-files)))
+         (result (completing-read "Org files: " (directory-files chin/org-dir nil ".*\\.org")))
+         (full-result (expand-file-name result chin/org-dir)))
     (if (file-exists-p full-result)
         (find-file full-result)
-      (find-file (expand-file-name (concat date "-" (replace-regexp-in-string ".org$" "" result) ".org") chin/org-managed-files)))))
+      (find-file (expand-file-name (concat date "-" (replace-regexp-in-string ".org$" "" result) ".org") chin/org-dir)))))
 
-(when (boundp 'diff-hl-mode)
-  (add-hook 'prog-mode-hook 'diff-hl-mode)
-  (add-hook 'org-mode-hook 'diff-hl-mode))
+(defconst chin/todo-prefix (rx (seq bol (one-or-more "*") (opt " " (= 4 (any "A-Z"))) (opt " " (seq (= 4 (any "0-9")) "-" (= 2 (any "0-9)")))) (opt " .") (opt " ") eol)))
+
+(defun chin/todo (dirpath filename)
+  (interactive)
+  (when-let ((buf (find-file (expand-file-name filename dirpath))))
+    (with-current-buffer buf
+      (let* ((today (format-time-string "%y%m-%d" (current-time))))
+        (goto-char (point-min))
+        (replace-regexp chin/todo-prefix "")
+        (goto-char (point-max))
+        (newline)
+        (delete-blank-lines)
+        (insert "* TODO " today " . ")))))
+
+(global-set-key (kbd "<f6>") (lambda () (interactive) (chin/todo chin/org-dir "todo.org")))
+(global-set-key (kbd "<f5>") (lambda () (interactive) (chin/todo chin/org-dir "todo-work.org")))
 
 (require 'iscroll)
 (add-hook 'org-mode-hook 'iscroll-mode)
@@ -379,10 +346,9 @@
   (add-to-list 'org-latex-packages-alist '("" "minted")))
 
 (require 'ox-latex)
-;; (fido-vertical-mode)
 
 (require 'org-roam)
-(setq org-roam-directory chin/org-managed-files)
+(setq org-roam-directory chin/org-dir)
 (setq org-roam-extract-new-file-path "%<%y-%m-%d>-${slug}.org")
 (setq org-roam-capture-templates
       '(("d" "default" plain "%?"
@@ -570,29 +536,6 @@ If popup is focused, kill it."
 (global-set-key (kbd "M-1") 'point-stack-pop)
 (global-set-key (kbd "M-2") 'point-stack-forward-stack-pop)
 
-;; ;; Chinese
-(chin/load-other-file "cangjie.el")
-(set-input-method 'chinese-cns-cangjie)
-(deactivate-input-method)
-(put 'erase-buffer 'disabled nil)
-
-(defvar chin/cangjie-fancha-file "/home/chin/files/docs/others/cangjie.fancha")
-(defvar chin/cangjie-fancha-file-hist "/home/chin/files/docs/others/cangjie.fancha.history")
-(when chin/is-windows
-  (setq chin/cangjie-fancha-file "e:/files/docs/cangjie.fancha"))
-(defun chin/cangjie-fancha ()
-  (interactive)
-  (let ((list (split-string
-               (with-temp-buffer
-                 (insert-file-contents chin/cangjie-fancha-file)
-                 (buffer-substring-no-properties (point-min) (point-max)))
-               "\r?\n"
-               t)))
-    (let ((option (completing-read "Cangjie: " list)))
-      (write-region (concat (format-time-string "%Y-%m-%d %H:%M:%S | ") option "\n") nil chin/cangjie-fancha-file-hist t))))
-
-(global-set-key (kbd "C-;") 'chin/cangjie-fancha)
-
 ;; Eglot
 (require 'eglot)
 (define-key eglot-mode-map (kbd "M-RET") 'eglot-code-actions)
@@ -667,9 +610,6 @@ If popup is focused, kill it."
 (require 'savehist)
 (savehist-mode)
 
-
-
-(global-visual-line-mode)
 (setq word-wrap-by-category t)
 
 (add-to-list 'auto-mode-alist '("\\.epub\\'" . nov-mode))
@@ -697,4 +637,39 @@ If popup is focused, kill it."
 (global-set-key (kbd "C-<left>") 'windmove-left)
 (global-set-key (kbd "C-<up>") 'windmove-up)
 (global-set-key (kbd "C-<down>") 'windmove-down)
+
 (put 'upcase-region 'disabled nil)
+
+(when (boundp 'diff-hl-mode)
+  (add-hook 'prog-mode-hook 'diff-hl-mode)
+  (add-hook 'org-mode-hook 'diff-hl-mode))
+
+(defun uijm ()
+  (interactive)
+  (insert (format-time-string "%y-%m-%d %H:%M:%S")))
+
+(defun file-uijm ()
+  (interactive)
+  (insert (format-time-string "%y%m-%d-T%H%M%S")))
+
+(defun chin/today-file (directory)
+  (interactive)
+  (let* ((ct (current-time))
+         (sub-dir (format-time-string "%y%m-%d-T%H%M%S.tp" ct))
+         (time (completing-read
+                (concat "Timebased file (" directory "): ")
+                (if (file-exists-p directory)
+                    (directory-files-recursively directory "" t (lambda (x) (not (string-match-p  "/\\." x))))
+                  nil) nil nil sub-dir))
+         (total (expand-file-name time directory)))
+    (mkdir (file-name-parent-directory total) t)
+    (find-file total)))
+
+(global-set-key (kbd "C-<f5>") (lambda () (interactive) (chin/today-file chin/playground-data-dir)))
+
+(defun chin/org-agenda-current-file ()
+  (interactive)
+  (unless (eq major-mode 'org-mode)
+    (throw "Use Org-agenda-current-file in org-mode only!"))
+  (let ((org-agenda-files (list (buffer-file-name))))
+    (org-agenda)))
