@@ -49,7 +49,7 @@ zstyle ':completion:*' matcher-list 'm:{a-zA-Z}={A-Za-z}' 'r:|[._-]=* r:|=* l:|=
 setopt COMPLETE_ALIASES
 
 ## COMMAND HISTORY
-HISTFILE="$CHIN_ZSH_CACHE_DIR/cmd_hist"
+HISTFILE="$CHIN_ZSH_CACHE_DIR/cmd-hist"
 # Modify this to make startup faster
 HISTSIZE=5000
 SAVEHIST=5000
@@ -76,10 +76,9 @@ zle -N down-line-or-beginning-search
 
 
 ## DIRECTORY NAVI
-export DIR_HISTORY_FILE="$CHIN_ZSH_CACHE_DIR/hist-files"
+export DIR_HISTORY_FILE="$CHIN_ZSH_CACHE_DIR/dir-hist"
 
 function chin-chpwd-append-dir() {
-
     [ -n  "$HISTFILE" ] && echo "$PWD" >> "$DIR_HISTORY_FILE"
 }
 add-zsh-hook -Uz chpwd chin-chpwd-append-dir
