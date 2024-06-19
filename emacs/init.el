@@ -57,8 +57,6 @@
 (chin/load-other-file "point-stack.el")
 (chin/load-other-file "base-sidebar.el")
 (chin/load-other-file "org-static-blog.el")
-(chin/load-other-file "ibuffer-sidebar.el")
-(chin/load-other-file "speed-sidebar.el")
 (chin/load-other-file "envir.el")
 (chin/load-other-file "mdired.el")
 (chin/load-other-file "damer.el")
@@ -119,50 +117,19 @@
 ;; Disable the annoying bell.
 (setq ring-bell-function 'ignore)
 
-;; Theme Settings
-(when (display-graphic-p)
-  (load-theme 'modus-operandi))
-;; (load-theme 'modus-vivendi-tinted)
-
-
-;; Font settings
 (defun chin/set-fonts ()
   (when (display-graphic-p)
-    (let ((prefered-mono-font-list '("Sarasa Mono SC" "IBM Plex Mono" "Jetbrains Mono"))
-          (prefered-chinese-font-list '("Zhuque Fangsong (technical preview)"  "Noto Serif CJK SC"))
-          (prefered-serif-font-list (list "Literata 7pt" "Charter" "Roboto"))
-          (first-font-fun (make-symbol "chin/get-first-available-font"))
-          prefered-mono-font prefered-chinese-font prefered-serif-font )
-      (fset first-font-fun
-            (lambda (font-list selected-font)
-              (if selected-font
-                  selected-font
-                (let* ((length (length font-list))
-                       (font-name)
-                       (i 0))
-                  (while (and (< i length) (not font-name))
-                    (setq font-name (nth i font-list))
-                    (unless (find-font (font-spec :name font-name))
-                      (setq font-name nil))
-                    (setq i (+ i 1)))
-                  font-name))))
-      (setq prefered-mono-font
-            (funcall first-font-fun prefered-mono-font-list prefered-mono-font))
-      (setq prefered-chinese-font
-            (funcall first-font-fun prefered-chinese-font-list prefered-chinese-font))
-      (setq prefered-serif-font
-            (funcall first-font-fun prefered-serif-font-list prefered-serif-font))
-      (set-fontset-font "fontset-default" '(#xe000 . #xf8ff) "nrss")
-      (set-face-attribute 'default nil
-                          :family prefered-mono-font :height 120 :weight 'Regular)
-      (set-face-attribute 'mode-line nil
-                          :family prefered-serif-font :height 120 :weight 'Bold)
-      (set-face-attribute 'mode-line-inactive nil
-                          :family prefered-serif-font :height 120 :weight 'Regular)
+    (let ((focus-bg "#d9d9d9")
+          (bg "#e0e0e0")
+          (focus-fg "#202020")
+          (fg "#404040"))
+    (set-fontset-font "fontset-default" '(#xe000 . #xf8ff) "nrss")
+    (set-face-attribute 'default nil
+                        :family "Martian Mono" :height 108 :weight 'Regular)
+    (custom-set-faces
+     `(mode-line ((t (:background ,focus-bg :foreground ,focus-fg :box (:line-width 4 :color ,focus-bg)))))
+     `(mode-line-inactive ((t (:background ,bg :foreground ,fg :box (:line-width 4 :color ,bg)))))))))
 
-      (setq ibuffer-sidebar-use-custom-font t)
-      (setq ibuffer-sidebar-face `(:family "Jost*" :height 120))
-      (setq speed-sidebar-face `(:family "Jost*" :height 120)))))
 
 ;; Toolbar Settings
 (tool-bar-mode -1)
@@ -239,21 +206,10 @@
 ;; Frame title settings
 (setq frame-title-format "Emacs - %b  %f")
 (setq backup-directory-alist `(("." . "~/.emacs-saves")))
-(setq speedbar-show-unknown-files t)
 
 ;;; Sidebar Settings
-;; Ibuffer Sidebar Settings
-(global-set-key (kbd "C-x C-b") 'ibuffer-sidebar-focus-or-toggle)
-(global-set-key (kbd "C-x <left>") 'ibuffer-sidebar-previous-buffer)
-(global-set-key (kbd "C-x <right>") 'ibuffer-sidebar-next-buffer)
-(global-set-key (kbd "C-x C-<left>") 'ibuffer-sidebar-previous-buffer)
-(global-set-key (kbd "C-x C-<right>") 'ibuffer-sidebar-next-buffer)
-;; (global-set-key (kbd "M-p") 'ibuffer-sidebar-previous-buffer)
-;; (global-set-key (kbd "M-n") 'ibuffer-sidebar-next-buffer)
 (global-set-key (kbd "M-j") 'base-sidebar-select-window)
 
-;; Speed Sidebar Settings
-(global-set-key (kbd "M-l") 'speed-sidebar-focus-or-toggle)
 
 ;; Paren Settings
 (show-paren-mode)

@@ -142,6 +142,16 @@ This only takes effect if `speed-sidebar-use-custom-font' is true."
         (select-window win)
       (speed-sidebar-toggle-sidebar))))
 
+;;;###autoload
+(defun speed-sidebar-focus-or-back ()
+  "Select speed-sidebar or go back"
+  (interactive)
+  (if-let  ((speed-window (speed-sidebar--showing-sidebar-p)))
+      (if (equal (selected-window) speed-window)
+          (other-window -1)
+        (select-window speed-window))
+    (speed-sidebar-show-sidebar)))
+
 (defun speed-sidebar--showing-sidebar-p (&optional f)
   "Return whether F or `selected-frame' is showing `speed-sidebar'.
 
