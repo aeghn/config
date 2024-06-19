@@ -266,7 +266,7 @@
 ;; Agenda styling
 (setq org-log-done 'time)
 (setq org-todo-keywords
-      '((sequence "TODO(t)" "STARTED(s)" "WAIT(w)" "|" "DONE(d)" "CANCELED(c)")))
+      '((sequence "TODO(t)" "CURR(c)" "WAIT(w)" "|" "DONE(d)" "STOP(s)")))
 
 ;;; Org Faces and Symbols
 (custom-set-faces
