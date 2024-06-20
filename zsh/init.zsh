@@ -1,6 +1,4 @@
-## Zsh Only Configuration
-
-export CHIN_ZSH_CACHE_DIR="${XDG_CACHE_HOME:-$HOME/.cache}/zsh"
+#### Pure Zsh Only Configuration
 
 autoload -U add-zsh-hook
 
@@ -27,7 +25,6 @@ bindkey -e # use Emacs keybindings
 [[ -n "${terminfo[khome]}" ]] && bindkey -- "${terminfo[khome]}" beginning-of-line
 
 WORDCHARS='*?_-[]~&;!#$%^(){}<>|'
-
 
 ########################################
 ### Completion
@@ -142,3 +139,14 @@ if [[ "$TERM" == (foot*|alacritty|screen*|xterm*|tmux*|putty*|konsole*|gnome*) ]
     add-zsh-hook -Uz precmd xterm_title_precmd
     add-zsh-hook -Uz preexec xterm_title_preexec
 fi
+
+
+########################################
+### Title
+########################################
+
+# Read Private config
+chin-prvt() {
+    source "$CHIN_PRIVATE_ENV"
+    echo "$1"
+}
