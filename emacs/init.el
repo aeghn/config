@@ -9,18 +9,13 @@
 (defconst chin/is-windows (memq system-type '(cygwin windows-nt ms-dos)))
 (defconst chin/is-android (string-match-p "-linux-android$" system-configuration))
 
-;;; Package Settings
-(require 'package)
-(setq-default tsinghua-mirror
-              '(("gnu"   . "https://mirrors.bfsu.edu.cn/elpa/gnu/")
-                ("melpa" . "https://mirrors.bfsu.edu.cn/elpa/melpa/")))
-
-(setq package-archives tsinghua-mirror)
-
-(package-initialize)
+(defmacro chin/when-nt! (body)
+  "Execute BODY if running on a Windows system."
+  `(when chin/is-windows
+     ,body))
 
 ;; Seamlessly stolen from https://github.com/rejeep/f.el/blob/master/f.el
-(defun chin/this-true-file ()
+(defun chin/true-file ()
   "Return path to this file."
   (let ((true-file))
     (setq true-file
@@ -30,44 +25,68 @@
                 (:else (buffer-file-name))))
     (file-truename true-file)))
 
-(defun chin/load-other-file (filename)
-  (let ((f (if (file-exists-p filename)
-               filename
-             (expand-file-name
-              filename (file-name-directory (chin/this-true-file))))))
-    (message "Try to load file: %s" f)
-    (when (file-exists-p f)
-      (load (file-truename f)))))
+(defmacro chin/load! (title packages body)
+  "Load file or install it, then do some settings"
+  (let ((el-existed
+         (lambda (el)
+           (if (file-exists-p el)
+               el
+             (let ((p (expand-file-name filename (file-name-directory (chin/true-file)))))
+               (if (file-exists-p p) p nil)))))))
+  (message "Loading %s" title)
+  (dolist (e packages)
+    (message "detect %s" e)
+    (cond ((el-existed e) (load (funcall el-existed e)))
+           (package-installed-p e) (require e))
+          (t (package-install e))))
 
-;; Packages Initialization
-(defun chin/ensure-all-packages ()
-  (interactive)
-  (let* ((packages '(dash magit-section markdown-mode with-editor modus-themes json-mode go-imenu go-mode vala-mode cargo cargo-mode caroline-theme org-download embark-consult embark magit expand-region restclient lua-mode ahk-mode corfu symbol-overlay consult all-the-icons xr ibuffer-project graphviz-dot-mode htmlize xcscope rust-mode ripgrep rainbow-mode meson-mode grey-paper-theme comment-dwim-2 vertico consult vundo diff-hl ob-rust vertico  iscroll )))
-    (package-refresh-contents)
-    (dolist (p packages)
-      (if (package-installed-p p)
-          (package-upgrade p)
-        (package-install p)))))
+(chin/load! "asdasd" ("vundo") ())
+
+;;; Package Settings
+(require 'package)
+(setq-default tsinghua-mirror
+              '(("gnu"   . "https://mirrors.bfsu.edu.cn/elpa/gnu/")
+                ("melpa" . "https://mirrors.bfsu.edu.cn/elpa/melpa/")))
+
+(setq package-archives tsinghua-mirror)
+
+(chin/when-nt!
+ ;; TODO remove this
+ (setq package-check-signature nil))
+
+(package-initialize)
+
+
+
 
 ;; Define some basic variables here.
 ;; We should not specify any full path below, they should be the sub directory of
-;; thos basic dirs.
+;; those basic dirs.
 (setq-default chin/playground-data-dir "~/playground/playground-data"
               chin/docs-dir "~/files/docs")
 
-;; We could override some variables here.
-(when chin/is-windows
-  (chin/load-other-file "windows.el"))
+(chin/when-nt!
+ ;; Windows-nt specific settings
+ (setq chin/playground-data-dir "F:/playground-data"
+       chin/docs-dir "D:/files/docs")
+ (let ((msys2root "C:\\msys64\\"))
+   (setenv "PATH" (concat
+                   ;; Remember to install `mingw-w64-x86_64-gnupg'
+                   "D:\\tools\\cmd;"
+                   msys2root "mingw64\\bin" ";"
+                   msys2root "mingw64\\x86_64-w64-mingw32\\bin" ";"
+                   msys2root "usr\\bin" ";"
+                   (getenv "PATH")))
+   (setq package-gnupghome-dir (string-replace "c:/" "/c/" (expand-file-name "gnupg" package-user-dir)))
+   ;; Without this the new added $PATH value won't be inherite by exec-path
+   (setq exec-path (split-string (getenv "PATH") path-separator))))
 
-(chin/load-other-file "point-stack.el")
-(chin/load-other-file "base-sidebar.el")
-(chin/load-other-file "org-static-blog.el")
-(chin/load-other-file "envir.el")
-(chin/load-other-file "mdired.el")
-(chin/load-other-file "damer.el")
-(chin/load-other-file "tool-bar.el")
-(chin/load-other-file "shortcut.el")
-(chin/load-other-file "org-roam-helper.el")
+
+(chin/load "point-stack.el")
+(chin/load "mdired.el")
+;; (chin/load "tool-bar.el")
+(chin/load "shortcut.el")
+(chin/load "org-roam-helper.el")
 
 ;; Locale Settings
 (when (fboundp 'set-charset-priority)
@@ -163,11 +182,8 @@
 
 ;; Frame title settings
 (setq frame-title-format "Emacs - %b  %f")
-
-
 (setq backup-directory-alist `(("." . "~/.emacs-saves")))
 
-(global-set-key (kbd "M-j") 'base-sidebar-select-window)
 
 ;; Paren Settings
 (show-paren-mode)
@@ -255,7 +271,6 @@
 (defun chin/insert-date ()
   (interactive)
   (insert (format-time-string "%y%m-%d ")))
-
 
 (defun chin/org-hook-function ()
   (chin/org-face-hook)
@@ -605,16 +620,12 @@ If popup is focused, kill it."
   (add-hook 'project-find-functions
             #'project-try-language-aware))
 
-(require 'tramp)
-
 (require 'savehist)
 (savehist-mode)
 
 (setq word-wrap-by-category t)
 
-(add-to-list 'auto-mode-alist '("\\.epub\\'" . nov-mode))
 (setq kill-whole-line t)
-
 
 (when (file-exists-p "~/Projects/blog/tools/org-static-blog.el")
   (load-file "~/Projects/blog/tools/org-static-blog.el")
@@ -637,6 +648,48 @@ If popup is focused, kill it."
 (global-set-key (kbd "C-<left>") 'windmove-left)
 (global-set-key (kbd "C-<up>") 'windmove-up)
 (global-set-key (kbd "C-<down>") 'windmove-down)
+
+(defun chin/select-window ()
+  (interactive)
+  (let ((normal-window-list)
+        (window-list-size)
+        (selected-window))
+    (setq normal-window-list
+          (seq-filter
+           (apply-partially (lambda (e) (not (window-dedicated-p e))))
+           (window-list)))
+    (setq window-list-size (length normal-window-list))
+    (setq selected-window
+          (if (= window-list-size 1)
+              (car-safe normal-window-list)
+            (let ((ovs nil)
+                  (loop 0)
+                  (ov nil)
+                  (key)
+                  (key-wins nil))
+              (dolist (win normal-window-list)
+                (setq key (nth loop base-sidebar-key-set))
+                (push (list key win) key-wins)
+                (select-window win)
+                (let ((ov (make-overlay (window-start) (1+ (window-start)))))
+                  (push ov ovs)
+                  (overlay-put ov 'face '((:height 3.0 :foreground "#aa0000")))
+                  (overlay-put ov 'display (format "[%s]" key))
+                  (overlay-put ov 'window win))
+                (setq loop (1+ loop)))
+              (setq win-key (ignore-errors (char-to-string (read-char "Please enter key"))))
+              (unless win-key (setq win-key ""))
+              (setq selected-win
+                    (car-safe
+                     (seq-filter (apply-partially (lambda (e) (string= (car-safe e) win-key)))
+                                 key-wins)))
+              (mapcar #'delete-overlay ovs)
+              (car-safe (cdr-safe selected-win)))))
+    (when selected-window (select-window selected-window))
+    selected-window))
+
+(global-set-key (kbd "M-j") 'chin/select-window)
+
 
 (put 'upcase-region 'disabled nil)
 
