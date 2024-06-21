@@ -2,24 +2,113 @@
 
 * Apps
   There are some apps in my work and daily life.
+
+** System
+   *On GNU/Linux*, I choose to use ArchLinux, very stable and never outdated.
+
+   I compiled the kernel for my laptop [[https://github.com/aeghn/arch-pkgs][linux-15iah7]].
+
+   *On Windows*, I choose to use Windows 10, have no plan to go to Windows 11.
+
 ** Launcher And Status Bar
-   **On GNU/Linux**, I wrote my own launcher and status bar based on Rust + GTK3/4.
+   *On GNU/Linux*, I wrote my own launcher and status bar based on Rust + GTK3/4.
 
    [[file:_data/preview/rglauncher.png]]
-   
+
    _link_: [[https://github.com/aeghn/rglauncher][RGLauncher]] [[https://github.com/aeghn/rgbar][RGBar]]
 
    - RGLauncher: A launcher, to launch app, to switch windows, to query some words and to do some calculates, etc.
    - RGBar: A status bar, with graph support.
 
-    **On Windows**, I use =Win+s= to start app and taskbar(with [[https://github.com/zhongyang219/TrafficMonitor][Traffic Monitor]]) as the status bar.
+     *On Windows*, I use =Win+s= to start app and taskbar(with [[https://github.com/zhongyang219/TrafficMonitor][Traffic Monitor]]) as the status bar.
+
 ** Terminal
-   **On GNU/Linux**, I use foot as my main terminal emulator, because it is fast, lightweight and _without_ GPU acceleration.
+   *On GNU/Linux*, I use foot as my main terminal emulator, because it is fast, lightweight and /without/ GPU acceleration.
 
    [[file:_data/preview/terminal.png]]
 
-** Emacs
-   [[file:_data/preview/emacs.png]]
-   
+   *On Windows*, I prefer to use WezTerm with Msys2 + UCRT.
+
+   I use zsh daily, I have used my own zsh prompt for years, which support async git status.
+   Great Terminal Tools:
+   - =ripgrep=, fast text greper.
+   - =fd=, fast find alternative.
+   - =gdu=, disk analyzer.
+   - =htop=, process monitor.
+   - =bandwidth=, network monitor.
+   - =fzf=, fast and fuzzy filter.
+   - =git-filter-repo=, git repo reshape tool.
+   - =dufs=, simple file server.
+
+   And I have wrote some bash scripts to make life easy, e.g, my dotfiles is orginized by =dfs=, =dfm=.
+
 ** Browser
    [[file:_data/preview/browser.png]]
+
+   I'd like to use firefox with some modification.
+
+   Great Firefox Plugins:
+   - Sidebery: Tree tab manager, which I think is better than tree-style-tab.
+   - Imagus: Enlarge thumbnails, and show images/videos from links with a mouse hover.
+   - PopUp: Create a popup of pages, with minimal browser UI
+   - SingleFile: SingleFile helps you to save a complete page (with CSS, images, etc.) into a single HTML file.
+   - block-images: Blocks all images on webpage.
+
+** Emacs
+   [[file:_data/preview/emacs.png]]
+
+   I use emacs for some text writing and script editing. (I alse like vim, but I'm not evil).
+
+   Great Emacs Plugins:
+   - Org-mode: outlined text editor, life orginazer.
+   - Magit: git, with Magic.
+   - Dired: what, GNU/ls has a argument for you?
+   - vundo: undo tree.
+   - comment-dwim-2: comment you code easily.
+   - org-static-blog: static blog generator in pure elisp.
+
+   /Make Emacs Great Again/.
+
+** VS Code
+   Very common, I use VS Code for web/remote developing.
+
+   Great Plugins:
+   - Remote - SSH: Remote Development.
+   - [[https://github.com/piousdeer/vscode-adwaita.git][Adwaita]]: An elegant VSCode theme.
+   - [[https://github.com/whitphx/vscode-emacs-mcx.git][Awesome Emacs Keymap]]: Emacs emulation for VSCode with multi-cursor support, clipboard-integrated kill-ring, well-emulated mark-mode, and more.
+   - [[https://github.com/wmaurer/vscode-change-case][change-case]]: Quickly change the case (camelCase, =CONSTANT_CASE=, =snake_case=, etc) of the current selection or current word
+   - [[https://github.com/tintinweb/vscode-interactive-graphviz][ vscode-interactive-graphviz]]: Interactive Graphviz Dot Preview for Visual Studio Code
+   - [[https://marketplace.visualstudio.com/items?itemName=eriklynd.json-tools][JSON Tools]]: Tools for manipulating JSON
+   - [[https://github.com/qjebbs/vscode-plantuml.git][PlantUML]]: Rich PlantUML support for Visual Studio Code.
+   - [[https://github.com/Huachao/vscode-restclient.git][RestClient]]: REST Client for Visual Studio Code
+   - [[https://github.com/adamhartford/vscode-base64.git][vscode-base64]]: Base64 encode/decode the current selections.
+
+   Do not forget those options:
+   #+begin_src json
+    "window.density.editorTabHeight": "compact",
+    "workbench.editor.wrapTabs": true,
+    "workbench.editor.tabActionLocation": "left",
+    "files.autoSave": "afterDelay",
+    "editor.autoIndent": "advanced",
+    "remote.autoForwardPortsSource": "hybrid",
+    "editor.formatOnSave": true,
+   #+end_src
+
+** Develop Tools
+*** DBeaver: open source database manager.
+*** JetBrain Idea: Java IDE.
+ 
+** Other apps
+   - [[https://github.com/zhongyang219/MusicPlayer2/][MusicPlayer2]]: ~win~
+   - shareX: ~win~
+   - OBS Studio: ~win~, ~lin~   
+   - aria2c: download everything. ~lin~
+   - AWGG: aria2c wrapper. ~win~
+   - meld: Differ and merger, but it is written in the python. ~lin~ ~win~ ~gtk~
+   - JPEG View: very fase image viewer. ~win~
+   - everything: Find anything. ~lin~
+   - [[https://github.com/telppa/KMCounter][kmcounters]]: Use heatmap to show mouse and keyboard usage. ~win~
+   - autohotkey: macro-creation and automation-oriented scripting utility for Windows. ~win~
+   - [[https://github.com/RamonUnch/AltSnap][AltSnap]]: It allows you to move and resize windows by using the Alt key and clicking wherever on the window instead of relying on very precise clicking. This behavior is very common on Linux distributions and is not actually hard to implement on Windows. ~win~
+   - CopyQ: very impressive clipboard manager. ~win~
+   - Lettura: Rss reader, but I'm using my own fork.
