@@ -49,13 +49,12 @@ echo_line() {
     for ((i=0; 1; i++)); do
         [ -z "${name_lines[$i]}" ] && [ -z "${value_lines[$i]}" ] && break
         [ $i -gt 0 ] && sep=" "
-	printf "│ \e[3m%-${NAME_LEN}s\e[0m│ \e[1m%s\e[0m\n" "${name_lines[$i]^^}$sep" "${value_lines[$i]}"
+	printf "  %-${NAME_LEN}s│ %s\n" "${name_lines[$i]^^}$sep" "${value_lines[$i]}"
     done
 }
 
 echo_title() {
-	:
-    #printf "*** \e[31m\e[1m\e[3m$*\e[0m \n"
+    printf "\e[31m* \e[0m\e[1m$*\e[0m \n"
 }
 
 
@@ -136,25 +135,35 @@ get_pacman_package_num() {
 }
 
 
-echo "╭─────────────╮"
+echo_title "Hardware"
+
 echo_line "31" "CPU" "$(get_hardware_cpu)"
 echo_line "31" "GPU" "$(lspci | grep ' VGA '| cut -d: -f3)"
 echo_line "31" "Memory" "$(get_hardware_memory)"
 echo_line "31" "Disk" "$(df -h | grep ^/dev)"
+
+echo
+echo_title "System"
 
 echo_line "32" "OS" "$(get_os_name)"
 echo_line "32" "Kernel" "$(get_os_kernel)"
 echo_line "32" "Version" "$(uname -v)"
 echo_line "32" "Rolling" "$(get_os_upgrade_time)"
 echo_line "32" "Uptime" "$(get_os_uptime)"
-echo_line "32" WM "Hyprland $(hyprctl version | sed -n '2p' | awk '{print $2}')"
 
+echo
+echo_title "Tools"
+
+echo_line "32" "Hyprland" "$(hyprctl version | grep Tag)"
 echo_line "32" "Pacman Pkgs" "$(get_pacman_package_num)"
 echo_line "32" "Cargo Pkgs" "$(cargo install --list | grep "^[^ ]"  | wc -l)"
 echo_line "34" Firefox "$(firefox --version)"
 echo_line "34" Terminal "$(foot --version)"
 echo_line "34" "GNU/Emacs" "$(emacs --version | grep "build date")"
 echo_line "34" Zsh "$(zsh --version)"
+
+echo
+echo_title "Languages"
 
 echo_line "34" GNU/Bash "$(bash --version | head -1)"
 echo_line "34" GNU/GCC "$(gcc --version | head -1)"
@@ -164,4 +173,4 @@ echo_line "34" Go "$(go version)"
 echo_line "34" NodeJS "$(node --version)"
 echo_line "34" Java "$(java --version | head -1)"
 
-echo "╰─────────────╯"
+echo
