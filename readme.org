@@ -1,13 +1,25 @@
+#+TITLE: My System Spec
 
-* My System Config
-  Some previews.
-** Laptop
-   [[file:previews/laptop.jpeg]]
-** Editor
-   [[file:previews/editor.png]]
-** Browser(Firefox)
-   [[file:previews/browser.png]]
+* Apps
+  There are some apps in my work and daily life.
+** Launcher And Status Bar
+   **On GNU/Linux**, I wrote my own launcher and status bar based on Rust + GTK3/4.
+
+   [[file:_data/preview/rglauncher.png]]
+   
+   _link_: [[https://github.com/aeghn/rglauncher][RGLauncher]] [[https://github.com/aeghn/rgbar][RGBar]]
+
+   - RGLauncher: A launcher, to launch app, to switch windows, to query some words and to do some calculates, etc.
+   - RGBar: A status bar, with graph support.
+
+    **On Windows**, I use =Win+s= to start app and taskbar(with [[https://github.com/zhongyang219/TrafficMonitor][Traffic Monitor]]) as the status bar.
 ** Terminal
-   [[file:previews/terminal.png]]
-** Launcher and Dictionary
-   [[file:previews/launcher.png]]
+   **On GNU/Linux**, I use foot as my main terminal emulator, because it is fast, lightweight and _without_ GPU acceleration.
+
+   [[file:_data/preview/terminal.png]]
+
+** Emacs
+   [[file:_data/preview/emacs.png]]
+   
+** Browser
+   [[file:_data/preview/browser.png]]
