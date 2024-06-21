@@ -48,11 +48,11 @@
    I'd like to use firefox with some modification.
 
    Great Firefox Plugins:
-   - Sidebery: Tree tab manager, which I think is better than tree-style-tab.
-   - Imagus: Enlarge thumbnails, and show images/videos from links with a mouse hover.
-   - PopUp: Create a popup of pages, with minimal browser UI
-   - SingleFile: SingleFile helps you to save a complete page (with CSS, images, etc.) into a single HTML file.
-   - block-images: Blocks all images on webpage.
+   - *Sidebery*: Tree tab manager, which I think is better than tree-style-tab.
+   - *Imagus*: Enlarge thumbnails, and show images/videos from links with a mouse hover.
+   - *PopUp*: Create a popup of pages, with minimal browser UI
+   - *SingleFile*: SingleFile helps you to save a complete page (with CSS, images, etc.) into a single HTML file.
+   - *block-images*: Blocks all images on webpage.
 
 ** Emacs
    [[file:_data/preview/emacs.png]]
@@ -60,12 +60,12 @@
    I use emacs for some text writing and script editing. (I alse like vim, but I'm not evil).
 
    Great Emacs Plugins:
-   - Org-mode: outlined text editor, life orginazer.
-   - Magit: git, with Magic.
-   - Dired: what, GNU/ls has a argument for you?
-   - vundo: undo tree.
-   - comment-dwim-2: comment you code easily.
-   - org-static-blog: static blog generator in pure elisp.
+   - *Org-mode*: outlined text editor, life orginazer.
+   - *Magit*: git, with Magic.
+   - *Dired*: What, GNU/ls has a argument for you?
+   - *vundo*: undo tree.
+   - *comment-dwim-2*: comment you code easily.
+   - *org-static-blog*: static blog generator in pure elisp.
 
    /Make Emacs Great Again/.
 
@@ -73,15 +73,15 @@
    Very common, I use VS Code for web/remote developing.
 
    Great Plugins:
-   - Remote - SSH: Remote Development.
-   - [[https://github.com/piousdeer/vscode-adwaita.git][Adwaita]]: An elegant VSCode theme.
-   - [[https://github.com/whitphx/vscode-emacs-mcx.git][Awesome Emacs Keymap]]: Emacs emulation for VSCode with multi-cursor support, clipboard-integrated kill-ring, well-emulated mark-mode, and more.
-   - [[https://github.com/wmaurer/vscode-change-case][change-case]]: Quickly change the case (camelCase, =CONSTANT_CASE=, =snake_case=, etc) of the current selection or current word
-   - [[https://github.com/tintinweb/vscode-interactive-graphviz][ vscode-interactive-graphviz]]: Interactive Graphviz Dot Preview for Visual Studio Code
-   - [[https://marketplace.visualstudio.com/items?itemName=eriklynd.json-tools][JSON Tools]]: Tools for manipulating JSON
-   - [[https://github.com/qjebbs/vscode-plantuml.git][PlantUML]]: Rich PlantUML support for Visual Studio Code.
-   - [[https://github.com/Huachao/vscode-restclient.git][RestClient]]: REST Client for Visual Studio Code
-   - [[https://github.com/adamhartford/vscode-base64.git][vscode-base64]]: Base64 encode/decode the current selections.
+   - *Remote - SSH*: Remote Development.
+   - *[[https://github.com/piousdeer/vscode-adwaita.git][Adwaita]]*: An elegant VSCode theme.
+   - *[[https://github.com/whitphx/vscode-emacs-mcx.git][Awesome Emacs Keymap]]*: Emacs emulation for VSCode with multi-cursor support, clipboard-integrated kill-ring, well-emulated mark-mode, and more.
+   - *[[https://github.com/wmaurer/vscode-change-case][change-case]]*: Quickly change the case (camelCase, =CONSTANT_CASE=, =snake_case=, etc) of the current selection or current word
+   - *[[https://github.com/tintinweb/vscode-interactive-graphviz][ vscode-interactive-graphviz]]*: Interactive Graphviz Dot Preview for Visual Studio Code
+   - *[[https://marketplace.visualstudio.com/items?itemName=eriklynd.json-tools][JSON Tools]]*: Tools for manipulating JSON
+   - *[[https://github.com/qjebbs/vscode-plantuml.git][PlantUML]]*: Rich PlantUML support for Visual Studio Code.
+   - *[[https://github.com/Huachao/vscode-restclient.git][RestClient]]*: REST Client for Visual Studio Code
+   - *[[https://github.com/adamhartford/vscode-base64.git][vscode-base64]]*: Base64 encode/decode the current selections.
 
    Do not forget those options:
    #+begin_src json
@@ -95,20 +95,20 @@
    #+end_src
 
 ** Develop Tools
-*** DBeaver: open source database manager.
-*** JetBrain Idea: Java IDE.
- 
+   - *DBeaver*: open source database manager.
+   - *JetBrain Idea*: Java IDE.
+    
 ** Other apps
-   - [[https://github.com/zhongyang219/MusicPlayer2/][MusicPlayer2]]: ~win~
-   - shareX: ~win~
-   - OBS Studio: ~win~, ~lin~   
-   - aria2c: download everything. ~lin~
-   - AWGG: aria2c wrapper. ~win~
-   - meld: Differ and merger, but it is written in the python. ~lin~ ~win~ ~gtk~
-   - JPEG View: very fase image viewer. ~win~
-   - everything: Find anything. ~lin~
-   - [[https://github.com/telppa/KMCounter][kmcounters]]: Use heatmap to show mouse and keyboard usage. ~win~
-   - autohotkey: macro-creation and automation-oriented scripting utility for Windows. ~win~
-   - [[https://github.com/RamonUnch/AltSnap][AltSnap]]: It allows you to move and resize windows by using the Alt key and clicking wherever on the window instead of relying on very precise clicking. This behavior is very common on Linux distributions and is not actually hard to implement on Windows. ~win~
-   - CopyQ: very impressive clipboard manager. ~win~
-   - Lettura: Rss reader, but I'm using my own fork.
+   - *[[https://github.com/zhongyang219/MusicPlayer2/][MusicPlayer2]]*: Music Player. ~win~
+   - *shareX*: ~win~
+   - *OBS Studio*: ~win~, ~lin~   
+   - *aria2c*: download everything. ~lin~
+   - *AWGG*: aria2c wrapper. ~win~
+   - *meld*: Differ and merger, but it is written in the python. ~lin~ ~win~ ~gtk~
+   - *JPEG View*: very fase image viewer. ~win~
+   - *everything*: Find anything. ~lin~
+   - *[[https://github.com/telppa/KMCounter][kmcounters]]*: Use heatmap to show mouse and keyboard usage. ~win~
+   - *autohotkey*: macro-creation and automation-oriented scripting utility for Windows. ~win~
+   - *[[https://github.com/RamonUnch/AltSnap][AltSnap]]*: It allows you to move and resize windows by using the Alt key and clicking wherever on the window instead of relying on very precise clicking. This behavior is very common on Linux distributions and is not actually hard to implement on Windows. ~win~
+   - *CopyQ*: very impressive clipboard manager. ~win~
+   - *Lettura*: Rss reader, but I'm using my own fork.
