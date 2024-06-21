@@ -111,4 +111,8 @@
    - *autohotkey*: macro-creation and automation-oriented scripting utility for Windows. ~win~
    - *[[https://github.com/RamonUnch/AltSnap][AltSnap]]*: It allows you to move and resize windows by using the Alt key and clicking wherever on the window instead of relying on very precise clicking. This behavior is very common on Linux distributions and is not actually hard to implement on Windows. ~win~
    - *CopyQ*: very impressive clipboard manager. ~win~
-   - *Lettura*: Rss reader, but I'm using my own fork.
+   - *Lettura*: Rss reader, but I'm using my own fork. ~web~
+   - *TLP*: Battery Management. ~lin~
+   - *intel-lpmd*: Battery Saver.  ~lin~
+   - *mpv*: Video player, simple but powerful. ~win~ ~lin~
+   - *[[https://github.com/nokyan/resources][resources]]*:  Keep an eye on system resources. ~lin~ 
