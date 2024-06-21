@@ -1,0 +1,3 @@
+#!/usr/bin/env bash
+
+emacs -nw --eval "(magit-status)"
