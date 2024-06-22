@@ -652,7 +652,44 @@
                     ad-do-it
                     (when (and (file-directory-p filename)
                                (not (eq (current-buffer) orig)))
-                      (kill-buffer orig)))))
+                      (kill-buffer orig))))
+
+                (block! "Dired-Subtree"
+                        :packages ("site-lisp/dired-subtree.el")
+                        (defun chin/once-dired-subtree ()
+                          (interactive)
+                          (let ((file (ignore-errors (file-truename (buffer-file-name))))
+                                (iterp t)
+                                start parent dir)
+                            (project-dired)
+                            (dired-hide-details-mode 1)
+                            (when file
+                              (setq dir (let ((dir (file-truename default-directory)))
+                                          (if (string-match ".*/$" dir)
+                                              dir
+                                            (concat dir "/"))))
+                              (setq start (length dir))
+
+                              (goto-char (point-min))
+                              (while-let ((index (or (string-search "/" file start)))
+                                          (iterp2 t))
+                                (setq parent (substring file nil index))
+                                (while (and (not (eobp)) iterp2)
+                                  (dired-next-line 1)
+                                  (when-let* ((fap (thing-at-point 'filename))
+                                              (samep (file-equal-p parent fap)))
+                                    (dired-subtree-insert)
+                                    (setq iterp2 nil)))
+                                (setq start (1+ index)))
+                              (while (and iterp (not (eobp)))
+                                (dired-next-line 1)
+                                (when-let* ((fap (thing-at-point 'filename))
+                                            (samep (file-equal-p file (expand-file-name fap parent))))
+                                  (setq iterp nil))))
+
+                            (keymap-local-set "<tab>" 'dired-subtree-toggle)
+                            (keymap-local-set "M-l" 'quit-window)))
+                        (global-set-key (kbd "M-l") 'chin/once-dired-subtree)))
 
         (block! "Recentf"
                 :packages ("recentf")
@@ -727,17 +764,17 @@
           (save-some-buffers)
           (kill-emacs)))
 (block! "Magit"
-	:packages ("magit")
+        :packages ("magit")
 
-	(setq magit-display-buffer-function
+        (setq magit-display-buffer-function
               (lambda (buffer)
-		(display-buffer
-		 buffer (if (and (derived-mode-p 'magit-mode)
-				 (memq (with-current-buffer buffer major-mode)
+                (display-buffer
+                 buffer (if (and (derived-mode-p 'magit-mode)
+                                 (memq (with-current-buffer buffer major-mode)
                                        '(magit-process-mode
-					 magit-revision-mode
-					 magit-diff-mode
-					 magit-stash-mode
-					 magit-status-mode)))
-			    nil
-			  '(display-buffer-same-window))))))
+                                         magit-revision-mode
+                                         magit-diff-mode
+                                         magit-stash-mode
+                                         magit-status-mode)))
+                            nil
+                          '(display-buffer-same-window))))))
