@@ -36,7 +36,7 @@ prompt_chin_tail() {
     fi
     
     if [ -z "$HISTFILE" ]; then
-       pr_his="??"
+       pr_his="?? "
     fi
 
     echo "${pr_al}${prompt_newline}${pr_his}${pr_prompt}${pr_post}"
