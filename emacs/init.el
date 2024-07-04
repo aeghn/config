@@ -575,6 +575,7 @@
           (add-to-list 'project-vc-ignores "node_modules")
           (defvar project-language-aware-root-files
             '("tsconfig.json"
+              ".git"
               "package.json"
               "Cargo.toml"
               "compile_commands.json"
@@ -655,7 +656,7 @@
                       (kill-buffer orig))))
 
                 (block! "Dired-Subtree"
-                        :packages ("site-lisp/dired-subtree.el")
+                        :packages ("site-lisp/dired-hack-utils.el" "site-lisp/dired-subtree.el")
                         (defun chin/once-dired-subtree ()
                           (interactive)
                           (let ((file (ignore-errors (file-truename (buffer-file-name))))
@@ -676,7 +677,7 @@
                                 (setq parent (substring file nil index))
                                 (while (and (not (eobp)) iterp2)
                                   (dired-next-line 1)
-                                  (when-let* ((fap (thing-at-point 'filename))
+                                  (when-let* ((fap (dired-file-name-at-point))
                                               (samep (file-equal-p parent fap)))
                                     (dired-subtree-insert)
                                     (setq iterp2 nil)))
