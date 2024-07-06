@@ -3,6 +3,7 @@
 # Clean unneeded dependencies.
 
 clean_pacman() {
+    
     sudo pacman -Rsn $(pacman -Qi | grep -e '^Name' -e '^Required By' -e "^Install Reason" | sed -z 's/\nR/ #R/g;s/\nI/ #I/g' | grep '#Required By.*None' | grep -Ev '#Install Reason.*Explicitly installed' | awk '{print $3}' | sed -z 's/\n/ /g')
 }
 
