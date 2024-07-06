@@ -20,20 +20,22 @@ $_CHIN_IS_MSYS2 && export CHIN_PG_DIR="/f/playground-data"
 
 export PASSWORD_STORE_DIR=$CHIN_PRIVATE_DIR/password-store
 
-[ -d "/d/Tools/cmd" ] && export PATH=/d/Tools/cmd:$PATH
 
 ### PATH Settings
 [ -d "$HOME/.local/bin" ] && export PATH=$HOME/.local/bin:$PATH
 [ -d "$CHIN_PRIVATE_DIR/scripts" ] && export PATH=$CHIN_PRIVATE_DIR/scripts:$PATH
 [ -d "$CHIN_FILES_DIR/config/scripts" ] && export PATH=$CHIN_FILES_DIR/config/scripts:$PATH
 
-$_CHIN_IS_MSYS2 && {
-    export PATH=/ucrt64/bin/:$PATH
-    export PATH=/D/Tools/cmd/poppler-24.02.0/Library/bin:$PATH
-}
 
 ### Load Some Configuration
 [ -f "$ZSH_CONFIG_DIR/init.zsh" ] && source "$ZSH_CONFIG_DIR/init.zsh"
 
 ### Load Configuration, for alias, fzf, languages, etc.
 [ -f "$ZSH_CONFIG_DIR/vendor.zsh" ] && source "$ZSH_CONFIG_DIR/vendor.zsh"
+
+
+$_CHIN_IS_MSYS2 && {
+    export PATH=/d/Tools/cmd:$PATH
+    export PATH=/ucrt64/bin/:$PATH
+    export PATH=/D/Tools/cmd/poppler-24.02.0/Library/bin:$PATH
+}
