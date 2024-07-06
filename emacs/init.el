@@ -728,11 +728,11 @@
         (defun chin/today-file (directory)
           (interactive)
           (let* ((ct (current-time))
-                 (sub-dir (format-time-string "%y%m-%d-T%H%M%S.tp" ct))
+                 (sub-dir (format-time-string "%y%m-%d-T%H%M%S" ct))
                  (time (completing-read
                         (concat "Timebased file (" directory "): ")
                         (if (file-exists-p directory)
-                            (directory-files-recursively directory "" t (lambda (x) (not (string-match-p  "/\\." x))))
+                            (directory-files directory)
                           nil) nil nil sub-dir))
                  (total (expand-file-name time directory)))
             (mkdir (file-name-parent-directory total) t)
