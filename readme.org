@@ -77,7 +77,7 @@
    - *[[https://github.com/piousdeer/vscode-adwaita.git][Adwaita]]*: An elegant VSCode theme.
    - *[[https://github.com/whitphx/vscode-emacs-mcx.git][Awesome Emacs Keymap]]*: Emacs emulation for VSCode with multi-cursor support, clipboard-integrated kill-ring, well-emulated mark-mode, and more.
    - *[[https://github.com/wmaurer/vscode-change-case][change-case]]*: Quickly change the case (camelCase, =CONSTANT_CASE=, =snake_case=, etc) of the current selection or current word
-   - *[[https://github.com/tintinweb/vscode-interactive-graphviz][ vscode-interactive-graphviz]]*: Interactive Graphviz Dot Preview for Visual Studio Code
+   - *[[https://github.com/tintinweb/vscode-interactive-graphviz][vscode-interactive-graphviz]]*: Interactive Graphviz Dot Preview for Visual Studio Code
    - *[[https://marketplace.visualstudio.com/items?itemName=eriklynd.json-tools][JSON Tools]]*: Tools for manipulating JSON
    - *[[https://github.com/qjebbs/vscode-plantuml.git][PlantUML]]*: Rich PlantUML support for Visual Studio Code.
    - *[[https://github.com/Huachao/vscode-restclient.git][RestClient]]*: REST Client for Visual Studio Code
@@ -97,22 +97,30 @@
 ** Develop Tools
    - *DBeaver*: open source database manager.
    - *JetBrain Idea*: Java IDE.
-    
+
 ** Other apps
    - *[[https://github.com/zhongyang219/MusicPlayer2/][MusicPlayer2]]*: Music Player. ~win~
-   - *shareX*: ~win~
-   - *OBS Studio*: ~win~, ~lin~   
+   - *shareX*: Screen capture, file sharing and productivity tool ~win~
+   - *OBS Studio*: ~win~, ~lin~
    - *aria2c*: download everything. ~lin~
    - *AWGG*: aria2c wrapper. ~win~
    - *meld*: Differ and merger, but it is written in the python. ~lin~ ~win~ ~gtk~
    - *JPEG View*: very fase image viewer. ~win~
-   - *everything*: Find anything. ~lin~
+   - *everything*: Find anything. ~win~ ~nos~
    - *[[https://github.com/telppa/KMCounter][kmcounters]]*: Use heatmap to show mouse and keyboard usage. ~win~
    - *autohotkey*: macro-creation and automation-oriented scripting utility for Windows. ~win~
    - *[[https://github.com/RamonUnch/AltSnap][AltSnap]]*: It allows you to move and resize windows by using the Alt key and clicking wherever on the window instead of relying on very precise clicking. This behavior is very common on Linux distributions and is not actually hard to implement on Windows. ~win~
-   - *CopyQ*: very impressive clipboard manager. ~win~
+   - *CopyQ*: very impressive clipboard manager. ~win~ ~lin~
    - *Lettura*: Rss reader, but I'm using my own fork. ~web~
    - *TLP*: Battery Management. ~lin~
    - *intel-lpmd*: Battery Saver.  ~lin~
    - *mpv*: Video player, simple but powerful. ~win~ ~lin~
-   - *[[https://github.com/nokyan/resources][resources]]*:  Keep an eye on system resources. ~lin~ 
+   - *[[https://github.com/nokyan/resources][resources]]*:  Keep an eye on system resources. ~lin~
+   - *[[https://github.com/JochenBaier/fastwindowswitcher][FastWindowSwitcher]]*: A fast window switcher for Windows using the keyboard. 
+
+** Fonts
+*** *Martian Mono*: Free and open-source monospaced font from Evil Martians. My favourite font now.
+*** *Sarasa Mono SC*: A CJK programming font based on Iosevka and Source Han Sans.
+*** *Inter*: Inter is a typeface carefully crafted & designed for computer screens.
+*** *Noto Sans CJK*: Noto is a global font collection for writing in all modern and ancient languages. Noto Sans SC is an unmodulated (“sans serif”) design for languages in mainland China that use the Simplified Chinese variant of the Han ideograms.
+*** *Zhuque FangSong*: An open-source Fangsong typeface project.
