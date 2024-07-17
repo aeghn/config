@@ -34,8 +34,8 @@ export PASSWORD_STORE_DIR=$CHIN_PRIVATE_DIR/password-store
 [ -f "$ZSH_CONFIG_DIR/vendor.zsh" ] && source "$ZSH_CONFIG_DIR/vendor.zsh"
 
 
-$_CHIN_IS_MSYS2 && {
+if $_CHIN_IS_MSYS2; then 
     export PATH=/d/Tools/cmd:$PATH
     export PATH=/ucrt64/bin/:$PATH
     export PATH=/D/Tools/cmd/poppler-24.02.0/Library/bin:$PATH
-}
+fi
