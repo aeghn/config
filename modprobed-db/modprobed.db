@@ -44,7 +44,11 @@ drm
 drm_buddy
 drm_display_helper
 drm_dp_helper
+drm_exec
+drm_gpuvm
 drm_kms_helper
+drm_suballoc_helper
+drm_ttm_helper
 ecc
 ecdh_generic
 efi_pstore
@@ -65,6 +69,7 @@ i2c_algo_bit
 i2c_hid
 i2c_hid_acpi
 i2c_i801
+i2c_mux
 i2c_smbus
 i8042
 i915
@@ -80,6 +85,7 @@ intel_gtt
 intel_lpss
 intel_lpss_pci
 intel_pmc_bxt
+intel_pmc_core
 intel_powerclamp
 intel_rapl_common
 intel_rapl_msr
@@ -141,8 +147,10 @@ numa
 nvidiafb
 nvidia_wmi_ec_backlight
 nvme
+nvme_auth
 nvme_common
 nvme_core
+overlay
 pcspkr
 pinctrl_tigerlake
 pkcs8_key_parser
@@ -151,6 +159,7 @@ pmt_class
 pmt_telemetry
 polyval_clmulni
 polyval_generic
+pps_core
 processor_thermal_device
 processor_thermal_device_pci
 processor_thermal_mbox
@@ -159,6 +168,7 @@ processor_thermal_rapl
 processor_thermal_rfim
 processor_thermal_wt_hint
 processor_thermal_wt_req
+ptp
 r8169
 raid6_pq
 rapl
@@ -198,8 +208,10 @@ snd_seq_midi_event
 snd_seq_oss
 snd_soc_acpi
 snd_soc_acpi_intel_match
+snd_soc_avs
 snd_soc_core
 snd_soc_hdac_hda
+snd_soc_hda_codec
 snd_sof
 snd_sof_intel_hda
 snd_sof_intel_hda_common
@@ -231,6 +243,7 @@ ttm
 tun
 typec
 typec_ucsi
+uas
 ucsi_acpi
 usbhid
 usbkbd
@@ -255,6 +268,7 @@ vivaldi_fmap
 wmi
 wmi_bmof
 x86_pkg_temp_thermal
+xe
 xfs
 xhci_pci
 xhci_pci_renesas
