@@ -15,7 +15,7 @@ app_options:
   firefox.exe:
     inline_preedit: true # 解决 Firefox 无法输入的问题 https://github.com/rime/weasel/issues/946
 
-show_notifications: true
+show_notifications: false
 # 通知显示多长时间
 show_notifications_time: 1200
 # 使用全局 ascii 状态
