@@ -222,8 +222,8 @@ key_binder:
     # - { when: always, accept: Control+Shift+space, select: .next }
     # - { when: always, accept: Shift+space, toggle: ascii_mode }
     # - { when: always, accept: Control+comma, toggle: full_shape }
-    # - { when: always, accept: Control+period, toggle: ascii_punct }
-    # - { when: always, accept: Control+slash, toggle: traditionalization }
+    - { when: composing, accept: comma, send: Up }     # composing 时,Control+p 等同于 Up 键
+    - { when: composing, accept: period, send: Down }
 
     # 将小键盘 0~9 . 映射到主键盘，数字金额大写的 Lua 如 R1234.5678 可使用小键盘输入
     - {accept: KP_0, send: 0, when: composing}
