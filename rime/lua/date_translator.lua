@@ -23,6 +23,7 @@ function M.func(input, seg, env)
     -- 日期
     if (input == M.date) then
         local current_time = os.time()
+        yield_cand(seg, os.date('%y%m-%d', current_time))
         yield_cand(seg, os.date('%Y-%m-%d', current_time))
         yield_cand(seg, os.date('%Y/%m/%d', current_time))
         yield_cand(seg, os.date('%Y.%m.%d', current_time))
