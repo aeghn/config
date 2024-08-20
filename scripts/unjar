@@ -1,5 +1,7 @@
 #!/usr/bin/env bash
 
+set -e
+
 export PATH=$JAVA_HOME/bin:$PATH
 
 JAR="$1"
@@ -17,11 +19,15 @@ mkdir "$TARGET" && cd "$TARGET"
 
 echo "> begin to uncompress $JAR"
 mkdir "$TARGET_CLASS" && cd "$TARGET_CLASS"
+echo ">>> CLASS dir: ${TARGET_CLASS}"
+
 jar xf "$JAR_FILE" 
 
 echo "> begin to decompile $JAR"
-mkdir "$TARGET_SOURCE" && cd "$TARGET_SOURCE"
-jad -r -ff -s java "$TARGET_CLASS"/**/*.class &> /dev/null
+cp -r "$TARGET_CLASS" "$TARGET_SOURCE" && cd "$TARGET_SOURCE"
+echo ">>> SOURCE dir: ${PWD}"
+find -name '*class' -exec jad -r -ff -s java {} \;
+find -name '*.class' -exec rm {} \;
 
 echo "> finished ${JAR}"
 
