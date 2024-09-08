@@ -49,7 +49,7 @@ setopt COMPLETE_ALIASES
 HISTFILE="$CHIN_ZSH_CACHE_DIR/cmd-hist"
 # Modify this to make startup faster
 HISTSIZE=5000
-SAVEHIST=5000
+SAVEHIST=500000
 HISTDUP=erase               #Erase duplicates in the history file
 
 setopt EXTENDED_HISTORY
