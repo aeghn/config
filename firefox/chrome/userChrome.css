@@ -132,23 +132,3 @@
 #sidebar-box {
   margin-top: 150px;
 }
-
-
-#bookmarksPanel,
-#sidebar-search-container,
-.sidebar-panel .sidebar-placesTree,
-#bookmarks-view,
-.sidebar-placesTreechildren,
-#PersonalToolbar,
-#sidebar-main,
-#sidebar-box,
-#sidebar,
-#navigator-toolbox,
-#nav-bar,
-#sidebar-box > #browser,
-#werbextpanels-window,
-#background,
-#main-window {
-  background-color: transparent !important;
-}
-
