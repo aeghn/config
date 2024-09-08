@@ -245,6 +245,7 @@ typec
 typec_ucsi
 uas
 ucsi_acpi
+uinput
 usbhid
 usbkbd
 usbmouse
