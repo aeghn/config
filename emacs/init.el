@@ -88,7 +88,7 @@
                            ;; Remember to install `mingw-w64-x86_64-gnupg'
                            "D:/tools/cmd;"
                            msys2root "mingw64/bin" ";"
-                           msys2root "mingw64/x86_64-w64-mingw32/bin" ";"
+                           msys2root "ucrt64/bin" ";"
                            msys2root "usr/bin" ";"
                            (getenv "PATH")))
            (setq package-gnupghome-dir (string-replace "c:/" "/c/" (expand-file-name "gnupg" package-user-dir)))
