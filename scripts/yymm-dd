@@ -1,0 +1,21 @@
+#!/usr/bin/env bash
+
+_yymm-dd() {
+    local fn="$1"
+    local prefix=$(date +"%y%m-%d" -d "@$(stat -c "%Y" "$fn")")
+
+    if [[ ! "$fn" =~ ${prefix}* ]]; then
+        mv "$fn" "${prefix}-${fn}"
+    fi
+}
+
+
+if [ $# -gt 0 ]; then
+    for i in "$@"; do
+        _yymm-dd "$i"
+    done
+else
+    for i in *; do
+        _yymm-dd "$i"
+    done
+fi
