@@ -85,4 +85,5 @@ cptd() {
 if $_CHIN_IS_MSYS2; then
     alias rg="rg --path-separator //"
     alias jdk8='export JAVA_HOME=/D/Tools/cmd/data/corretto-1.8.0/; export PATH=/D/Tools/cmd/data/corretto-1.8.0/bin:$PATH'
+    alias jdk17='export JAVA_HOME=/d/Tools/jdks/corretto-17; export PATH=/d/Tools/jdks/corretto-17/bin:$PATH'
 fi
