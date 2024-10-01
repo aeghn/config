@@ -1,134 +1,32 @@
-@namespace url(http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul);
-
-:root {
-  --transition: all var(--trans-dur) ease-out;
-  --bg-color: transparent;
-  --toolbar-item-height: 40px;
-
-  --buttonbox-left-width: 0px;
-  --sdbr-wdt: 300px;
-  --left-margin: 40px;
-}
-
-#navigator-toolbox {
-  max-height: 0px;
-}
-
-#sidebar-header {
-  display: none;
-}
-
-#sidebar-box {
-  max-width: 320px !important;
-  min-width: 320px !important;
-}
-
 #TabsToolbar {
-  visibility: collapse !important;
+    visibility: collapse !important;
 }
 
 #TabsToolbar .tabbrowser-tab {
-  display: none !important;
+    display: none !important;
 }
 
-#nav-bar[inFullscreen],
-#TabsToolbar[inFullscreen] {
-  display: none;
-}
-
-#TabsToolbar > .titlebar-buttonbox-container {
-  display: none !important;
-}
-
-#nav-bar,
-#urlbar-container {
-  width: 305px !important;
-  left: 9px;
-}
-
-#PersonalToolbar {
-  width: 305px !important;
-}
 
 #nav-bar {
-  display: flex;
-  box-shadow: none !important;
-  border: none !important;
-  position: absolute !important;
-  top: 6px !important;
-  overflow: visible !important;
-  height: 40px !important;
+    background: transparent !important;
+}
+
+
+#sidebar-header {
+    display: none;
 }
 
 #urlbar-container {
-  display: flex;
-  position: absolute !important;
-  left: -6px;
-  top: 50px !important;
-  height: 30px !important;
+    max-width: 1000px !important;
 }
 
-#urlbar[breakout][breakout-extend] {
-  width: 240% !important;
-  box-shadow: none !important;
-  transition: 0.2s all;
-}
-
-#urlbar-input {
-  text-wrap: wrap !important;
-  padding-left: 10px !important;
-}
-
-.urlbar-input-box {
-  padding-left: 10px !important;
-}
-
-#urlbar #urlbar-background,
-#urlbar,
-#urlbar-input-container,
-#searchbar,
-.searchbar-textbox {
-  box-shadow: none !important;
-  font-size: 12px;
-}
-
-#identity-box,
-#tracking-protection-icon-container {
-  display: none;
-}
-
-#PersonalToolbar {
-  top: 100px !important;
-
-  position: fixed;
-
-  transition: var(--transition) !important;
-
-  & > * {
-    transition: var(--transition) !important;
-  }
-
-  visibility: visible !important;
-  height: var(--toolbar-item-height) !important;
-
-  margin-left: var(--buttonbox-left-width);
-
-  padding-top: 3px !important;
-  padding-bottom: 3px !important;
-
-  &[collapsed="true"] {
-    display: none;
-  }
-}
-
+#personal-bookmarks,
+#PlacesToolbar,
 #PlacesToolbarItems {
-  display: flex;
+    max-width: calc(50vw - 600px) !important;
 }
 
 #sidebar-splitter {
   width: 0px !important;
 }
 
-#sidebar-box {
-  margin-top: 150px;
-}
