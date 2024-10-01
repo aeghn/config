@@ -280,13 +280,10 @@
   "sidebar": {
     "nav": [
       "VG0DddMN8dQK",
-      "e4gevjOtot2v",
-      "EZmncOdQtnDT",
-      "5nrSEcH0EGDT",
-      "k4R2qcHg1MDT",
-      "u0VoWYlV6SDT",
-      "sd-KsQPf7Lx1lQK",
+      "fpXcHT1o1pXi",
+      "search",
       "history",
+      "remute_audio_tabs",
       "settings"
     ],
     "panels": {
@@ -309,117 +306,20 @@
         "newTabBtns": [],
         "srcPanelConfig": null
       },
-      "e4gevjOtot2v": {
-        "type": 2,
-        "id": "e4gevjOtot2v",
-        "name": "Unsorted",
+      "fpXcHT1o1pXi": {
+        "type": 1,
+        "id": "fpXcHT1o1pXi",
+        "name": "Bookmarks",
+        "iconSVG": "icon_bookmarks",
+        "iconIMGSrc": "",
+        "iconIMG": "",
         "color": "toolbar",
-        "iconSVG": "icon_book",
-        "iconIMGSrc": "",
-        "iconIMG": "",
         "lockedPanel": false,
+        "tempMode": false,
         "skipOnSwitching": false,
-        "noEmpty": false,
-        "newTabCtx": "none",
-        "dropTabCtx": "none",
-        "moveRules": [],
-        "moveExcludedTo": -1,
-        "bookmarksFolderId": -1,
-        "newTabBtns": [],
-        "srcPanelConfig": null
-      },
-      "EZmncOdQtnDT": {
-        "type": 2,
-        "id": "EZmncOdQtnDT",
-        "name": "Videos",
-        "color": "red",
-        "iconSVG": "icon_play",
-        "iconIMGSrc": "",
-        "iconIMG": "",
-        "lockedPanel": false,
-        "skipOnSwitching": false,
-        "noEmpty": false,
-        "newTabCtx": "none",
-        "dropTabCtx": "none",
-        "moveRules": [
-          {
-            "id": "HnzgbvHepKG5",
-            "active": true,
-            "url": "youtube.com",
-            "topLvlOnly": true
-          }
-        ],
-        "moveExcludedTo": -1,
-        "bookmarksFolderId": -1,
-        "newTabBtns": [],
-        "srcPanelConfig": null
-      },
-      "5nrSEcH0EGDT": {
-        "type": 2,
-        "id": "5nrSEcH0EGDT",
-        "name": "Procrastination",
-        "color": "orange",
-        "iconSVG": "fingerprint",
-        "iconIMGSrc": "",
-        "iconIMG": "",
-        "lockedPanel": false,
-        "skipOnSwitching": false,
-        "noEmpty": false,
-        "newTabCtx": "none",
-        "dropTabCtx": "none",
-        "moveRules": [],
-        "moveExcludedTo": -1,
-        "bookmarksFolderId": -1,
-        "newTabBtns": [],
-        "srcPanelConfig": null
-      },
-      "k4R2qcHg1MDT": {
-        "type": 2,
-        "id": "k4R2qcHg1MDT",
-        "name": "Social",
-        "color": "blue",
-        "iconSVG": "icon_man",
-        "iconIMGSrc": "",
-        "iconIMG": "",
-        "lockedPanel": false,
-        "skipOnSwitching": false,
-        "noEmpty": false,
-        "newTabCtx": "none",
-        "dropTabCtx": "none",
-        "moveRules": [
-          {
-            "id": "AHLZPAfLvP39",
-            "active": true,
-            "url": "twitter.com"
-          },
-          {
-            "id": "TPth9kXu3T39",
-            "active": true,
-            "url": "facebook.com"
-          }
-        ],
-        "moveExcludedTo": -1,
-        "bookmarksFolderId": -1,
-        "newTabBtns": [],
-        "srcPanelConfig": null
-      },
-      "u0VoWYlV6SDT": {
-        "type": 2,
-        "id": "u0VoWYlV6SDT",
-        "name": "Work",
-        "color": "purple",
-        "iconSVG": "icon_flask",
-        "iconIMGSrc": "",
-        "iconIMG": "",
-        "lockedPanel": false,
-        "skipOnSwitching": false,
-        "noEmpty": false,
-        "newTabCtx": "none",
-        "dropTabCtx": "none",
-        "moveRules": [],
-        "moveExcludedTo": -1,
-        "bookmarksFolderId": -1,
-        "newTabBtns": [],
+        "rootId": "root________",
+        "viewMode": "tree",
+        "autoConvert": false,
         "srcPanelConfig": null
       },
       "history": {
