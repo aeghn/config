@@ -1,0 +1,65 @@
+#TabsToolbar {
+  visibility: collapse !important;
+}
+
+#TabsToolbar .tabbrowser-tab {
+  display: none !important;
+}
+
+#sidebar-header {
+  display: none;
+}
+
+#urlbar-container {
+  max-width: 40vw !important;
+}
+
+#personal-bookmarks,
+#PlacesToolbar,
+#PlacesToolbarItems {
+  max-width: calc(50vw - 600px) !important;
+}
+
+#sidebar-splitter {
+  width: 0px !important;
+}
+
+/* Inspired by https://codeberg.org/Freeplay/Firefox-Onebar/src/branch/main/userChrome.css */
+@media (-moz-platform: windows) {
+  :root {
+    --uc-window-control-width: 137px;
+    --chin-nav-bar-height: 36px;
+  }
+
+  #nav-bar {
+    padding-right: calc(var(--uc-window-control-width)) !important;
+    z-index: 2 !important;
+    height: var(--chin-nav-bar-height) !important;
+  }
+  #titlebar {
+    z-index: 101 !important;
+  }
+
+  .titlebar-buttonbox-container {
+    top: 0 !important;
+    right: 0 !important;
+    height: calc(var(--tab-min-height));
+    position: absolute !important;
+    max-height: 100%;
+  }
+  .titlebar-buttonbox {
+    height: var(--chin-nav-bar-height) !important;
+    z-index: 9999 !important;
+  }
+
+  .toolbar-items {
+    max-width: calc(100vw - var(--uc-window-control-width)) !important;
+  }
+
+  /* Hide window buttons in fullscreen */
+  #navigator-toolbox[style*="margin-top: -"] .titlebar-buttonbox-container,
+  [inDOMFullscreen="true"] .titlebar-buttonbox-container {
+    transform: translateY(-100px);
+  }
+}
+
