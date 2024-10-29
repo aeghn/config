@@ -7,6 +7,7 @@ wezterm.on('gui-startup', function(cmd)
 end)
 
 return {
+enable_wayland = true,
    window_padding = {
       left = '1cell',
       right = '1cell',

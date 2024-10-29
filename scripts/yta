@@ -144,7 +144,7 @@ download_youtube_dl() {
     cd "$DOWNLOAD_DIR"
 
     local args=(
-        -r '4.2M'                                          # max speed
+        -r '2.2M'                                          # max speed
         --no-mtime                                         # without update time
         -o '[%(upload_date)s][%(id)s]%(title).40s.%(ext)s' # file name
         -N 4

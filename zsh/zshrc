@@ -16,6 +16,7 @@ export CHIN_CACHE_DIR="${XDG_CACHE_HOME:-$HOME/.cache}"
 export CHIN_ZSH_CACHE_DIR="${CHIN_CACHE_DIR}/zsh"
 export CHIN_PG_DIR="$HOME/playground"
 $_CHIN_IS_MSYS2 && export CHIN_PG_DIR="/f/playground-data"
+[ -d "${CHIN_PRIVATE_DIR}/bin" ] && export PATH="${CHIN_PRIVATE_DIR}/bin":$PATH
 
 
 export PASSWORD_STORE_DIR=$CHIN_PRIVATE_DIR/password-store

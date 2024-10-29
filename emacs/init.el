@@ -122,7 +122,7 @@
         (defun chin/set-fonts ()
           (set-fontset-font "fontset-default" '(#xe000 . #xf8ff) "nrss")
           (set-face-attribute 'default nil
-                              :family "Martian Mono" :height 108 :weight 'Regular))
+                              :family "Sarasa Mono SC" :height 120 :weight 'Regular))
 
         (defun chin/set-divider ()
           (dolist (face '(window-divider
@@ -779,3 +779,5 @@
                                          magit-status-mode)))
                             nil
                           '(display-buffer-same-window))))))
+
+(add-to-list 'eglot-server-programs '((python-mode python-ts-mode) "basedpyright-langserver" "--stdio"))
