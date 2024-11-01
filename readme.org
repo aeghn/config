@@ -39,6 +39,7 @@
    - =fzf=, fast and fuzzy filter.
    - =git-filter-repo=, git repo reshape tool.
    - =dufs=, simple file server.
+   - [[https://github.com/darkhz/bluetuith][bluetuith]],  A TUI bluetooth manager for Linux.
 
    And I have wrote some bash scripts to make life easy, e.g, my dotfiles is orginized by =dfs=, =dfm=.
 
