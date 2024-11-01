@@ -53,6 +53,7 @@
    - *PopUp*: Create a popup of pages, with minimal browser UI
    - *SingleFile*: SingleFile helps you to save a complete page (with CSS, images, etc.) into a single HTML file.
    - *block-images*: Blocks all images on webpage.
+   - *[[https://github.com/fishjar/kiss-translator][kiss-translator]]*: A simple, open source bilingual translation extension & Greasemonkey script
 
 ** Emacs
    [[file:_data/preview/emacs.png]]
