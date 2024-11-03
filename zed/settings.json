@@ -7,9 +7,17 @@
 // custom settings, run the `open default settings` command
 // from the command palette or from `Zed` application menu.
 {
+  "ssh_connections": [
+    {
+      "host": "localhost",
+      "username": "chin",
+      "projects": []
+    }
+  ],
+  "theme": "Atelier Forest Light",
   "ui_font_size": 16,
   "buffer_font_size": 16,
-  "buffer_font_family": "Martian Mono",
+  "buffer_font_family": "Sarasa Mono SC",
   "tabs": {
     "close_position": "left"
   }
