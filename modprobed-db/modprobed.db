@@ -70,6 +70,7 @@ hid_logitech_hidpp
 hid_multitouch
 hid_nintendo
 i2c_algo_bit
+i2c_dev
 i2c_hid
 i2c_hid_acpi
 i2c_i801
@@ -262,6 +263,7 @@ spi_intel
 spi_intel_pci
 spi_nor
 stp
+tap
 thunderbolt
 tls
 tpm
@@ -290,6 +292,9 @@ vfio_pci
 vfio_pci_core
 vfio_virqfd
 vgastate
+vhost
+vhost_iotlb
+vhost_net
 video
 videobuf2_common
 videobuf2_memops
