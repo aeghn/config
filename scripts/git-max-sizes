@@ -1,0 +1,7 @@
+#!/usr/bin/env bash
+
+TOP_K=10
+
+GIT_ROOT="$(git rev-parse --show-toplevel)"
+
+git rev-list --objects --all | grep "$(git verify-pack -v $GIT_ROOT/.git/objects/pack/*.idx | sort -k 3 -n | tail -$TOP_K | awk '{print$1}')"
