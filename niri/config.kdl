@@ -240,6 +240,10 @@ always-center-single-column
 // which may be more convenient to use.
 // See the binds section below for more spawn examples.
 // spawn-at-startup "alacritty" "-e" "fish"
+spawn-at-startup "rgbar"
+spawn-at-startup "wall.sh"
+spawn-at-startup "fcitx5"
+spawn-at-startup "dunst"
 
 // Uncomment this line to ask the clients to omit their client-side decorations if possible.
 // If the client will specifically ask for CSD, the request will be honored.
