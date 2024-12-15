@@ -12,6 +12,7 @@ export MOZ_ENABLE_WAYLAND=1
 export GRADLE_USER_HOME=$HOME/Supply/gradle
 export ANDROID_SDK_ROOT=$HOME/Supply/Android/Sdk
 export GTK_USE_PORTAL=0
+export  QT_QPA_PLATFORM=wayland 
 
 #export LIBVA_DRIVER_NAME=nvidia
 #export XDG_SESSION_TYPE=wayland
