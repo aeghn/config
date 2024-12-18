@@ -244,6 +244,7 @@ spawn-at-startup "rgbar"
 spawn-at-startup "wall.sh"
 spawn-at-startup "fcitx5"
 spawn-at-startup "dunst"
+spawn-at-startup "clash"
 
 // Uncomment this line to ask the clients to omit their client-side decorations if possible.
 // If the client will specifically ask for CSD, the request will be honored.
@@ -327,6 +328,7 @@ binds {
 
     // Suggested binds for running programs: terminal, app launcher, screen locker.
     Mod+Return { spawn "foot"; }
+    Mod+X { spawn "emacs"; }
     Mod+D { spawn "rglauncher"; }
     Super+Alt+L { spawn "swaylock"; }
 
