@@ -24,6 +24,8 @@ esac
 
 
 ## Rust Settings
+export RUSTUP_DIST_SERVER="https://rsproxy.cn"
+export RUSTUP_UPDATE_ROOT="https://rsproxy.cn/rustup"
 [ -d ~/.cargo/bin ] && export PATH=$HOME/.cargo/bin:$PATH
 
 ########################################
