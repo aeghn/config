@@ -77,12 +77,12 @@
         ;; We should not specify any full path below, they should be the sub directory of
         ;; those basic dirs.
         (setq-default chin/playground-data-dir "~/playground/playground-data"
-                      chin/docs-dir "~/files/docs")
+                      chin/docs-dir "~/files/doc")
 
         (chin/when-nt!
          ;; Windows-nt specific settings
          (setq chin/playground-data-dir "F:/playground-data"
-               chin/docs-dir "D:/files/docs")
+               chin/docs-dir "D:/files/doc")
          (let ((msys2root "C:/msys64/"))
            (setenv "PATH" (concat
                            ;; Remember to install `mingw-w64-x86_64-gnupg'
@@ -100,6 +100,9 @@
           (set-charset-priority 'unicode))
         (prefer-coding-system 'utf-8)
         (setq system-time-locale "C"))
+
+(block! "Org-mode" :packages ("org-chin.el"))
+
 
 (block! "Gui Settings"
         (defun chin/set-mode-line ()
@@ -120,9 +123,8 @@
            (internal-border-width . 20)))
 
         (defun chin/set-fonts ()
-          (set-fontset-font "fontset-default" '(#xe000 . #xf8ff) "nrss")
           (set-face-attribute 'default nil
-                              :family "Sarasa Mono SC" :height 120 :weight 'Regular))
+                              :family "Sarasa Mono SC" :height 108 :weight 'Regular))
 
         (defun chin/set-divider ()
           (dolist (face '(window-divider
@@ -144,212 +146,6 @@
                     (chin/tweak-gui)))
 
         (chin/tweak-gui))
-
-(block! "Org-mode Related Settings"
-        ;; Org-mode settings
-        (require 'org)
-        (require 'org-tempo)
-        (require 'org-tidy)
-        ;; (require 'org-visual-indent)
-        (setq org-special-ctrl-a/e t
-              ;; Edit settings
-              ;; org-auto-align-tags nil
-              org-tags-column 0
-              org-catch-invisible-edits 'show-and-error
-
-              ;; org-insert-heading-respect-content t
-
-              org-src-tab-acts-natively nil
-
-              org-adapt-indentation t
-              org-hide-leading-stars t
-              ;; org-odd-levels-only t
-
-              ;; Org styling, hide markup etc.
-              org-hide-emphasis-markers nil
-              org-pretty-entities t
-              org-ellipsis " ... "
-
-              org-export-preserve-breaks t
-
-              org-confirm-babel-evaluate nil)
-        (setq org-latex-listings t)
-
-        ;; 🅾🄮 ⃝⃞ℓℵ⇒∀∂∃∅∆∇∈∉∊∋∽≌≒⊠⊿⏃⏄⏅⏛▷◯◉●◎◇◈◯♦♥♭♮♯⚠⚽⚾❀✿✽❖⦿〇〠 ?☁ ?∭ ?∬ ?∫ ?∮
-
-        ;; Agenda styling
-        (setq org-log-done 'time)
-        (setq org-todo-keywords
-              '((sequence "TODO(t)" "CURR(c)" "WAIT(w)" "|" "DONE(d)" "STOP(s)")))
-
-        ;; Org Faces and Symbols
-        (custom-set-faces
-         '(speedbar-directory-face ((t (:foreground "#aa0000" :weight normal))))
-         '(org-document-title ((t (:weight normal :height 2.0))))
-         '(org-level-1 ((t (:weight normal :height 1.1 ))))
-         '(org-level-2 ((t (:weight normal :height 1.05 ))))
-         '(org-level-3 ((t (:weight normal :height 1.05 ))))
-         '(org-level-4 ((t (:weight normal :height 1.0 ))))
-         '(org-level-5 ((t (:weight normal :height 1.0 ))))
-         '(org-level-6 ((t (:weight normal :height 1.0 ))))
-         '(org-level-8 ((t (:weight normal)))))
-
-        (defun chin/org-face-hook ()
-          (let ((variable-font "Sarasa Mono SC"))
-            (setq-local face-remapping-alist
-                        `((default (:family ,variable-font :height 120) variable-pitch)
-                          (org-block (:family "Martian Mono Nr Rg" :height 108) org-block))
-                        line-spacing 0.2)
-            (org-tidy-mode)))
-        (defun chin/org-agenda-current-file ()
-          (interactive)
-          (unless (eq major-mode 'org-mode)
-            (throw "Use Org-agenda-current-file in org-mode only!"))
-          (let ((org-agenda-files (list (buffer-file-name))))
-            (org-agenda)))
-
-        (defun chin/insert-date ()
-          (interactive)
-          (insert (format-time-string "%y%m-%d ")))
-
-        (defun chin/org-hook-function ()
-          (chin/org-face-hook)
-          (define-key org-mode-map (kbd "M-.") 'chin/insert-date)
-          (define-key org-mode-map (kbd "M-h") 'chin/delete-blanks))
-
-
-        (setq org-plantuml-exec-mode 'plantuml)
-        ;; https://orgmode.org/worg/org-contrib/babel/languages/ob-doc-plantuml.html
-        (org-babel-do-load-languages
-         'org-babel-load-languages
-         '((plantuml . t)
-           (python . t)
-           (rust . t)
-           (dot . t)))
-
-        (add-to-list
-         'org-src-lang-modes '("plantuml" . plantuml))
-
-        (defvar chin/org-dir (expand-file-name "org" chin/docs-dir))
-        (defun chin/org-file-open ()
-          (interactive)
-          (let* ((date (format-time-string "%y-%m-%d"))
-                 (result (completing-read "Org files: " (directory-files chin/org-dir nil ".*\\.org")))
-                 (full-result (expand-file-name result chin/org-dir)))
-            (if (file-exists-p full-result)
-                (find-file full-result)
-              (find-file (expand-file-name (concat date "-"
-                                                   (replace-regexp-in-string ".org$" "" result)
-                                                   ".org")
-                                           chin/org-dir)))))
-
-        (defconst chin/todo-prefix (rx (seq
-                                        bol
-                                        (one-or-more "*")
-                                        (opt " " (= 4 (any "A-Z")))
-                                        (opt " " (seq (= 4 (any "0-9")) "-" (= 2 (any "0-9)"))))
-                                        (opt " .")
-                                        (opt " ")
-                                        eol)))
-
-        (defun chin/todo (dirpath filename)
-          (interactive)
-          (when-let ((buf (find-file (expand-file-name filename dirpath))))
-            (with-current-buffer buf
-              (let* ((today (format-time-string "%y%m-%d" (current-time))))
-                (goto-char (point-min))
-                (replace-regexp chin/todo-prefix "")
-                (goto-char (point-max))
-                (newline)
-                (delete-blank-lines)
-                (insert "* TODO " today " . ")))))
-
-        (global-set-key
-         (kbd "<f6>")
-         (lambda ()
-           (interactive)
-           (chin/todo chin/org-dir "todo.org")))
-        (global-set-key
-         (kbd "<f5>")
-         (lambda ()
-           (interactive)
-           (chin/todo chin/org-dir "todo-work.org")))
-
-        (require 'iscroll)
-        (add-hook 'org-mode-hook 'iscroll-mode)
-        (add-hook 'org-mode-hook 'chin/org-hook-function)
-
-        (with-eval-after-load 'ox-latex
-          ;; http://orgmode.org/worg/org-faq.html#using-xelatex-for-pdf-export
-          ;; latexmk runs pdflatex/xelatex (whatever is specified) multiple times
-          ;; automatically to resolve the cross-references.
-          (setenv "TEXMFHOME" "/home/chin/Repos/tex_config/texmfhome")
-          (setq org-latex-pdf-process '("xelatex -interaction=batchmode -shell-escape -f %f")
-                org-latex-remove-logfiles t
-                org-latex-logfiles-extensions '("aux" "bcf" "blg" "fdb_latexmk" "fls"
-                                                "figlist" "idx" "log" "nav" "out" "ptc"
-                                                "run.xml" "snm" "toc" "vrb" "xdv"))
-
-
-          ;; update the list of LaTeX classes and associated header (encoding, etc.)
-          ;; and structure
-          (add-to-list 'org-latex-classes
-                       `("beamer"
-                         ,(concat "\\documentclass[presentation]{beamer}\n"
-                                  "[DEFAULT-PACKAGES]"
-                                  "[PACKAGES]"
-                                  "[EXTRA]\n")
-                         ("\\section{%s}" . "\\section*{%s}")
-                         ("\\subsection{%s}" . "\\subsection*{%s}")
-                         ("\\subsubsection{%s}" . "\\subsubsection*{%s}")))
-
-          (add-to-list 'org-latex-classes
-                       '("elegantpaper"
-                         "\\documentclass[lang=cn]{elegantpaper}
-                  \\bigskip
-                 [NO-DEFAULT-PACKAGES]
-                 [PACKAGES]
-                 [EXTRA]"
-                         ("\\section{%s}" . "\\section*{%s}")
-                         ("\\subsection{%s}" . "\\subsection*{%s}")
-                         ("\\subsubsection{%s}" . "\\subsubsection*{%s}")
-                         ("\\paragraph{%s}" . "\\paragraph*{%s}")
-                         ("\\subparagraph{%s}" . "\\subparagraph*{%s}")))
-          (setq org-latex-listings 'minted)
-          (add-to-list 'org-latex-packages-alist '("" "minted")))
-
-        (require 'ox-latex)
-
-        (block!
-         "org-roam"
-         :packages ("org-roam-helper.el" "org-roam")
-
-         (require 'org-roam)
-         (setq org-roam-directory chin/org-dir)
-         (setq org-roam-extract-new-file-path "%<%y-%m-%d>-${slug}.org")
-         (setq org-roam-capture-templates
-               '(("d" "default" plain "%?"
-                  :target (file+head "%<%y-%m-%d>-${slug}.org"
-                                     "#+title: ${title}\n")
-                  :unnarrowed t)))
-         (add-hook 'after-init-hook 'org-roam-db-autosync-mode))
-
-        (defun chin/org-insert-image-from-clipboard ()
-          (interactive)
-          (let* ((pure-filename (file-name-sans-extension
-                                 (file-name-nondirectory
-                                  (buffer-file-name))))
-                 (time (format-time-string "%y%m%d-%H%M%S"))
-                 (image-dir-name "images")
-                 (image-dir (expand-file-name image-dir-name))
-                 (filename (concat pure-filename "-" time ".png")))
-            (unless (file-exists-p image-dir)
-              (make-directory image-dir))
-            (if (process-file "convert" nil nil nil "clipboard:myimage"
-                              (expand-file-name filename image-dir))
-                (insert  (concat "[[file:./" image-dir-name "/" filename "]]"))
-              (message "Unable to create image"))))
-        (define-key org-mode-map (kbd "C-c p") 'chin/insert-image-from-clipboard))
 
 (block! "Completions"
         '("vertico" "consult" "corfu")
@@ -378,7 +174,9 @@
         (require 'corfu)
         (setq corfu-auto t)
         (setq corfu-quit-at-boundary t)
-        (global-corfu-mode))
+        
+        (global-corfu-mode)
+        (setq text-mode-ispell-word-completion nil))
 
 (block! "Comment"
         :packages ("comment-dwim-2")
@@ -779,5 +577,3 @@
                                          magit-status-mode)))
                             nil
                           '(display-buffer-same-window))))))
-
-(add-to-list 'eglot-server-programs '((python-mode python-ts-mode) "basedpyright-langserver" "--stdio"))
