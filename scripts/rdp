@@ -1,0 +1,10 @@
+#!/usr/bin/env bash
+
+wlfreerdp /u:chin /p:q /v:192.168.122.173 \
+                   /bpp:32 \
+                   /dynamic-resolution \
+                   +clipboard +fonts \
+                   /gdi:hw \
+                   /rfx /rfx-mode:video \
+                   +menu-anims +window-drag  \
+                   +auto-reconnect &!
