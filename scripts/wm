@@ -14,6 +14,9 @@ export ANDROID_SDK_ROOT=$HOME/Supply/Android/Sdk
 export GTK_USE_PORTAL=0
 export  QT_QPA_PLATFORM=wayland 
 
+# polkit-gnome
+/usr/lib/polkit-gnome/polkit-gnome-authentication-agent-1 &
+
 #export LIBVA_DRIVER_NAME=nvidia
 #export XDG_SESSION_TYPE=wayland
 #export GBM_BACKEND=nvidia-drm
@@ -23,4 +26,4 @@ export  QT_QPA_PLATFORM=wayland
 
 
 #Hyprland
-niri > ~/niri.log
+niri
