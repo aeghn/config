@@ -36,6 +36,7 @@
     z-index: 2 !important;
     height: var(--chin-nav-bar-height) !important;
   }
+
   #titlebar {
     z-index: 101 !important;
   }
@@ -46,7 +47,12 @@
     height: calc(var(--tab-min-height));
     position: absolute !important;
     max-height: 100%;
+    width: calc(var(--uc-window-control-width)) !important;
+
+    /* from: https://github.com/MrOtherGuy/firefox-csshacks/blob/master/chrome/oneline_toolbar.css */
+    display: flex !important;
   }
+
   .titlebar-buttonbox {
     height: var(--chin-nav-bar-height) !important;
     z-index: 9999 !important;
@@ -62,4 +68,3 @@
     transform: translateY(-100px);
   }
 }
-
