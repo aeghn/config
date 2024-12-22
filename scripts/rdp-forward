@@ -1,0 +1,22 @@
+#!/usr/bin/env bash
+
+set -x
+
+Guest="win"
+Guest_ip="192.168.122.173"
+
+if [[ $1 = $Guest ]]
+then
+    if [[ $2 = "stopped" || $2 = "reconnect" ]]
+    then
+        iptables -t nat -D PREROUTING -i eth0 -p tcp --dport 3389 -j DNAT --to $Guest_ip:3389
+        iptables -D FORWARD -d $Guest_ip -p tcp -m state --state NEW -m tcp \
+                 --dport 3389 -j ACCEPT
+    fi
+    if [[ $2 = "start" || $2 = "reconnect" ]]
+    then
+        iptables -t nat -I PREROUTING -i eth0 -p tcp --dport 3389 -j DNAT --to $Guest_ip:3389
+        iptables -I FORWARD -d $Guest_ip -p tcp -m state --state NEW -m tcp \
+                 --dport 3389 -j ACCEPT
+    fi
+fi
