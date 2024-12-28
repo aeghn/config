@@ -1,4 +1,0 @@
-for f in $HOME/.mozilla/firefox/**/chrome/userChrome.css; do
-    @ "$f" "chrome/userChrome.css"
-done
-@ "chrome" "$HOME/.mozilla/firefox/xi2c6jjo.default-release-1697197771826/chrome"

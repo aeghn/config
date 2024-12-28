@@ -1,4 +1,22 @@
-@ ~/files/config/fcitx5/config/conf ~/.config/fcitx5/conf
-@ ~/files/config/fcitx5/config/config ~/.config/fcitx5/config
-@ ~/files/config/fcitx5/config/profile ~/.config/fcitx5/profile
-@ ~/files/config/fcitx5/share/themes ~/.local/share/fcitx5/themes
+#!/usr/bin/env bash
+
+set -eu
+
+# Created by dfs
+
+# WORK_DIR := work dir
+# LINK_MODE := CP | LN | DEF
+# GIT_MANAGED := false | true
+#   GIT_DIRTY := false | true
+
+# File to store and restore.
+
+store() {
+    msg "store not implement, $PWD"
+}
+
+restore() {
+    ln_force "./config" "$HOME/.config/fcitx5"
+    ln_force "./share/themes" "$HOME/.local/share/fcitx5/themes"
+    ln_force "../rime" "$HOME/.local/share/fcitx5/rime"
+}

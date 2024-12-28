@@ -1,83 +1,153 @@
 #!/usr/bin/env bash
 
+WORK_MODE="UNKNOWN"
+KERNEL_NAME=""
 
-can_handle() {
-    [[ "$FILEPATH" =~ "$1" ]] && return 0 || return 122
+msg()    { echo -e "\033[32m==> $(date +%H:%M:%S) ~ $*\033[0m"; }
+msg2()   { echo -e "\033[32m -> $(date +%H:%M:%S) ~ $*\033[0m"; }
+warn()   { echo -e "\033[33m==> $(date +%H:%M:%S) ~ $*\033[0m"; }
+warn2()  { echo -e "\033[33m -> $(date +%H:%M:%S) ~ $*\033[0m"; }
+error()  { echo -e "\033[31m==> $(date +%H:%M:%S) ~ $*\033[0m"; }
+error2() { echo -e "\033[31m -> $(date +%H:%M:%S) ~ $*\033[0m"; }
+die()    { error "$*";  exit 1; }
+die2()   { error2 "$*"; exit 1; }
+ask()    { msg "$*"; read -r ""; }
+indent() { sed "s/^/ $(printf "%*s" $1)/g"; }
+
+# https://stackoverflow.com/questions/3466166/how-to-check-if-running-in-cygwin-mac-or-linux
+is_linux() { [ "$KERNEL_NAME" = "Linux" ]; }
+is_windows() { [ "$KERNEL_NAME" = "MinGw" ] || [ "$KERNEL_NAME" = "MSys" ]; }
+
+ln_force() {
+    local full_filepath
+    full_filepath="$2"
+
+    mkdir -p "${2%/*}"
+    ln -sf "$(realpath "$1")" "$2"
 }
 
-dfs_home_dotsciprts() {
-    # We check if this function could handle the path.
-    can_handle "$HOME/.scripts/" || return 122
+create_dotdfs() {
+    if [ ! -f "./.dfs" ]; then
+        msg "create \`.dfs' file"
+        cat <<EOF > ./.dfs
+#!/usr/bin/env bash
 
-    local filename="${FILEPATH##*/}"
-    local island_file="${CONFIG_ISLAND_DIR%/}/scripts/$filename"
-    dfm -i "$island_file" -m "$FILEPATH"
+set -eu
+
+# Created by dfs
+
+# WORK_DIR := work dir
+# LINK_MODE := CP | LN | DEF
+# GIT_MANAGED := false | true
+#   GIT_DIRTY := false | true
+
+# File to store and restore.
+
+store() {
+    msg "store not implement, \$PWD"
 }
 
-dfs_home_dotconfig() {
-    can_handle "$HOME/.config/" || return 122
-
-    local filename _dir _island
-    filename="${FILEPATH%/}"
-    filename="${filename##*/}"
-
-    # check if just regular file in ~/.config
-    if [ "_$HOME/.config/$filename" = "_$FILEPATH" ] && [ -f "${FILEPATH}" ]; then
-        read _dir
-        _island="/${_dir#/}/$filename"
+restore() {
+    msg "restore not implement, \$PWD"
+}
+EOF
     else
-        _island="/${FILEPATH#$HOME/.config/}"
+        warn "\`.dfs' file is created, please update it manually."
     fi
-
-    local dfs_file="${CONFIG_ISLAND_DIR%/}/${_island%/*}/.dfs"
-    local island_file="${CONFIG_ISLAND_DIR%/}/$_island"
-    dfm -i "$island_file" -m "$FILEPATH" -f "$dfs_file"
 }
 
-dfs_home_font() {
-    local prefix prefix1 prefix2
-    prefix1="$HOME/.local/share/fonts/"
-    prefix2="/usr/share/fonts/"
+edit_dotdfs() {
+    create_dotdfs
+    vim "$(realpath ./.dfs)"
+}
 
-    if can_handle "$prefix1"; then
-        prefix="$prefix1"
-    elif can_handle "$prefix2"; then
-        prefix="$prefix2"
+help() {
+    cat <<EOF
+dfm --  Dot File Manager
+  s | store     store files
+  r | restore   restore files
+  c | cdfs      create dfs file
+  e | edit      edit dfs file in the current dir
+  --ln          work in symlink mode
+  --cp          work in copy mode
+  --ignore-git  ignore git status
+EOF
+}
+
+git_managed() {
+    # https://stackoverflow.com/questions/2044574/determine-if-directory-is-under-git-control
+    if git rev-parse --is-inside-work-tree &>/dev/null; then
+        echo true
     else
-        return 122
+        echo false
     fi
-
-    _island="${FILEPATH#$prefix}"
-
-    local island_file="${CONFIG_ISLAND_DIR%/}/fonts/$_island"
-    dfm "$island_file" "$FILEPATH" --so
-
-    dfm -i "$island_file" -m "$prefix1/$_island"
 }
 
-
-fullpath() {
-    awk -v target="$1" -v pwd="$PWD" 'BEGIN { t=target;c=pwd;if(substr(t,1,1)!="/"){t=c"/"t;}gsub("/\\.?/","/",t);while(match(t,"/[^./]+/\\.\\./")){t=substr(t,1,RSTART-1)"/"substr(t,RSTART+RLENGTH);}print t; }'
+git_is_dirty() {
+    # https://unix.stackexchange.com/questions/155046/determine-if-git-working-directory-is-clean-from-a-script
+    if [ -z "$(git status --porcelain .)" ]; then
+        echo "false"
+    else
+        echo "true"
+    fi
 }
 
+do_work() {
+    cd "$WORK_DIR"
 
-for i in "$@"; do
-    FILEPATH="$(fullpath "$i")"
+    msg "Work on $PWD"
+    source "$WORK_DIR/.dfs"
 
-    CONFIG_ISLAND_DIR="$HOME/files/config"
-    echo "=> FILEPATH: $FILEPATH"
-    for func in $(compgen -A function); do
-        if [[ ! "$func" =~ dfs_.* ]]; then
-            continue
-        fi
-        eval "$func"
-        exit_status="$?"
-        if [ "_$exit_status" = _122 ]; then
-            continue
-        elif [ "_$exit_status" != _0 ]; then
-            echo "unknown exit status: $exit_status"
-            exit 1
-        fi
+    if [ "x$WORK_MODE" = "xstore" ]; then
+        store
+    else
+        restore
+    fi
+}
+
+cycle_and_work() {
+    local root_dir work_dir
+
+    # parse full path
+    root_dir="$PWD"
+
+    msg "begin to search $root_dir"
+    for f in $(find "$root_dir" -name '.dfs' -type f); do
+        # https://unix.stackexchange.com/questions/138463/do-parentheses-really-put-the-command-in-a-subshell
+        # work in a new sub shell process
+        (
+            WORK_DIR="$(realpath "${f%/.dfs}")" \
+                    GIT_MANAGED="$(git_managed)" \
+                    GIT_DIRTY="$(git_is_dirty)" \
+                    do_work
+        )
     done
-    echo "===="
+}
+
+if [ $# -eq 0 ]; then
+    help
+    exit
+fi
+
+while [ $# -gt 0 ]; do
+    case "$1" in
+        -h|--help) help; exit ;;
+        c|cdfs) create_dotdfs; exit ;;
+        e|edit) edit_dotdfs; exit ;;
+        s|store) WORK_MODE="store" ;;
+        r|restore) WORK_MODE="restore" ;;
+        -*) die "unknown option \`$1'" ;;
+    esac
+    shift
 done
+
+case "$(uname -s)" in
+    Linux*)     KERNEL_NAME=Linux ;;
+    Darwin*)    KERNEL_NAME=Mac ;;
+    CYGWIN*)    KERNEL_NAME=Cygwin ;;
+    MINGW*)     KERNEL_NAME=MinGw ;;
+    MSYS_NT*)   KERNEL_NAME=MSys ;;
+    *)          KERNEL_NAME="UNKNOWN:${unameOut}" ;;
+esac
+
+cycle_and_work

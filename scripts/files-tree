@@ -1,0 +1,36 @@
+#!/usr/bin/env bash
+
+TEMP_FILE="$(mktemp)"
+
+# files list
+cat > "$TEMP_FILE" <<EOF
+files/config
+files/doc
+files/doc/docx
+files/doc/html
+files/doc/md
+files/doc/org
+files/doc/pdf
+files/doc/pptx
+files/doc/xlsx
+files/media
+files/media/audio
+files/media/audio/novel
+files/media/audio/music
+files/media/audio/podcast
+files/media/font
+files/media/pic
+files/media/video
+files/plantform
+files/plantform/android/packages
+files/plantform/gnu-linux/packages
+files/plantform/gnu-linux/system-iso
+files/plantform/macos/packages
+files/plantform/windows/packages
+files/plantform/windows/system-iso
+files/plantform/windows/tools
+files/private
+files/social/qq
+files/social/wechat
+EOF
+

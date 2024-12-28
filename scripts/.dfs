@@ -1,5 +1,0 @@
-### manual
-
-for i in *; do
-    @ "$i" "$HOME/.scripts/${i##*/}"
-done

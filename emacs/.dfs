@@ -1,2 +1,24 @@
-@ "lib" "$HOME/.emacs.d/lib"
-@ ~/files/config/emacs/org-visual-indent.el ~/.emacs.d/org-visual-indent.el
+#!/usr/bin/env bash
+
+set -eu
+
+# Created by dfs
+
+# WORK_DIR := work dir
+# LINK_MODE := CP | LN | DEF
+# GIT_MANAGED := false | true
+#   GIT_DIRTY := false | true
+
+# File to store and restore.
+
+store() {
+    msg "store not implemented"
+
+}
+
+restore() {
+    mkdir -p "$HOME/.emacs.d"
+    for i in *.el; do
+        ln -sf "$PWD/$i" "$HOME/.emacs.d/$i"
+    done
+}
