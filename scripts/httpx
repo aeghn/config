@@ -1,0 +1,149 @@
+#!/usr/bin/env bash
+
+set -eu
+
+LOG_DIR="${CHIN_HTTPX_DIR}/logs"
+
+#!/usr/bin/env bash
+
+set -eu
+
+msg() { echo -e "\033[32m==> \033[0m$(date +%H:%M:%S) ~ $*" >&2; }
+msg2() { echo -e "\033[32m -> \033[0m$(date +%H:%M:%S) ~ $*" >&2; }
+warn() { echo -e "\033[33m==> \033[0m$(date +%H:%M:%S) ~ $*" >&2; }
+warn2() { echo -e "\033[33m -> \033[0m$(date +%H:%M:%S) ~ $*" >&2; }
+error() { echo -e "\033[31m==> $(date +%H:%M:%S) ~ $*\033[0m" >&2; }
+error2() { echo -e "\033[31m -> $(date +%H:%M:%S) ~ $*\033[0m" >&2; }
+die() {
+    error "$*"
+    exit 1
+}
+die2() {
+    error2 "$*"
+    exit 1
+}
+indent() { awk "{print \"$1\", strftime(\"%H:%M:%S\", systime()), \"-\", \$0}"; }
+
+_create() {
+    local req_file
+
+    req_file="$1"
+    mkdir -p "${CHIN_HTTPX_DIR}"
+
+    cat >"$req_file" <<EOF
+set -eu
+
+# ###################################
+# Final Environments
+# ###################################
+
+# is script mode, set it is to 1, then this file is going to be executed as finanl request script.
+SCRIPT_MODE=0
+
+# request method: GET POST PUT DELETE
+METHOD=""
+
+# request url
+REQ_URL=""
+
+# headers
+HEADERS=(
+
+)
+
+# body
+BODY="\$(cat <<EOB
+
+EOB
+)"
+
+EOF
+}
+
+_edit() {
+    local title req_file
+    title="$1"
+
+    if test -f "$title"; then
+        req_file="$(realpath "$title")"
+    else
+        if echo "$title" | grep -E '^httpx-.*.sh$'; then
+            req_file="$(realpath "$title")"
+        else
+            req_file="${CHIN_HTTPX_DIR}/httpx-$(date +%y%m-%d)-${title}.sh"
+        fi
+        if ! test -f "$req_file"; then
+            _create "$req_file"
+        fi
+    fi
+    vim "$req_file"
+}
+
+_exec() {
+    local req_file="$1"
+    if cat "$req_file" | grep '^SCRIPT_MODE=1' >/dev/null; then
+        msg2 "====== begin to exec script directly ====="
+
+        set -x
+        sh "$req_file"
+        msg2 "====== exec script directly finished ====="
+    else
+        . "$req_file"
+        local -a headers
+        headers=()
+        for h in "${HEADERS[@]}"; do
+            headers=("${HEADERS[@]}" -H "$h")
+        done
+        msg2 "====== final curl command. ====="
+        echo curl -v -X "$METHOD" "$REQ_URL" "${headers[@]}" -d "$BODY" | sed 's/^/ | /g'
+        msg2 "====== final curl command finished. ====="
+        curl -v -X "$METHOD" "$REQ_URL" "${headers[@]}" -d "$BODY" 2>&1 | indent " |"
+    fi
+}
+
+_exec_wrapper() {
+    local log_file req_file="$1"
+
+    log_file="${LOG_DIR}/${req_file##*/}--$(date +%y%m-%d-%H%M%S)${RANDOM}.log"
+    mkdir -p "$LOG_DIR"
+
+    msg "开始执行请求任务"
+    _exec "$req_file" | tee "$log_file"
+    msg "输出文件为 $log_file"
+}
+
+_list() {
+    cd ${CHIN_HTTPX_DIR}
+    ls -lh httpx*sh
+}
+
+_help() {
+    cat <<EOF
+HTTPX_DIR: ${CHIN_HTTPX_DIR}
+
+e edit <file>
+x exec <file>
+l ls list
+EOF
+}
+
+if [ $# -eq 0 ]; then
+    _help
+fi
+
+while [ $# -gt 0 ]; do
+    case "$1" in
+    e | edit)
+        _edit "$2"
+        shift
+        ;;
+    x | exec)
+        _exec_wrapper "$2"
+        shift
+        ;;
+    l | ls | list)
+        _list
+        ;;
+    esac
+    shift
+done
