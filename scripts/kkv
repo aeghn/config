@@ -56,7 +56,7 @@ EOF
 )"
 
 FZF_ARGS=(
-    --preview-window=right
+    --preview-window=right:wrap
     --preview="echo {} | sed -z 's/$NL/\n/g'"
     --bind="alt-e:execute(_edit)+abort"
 )
