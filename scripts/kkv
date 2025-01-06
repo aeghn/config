@@ -4,7 +4,7 @@ export KV_FILE="$CHIN_PRIVATE_DIR/kkv/kkv"
 export NL="​⮰​"
 export SEP="==="
 
-export SHELL=bash
+export SHELL="/usr/bin/bash"
 export IS_MSYS="$(uname -o | grep '^Msys' >/dev/null)"
 export IS_WAYLAND=$(test -n "$WAYLAND_DISPLAY" && echo true || echo false)
 
@@ -23,7 +23,7 @@ _edit() {
     cd "${KV_FILE%/*}"
     git add .
     git commit -m "backup"
-    vim "${KV_FILE}" < /dev/tty > /dev/tty
+    vim "${KV_FILE}" </dev/tty >/dev/tty
 }
 export -f _edit
 
@@ -33,13 +33,12 @@ _copy() {
     [ -z "$content" ] && content="$1"
     content="$(echo "$content" | sed 's/^{{//g;s/}}$//g' | sed -z "s/$NL/\n/g")"
 
-    if $IS_WAYLAND; then
-        echo "$content" | wl-copy
-    elif $IS_MSYS; then
+    if $IS_MSYS; then
         echo "$content" >/dev/clipboard
+    elif $IS_WAYLAND; then
+        echo "$content" | wl-copy
     fi
 }
-export -f _copy
 
 AWK_SCRIPT="$(
     cat <<EOF
@@ -60,7 +59,6 @@ FZF_ARGS=(
     --preview-window=right
     --preview="echo {} | sed -z 's/$NL/\n/g'"
     --bind="alt-e:execute(_edit)+abort"
-    --bind="return:execute(_copy {})"
 )
 
 if [ "$1" = "init" ]; then
@@ -68,8 +66,16 @@ if [ "$1" = "init" ]; then
     exit
 fi
 
-while true; do
-    RESULT="$(awk "$AWK_SCRIPT" "$KV_FILE" | fzf "${FZF_ARGS[@]}")"
+RESULT="$(awk "$AWK_SCRIPT" "$KV_FILE" | fzf "${FZF_ARGS[@]}")"
+_copy "$RESULT"
 
-    sleep 0.5
-done
+# For windows
+# ##!/usr/bin/env bash
+# TOOLS_DIR="/d/Tools"
+# export PATH="$TOOLS_DIR/cmd:$TOOLS_DIR/msys64/usr/bin:$PATH"
+# SCRIPT_DIR="$(dirname "$(realpath "$0")")"
+# export CHIN_PRIVATE_DIR="${SCRIPT_DIR%/*}"
+# FILES_DIR="${CHIN_PRIVATE_DIR%/*}"
+# bash -c "$FILES_DIR/config/scripts/kkv"
+#
+# d:/tools/alacritty/alacritty.exe -e "d:/tools/msys64/usr/bin/bash -c d:/files/private/kkv/kkv-wrapper"
