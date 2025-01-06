@@ -1,0 +1,31 @@
+#!/usr/bin/env bash
+
+DOC_DIR="$HOME/files/doc/day-note"
+export SHELL=bash
+
+_edit() {
+    local filename
+
+    filename="$1"
+
+    if echo "$filename" | grep -E '^[0-9]{2}[01][0-9]-[0-3][0-9]' 2>/dev/null; then
+        vim "$filename"
+    else
+        vim "$(date +%y%m-%d)-${filename/ /_/}.md"
+    fi
+}
+export -f _edit
+
+read_list() {
+    cd "$DOC_DIR"
+    ls "$DOC_DIR" | fzf \
+        --preview-window=right \
+        --preview="glow -p -w \$FZF_PREVIEW_COLUMNS {}" \
+        --bind="alt-r:execute(glow {})+abort" \
+        --print-query
+}
+
+FILENAME=$(read_list)
+if [ -n "$FILENAME" ]; then
+    _edit "$FILENAME"
+fi

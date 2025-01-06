@@ -9,7 +9,6 @@ _yymm-dd() {
     fi
 }
 
-
 if [ $# -gt 0 ]; then
     for i in "$@"; do
         _yymm-dd "$i"

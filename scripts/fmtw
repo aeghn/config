@@ -1,0 +1,21 @@
+#!/usr/bin/env bash
+
+set -eu
+
+_fmtw() {
+    local ext="$1" filepath="$2"
+    case "$ext" in
+    sh)
+        shfmt -w -i 4 "$filepath"
+        ;;
+    esac
+}
+
+EXT="$(echo "$1" | awk -F'.' '{if ($0 != $NF) {print $NF}}')"
+FILEPATH="${1}"
+
+if [ -n "$EXT" ]; then
+    _fmtw "$EXT" "$FILEPATH"
+elif cat "$FILEPATH" | head -1 | grep -e "^#!/.*sh$" >/dev/null; then
+    _fmtw "sh" "$FILEPATH"
+fi
