@@ -1,12 +1,23 @@
 #!/usr/bin/env bash
 
-export KV_FILE="$HOME/files/private/simple-kv"
+export KV_FILE="$CHIN_PRIVATE_DIR/kkv/kkv"
 export NL="​⮰​"
 export SEP="==="
 
 export SHELL=bash
 export IS_MSYS="$(uname -o | grep '^Msys' >/dev/null)"
 export IS_WAYLAND=$(test -n "$WAYLAND_DISPLAY" && echo true || echo false)
+
+init() {
+    set -eu
+
+    local k_dir="${KV_FILE%/kkv}"
+    mkdir -p "$k_dir" && cd "$k_dir"
+    git init
+    touch kkv
+    git add .
+    git commit -m "init"
+}
 
 _edit() {
     cd "${KV_FILE%/*}"
@@ -24,8 +35,8 @@ _copy() {
 
     if $IS_WAYLAND; then
         echo "$content" | wl-copy
-elif $IS_MSYS; then
-	echo "$content" > /dev/clipboard
+    elif $IS_MSYS; then
+        echo "$content" >/dev/clipboard
     fi
 }
 export -f _copy
@@ -48,9 +59,14 @@ EOF
 FZF_ARGS=(
     --preview-window=right
     --preview="echo {} | sed -z 's/$NL/\n/g'"
-    --bind="alt-enter:execute(_edit)+abort"
+    --bind="alt-e:execute(_edit)+abort"
     --bind="return:execute(_copy {})"
 )
+
+if [ "$1" = "init" ]; then
+    init
+    exit
+fi
 
 while true; do
     RESULT="$(awk "$AWK_SCRIPT" "$KV_FILE" | fzf "${FZF_ARGS[@]}")"
