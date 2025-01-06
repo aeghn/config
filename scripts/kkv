@@ -23,7 +23,7 @@ _edit() {
     cd "${KV_FILE%/*}"
     git add .
     git commit -m "backup"
-    vim "${KV_FILE}"
+    vim "${KV_FILE}" < /dev/tty > /dev/tty
 }
 export -f _edit
 
