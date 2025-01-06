@@ -5,7 +5,7 @@ export NL="​⮰​"
 export SEP="==="
 
 export SHELL=bash
-export IS_WINDOWS=false
+export IS_MSYS="$(uname -o | grep '^Msys' >/dev/null)"
 export IS_WAYLAND=$(test -n "$WAYLAND_DISPLAY" && echo true || echo false)
 
 _edit() {
@@ -24,6 +24,8 @@ _copy() {
 
     if $IS_WAYLAND; then
         echo "$content" | wl-copy
+elif $IS_MSYS; then
+	echo "$content" > /dev/clipboard
     fi
 }
 export -f _copy
