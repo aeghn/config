@@ -50,6 +50,11 @@
     left: 9px;
 }
 
+#tabbrowser-tabbox {
+    outline: 0.01px solid light-dark(rgba(0,0,0,.3), rgba(255,255,255,.3));
+    box-shadow: 0 2px 6px 0 light-dark(rgba(0,0,0,.2), rgba(0,0,0,.8));
+
+}
 #PersonalToolbar {
     width: 320px !important;
 }
@@ -134,7 +139,7 @@
 }
 
 #sidebar-splitter {
-    width: 0px !important;
+    display: none !important;
 }
 
 #sidebar-box {
