@@ -92,10 +92,10 @@ _exec() {
         local -a headers
         headers=()
         for h in "${HEADERS[@]}"; do
-            headers=("${HEADERS[@]}" -H "$h")
+            headers=("${headers[@]}" -H "$h")
         done
         msg2 "====== final curl command. ====="
-        echo curl -v -X "$METHOD" "$REQ_URL" "${headers[@]}" -d "$BODY" | sed 's/^/ | /g'
+        echo curl -v -X "$METHOD" "$REQ_URL" "${headers[@]}" -d "$BODY" | sed 's/^/  /g'
         msg2 "====== final curl command finished. ====="
         curl -v -X "$METHOD" "$REQ_URL" "${headers[@]}" -d "$BODY" 2>&1 | indent " |"
     fi

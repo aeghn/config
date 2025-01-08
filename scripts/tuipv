@@ -13,7 +13,7 @@ highcat() {
 }
 
 fontcat() {
-    convert -size 800x600 xc:#ffffff -font "$1" -pointsize 48 -gravity center -fill '#000000' \
+    magick -size 800x600 xc:#ffffff -font "$1" -pointsize 48 -gravity center -fill '#000000' \
             -annotate +0+0 'ABCDEFHIJKLMN\nOPQRSTUVWXYZ\nabcdefhijklmn\nopqrstuvwxyz\n1234567890\n!@#$\%\^&*()_+-=\n\\[]{},./<>?:";'"'" \
             -flatten "$CACHE"
     otfinfo --info "$1"
