@@ -53,7 +53,8 @@
 #tabbrowser-tabbox {
     outline: 0.01px solid light-dark(rgba(0,0,0,.3), rgba(255,255,255,.3));
     box-shadow: 0 2px 6px 0 light-dark(rgba(0,0,0,.2), rgba(0,0,0,.8));
-
+    top: -1px;
+    margin: -1px;
 }
 #PersonalToolbar {
     width: 320px !important;
@@ -73,8 +74,8 @@
     display: flex;
     position: absolute !important;
     left: -6px;
-    top: 50px !important;
     height: 30px !important;
+    top: 50px !important;
 }
 
 #urlbar[breakout][breakout-extend] {
@@ -84,13 +85,9 @@
 }
 
 #urlbar-input {
-    text-wrap: wrap !important;
     padding-left: 10px !important;
 }
 
-.urlbar-input-box {
-    padding-left: 10px !important;
-}
 
 #urlbar #urlbar-background,
 #urlbar,
@@ -108,9 +105,7 @@
 
 #PersonalToolbar {
     top: 100px !important;
-
     position: fixed;
-
     transition: var(--transition) !important;
 
     & > * {
