@@ -44,11 +44,11 @@ set -eu
 # File to store and restore.
 
 store() {
-    msg "store not implement, \$PWD"
+    warn "store not implement, \$PWD"
 }
 
 restore() {
-    msg "restore not implement, \$PWD"
+    warn "restore not implement, \$PWD"
 }
 EOF
     else
