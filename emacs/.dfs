@@ -18,7 +18,7 @@ store() {
 
 restore() {
     mkdir -p "$HOME/.emacs.d"
-    for i in *.el; do
-        ln -sf "$PWD/$i" "$HOME/.emacs.d/$i"
+    for i in *; do
+        ln -sf "$WORK_DIR/$i" "$HOME/.emacs.d/$i"
     done
 }

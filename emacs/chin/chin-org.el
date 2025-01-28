@@ -178,3 +178,6 @@
       (dolist (line lines)
         (unless (string-empty-p line)
           (insert "[[" line "]]"))))))
+
+
+(provide 'chin-org)
