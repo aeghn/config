@@ -90,6 +90,7 @@ output "eDP-1" {
     // If the position is unset or results in an overlap, the output is instead placed
     // automatically.
     // position x=2560 y=0
+        variable-refresh-rate
 }
 
 
@@ -328,7 +329,6 @@ binds {
 
     // Suggested binds for running programs: terminal, app launcher, screen locker.
     Mod+Return { spawn "foot"; }
-    Mod+X { spawn "emacs"; }
     Mod+D { spawn "rglauncher"; }
     Super+Alt+L { spawn "swaylock"; }
 
