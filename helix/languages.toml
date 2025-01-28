@@ -1,0 +1,40 @@
+[language-server.astro-ls]
+command = "astro-ls"
+args = [ "--stdio" ]
+config = { "typescript" = { "tsdk" = "/Users/valerio.pescatori/.volta/tools/image/packages/typescript/lib/node_modules/typescript/lib"}, "environment" = "node" }
+
+[language-server.tailwindcss-ls]
+command = "tailwindcss-language-server"
+args = ["--stdio"]
+config = { userLanguages = { astro = "html", "*.astro" = "html" } }
+
+[[language]]
+name = "astro"
+scope = "source.astro"
+injection-regex = "astro"
+file-types = ["astro"]
+roots = ["package.json", "astro.config.mjs"]
+language-servers = [ "astro-ls", "tailwindcss-ls" ]
+auto-format = true
+formatter = { command = "prettier", args = ["--parser", "astro"] }
+
+[[language]]
+name = "typescript"
+auto-format = true
+formatter = { command = "prettier", args = ["--parser", "typescript"] }
+
+[[language]]
+name = "jsx"
+language-servers = [ "tailwindcss-ls", "typescript-language-server" ]
+
+[[language]]
+name = "tsx"
+language-servers = [ "tailwindcss-ls", "typescript-language-server" ]
+
+[[language]]
+name = "html"
+language-servers = [ "tailwindcss-ls", "vscode-html-language-server" ]
+
+[[language]]
+name = "css"
+language-servers = [ "tailwindcss-ls", "vscode-css-language-server" ]
