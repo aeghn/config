@@ -1,0 +1,11 @@
+#!/usr/bin/env bash
+
+preview() {
+    clear
+    cat "$1" | dot -T png | chafa
+}
+
+preview "$1"
+while inotifywait "$1" &>/dev/null; do
+    preview "$1"
+done

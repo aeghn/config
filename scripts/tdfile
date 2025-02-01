@@ -1,0 +1,5 @@
+#!/usr/bin/env bash
+
+set -eu
+
+emacs "$(date +%y%m-%d)-$1"

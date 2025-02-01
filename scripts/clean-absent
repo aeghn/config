@@ -1,0 +1,14 @@
+#!/usr/bin/env bash
+
+set -eu
+
+ORI_FILE="$1"
+TMP_FILE="${1}.clean-absent"
+
+[ -f "$TMP_FILE" ] && rm "$TMP_FILE"
+
+IFS='$'\n
+cat "$ORI_FILE" | awk 'arr[$0]++==0' | bash -c 'while read file; do [ -e "$file" ] && echo "$file"; done' > "$TMP_FILE" 
+
+mv "$ORI_FILE" "${ORI_FILE}.bak"
+mv "$TMP_FILE" "$ORI_FILE"
