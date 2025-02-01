@@ -60,13 +60,15 @@
     "b" 'consult-buffer
     "k" 'kill-buffer
     "f" 'affe-find
-    "d" 'flymake-show-project-diagnostics
+    "d" (lambda () (interactive) (consult-flymake t)) 
     "a" 'eglot-code-actions
     "wh" 'windmove-left
     "wj" 'windmove-down
     "wk" 'windmove-up
     "wl" 'windmove-right
     "wx" 'delete-window
+    "/" 'consult-ripgrep
+    "l" 'consult-line
     ))
 
 (provide 'chin-evil)

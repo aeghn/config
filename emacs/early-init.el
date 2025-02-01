@@ -1,5 +1,4 @@
 (menu-bar-mode -1)
-(scroll-bar-mode -1)
 (setq-default truncate-lines nil)
 (setq truncate-partial-width-windows nil)
 

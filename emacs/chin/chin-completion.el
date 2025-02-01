@@ -37,4 +37,30 @@
   (consult-customize affe-grep :preview-key "M-.")
   )
 
+(use-package consult-xref
+  :defer t
+  :init
+  (setq xref-show-xrefs-function       #'consult-xref
+        xref-show-definitions-function #'consult-xref))
+
+
+(use-package embark
+  :bind
+  (("C-," . embark-act)
+   ("C-." . embark-dwim)
+   ("C-h B" . embark-bindings)
+   :map minibuffer-mode-map
+   ("C-c C-o" . embark-export)  ;; This is the default binding of Ivy-Occur
+   )
+  :config
+  (add-to-list 'display-buffer-alist
+               '("\\`\\*Embark Collect \\(Live\\|Completions\\)\\*"
+                 nil
+                 (window-parameters (mode-line-format . none)))))
+
+(use-package embark-consult
+  :after (embark consult)
+  :hook
+  (embark-consult-mode . consult-preview-at-point-mode))
+
 (provide 'chin-completion)
