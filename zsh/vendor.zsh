@@ -62,7 +62,6 @@ j() {
 ########################################
 ## Aliases
 alias ls='ls --color=auto'
-alias hx='helix'
 alias rga="rg --no-ignore-files --no-ignore --hidden -i"
 alias fda='NO_COLOR=1 fd -I --hidden'
 alias rmi='/usr/bin/rm -I -r'
