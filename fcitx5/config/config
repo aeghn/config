@@ -7,10 +7,13 @@ EnumerateForwardKeys=
 EnumerateBackwardKeys=
 # Skip first input method while enumerating
 EnumerateSkipFirst=False
+# Time limit in milliseconds for triggering modifier key shortcuts
+ModifierOnlyKeyTimeout=250
 
 [Hotkey/TriggerKeys]
-0=Shift+Shift_R
-1=Shift+Shift_L
+0=Shift+Shift_L
+1=Shift+Shift_R
+2=Hangul
 
 [Hotkey/AltTriggerKeys]
 0=Shift_L
@@ -45,6 +48,8 @@ EnumerateSkipFirst=False
 [Behavior]
 # Active By Default
 ActiveByDefault=False
+# Reset state on Focus In
+resetStateWhenFocusIn=No
 # Share Input State
 ShareInputState=No
 # Show preedit in application
@@ -65,8 +70,6 @@ OverrideXkbOption=False
 CustomXkbOption=
 # Force Enabled Addons
 EnabledAddons=
-# Force Disabled Addons
-DisabledAddons=
 # Preload input method to be used by default
 PreloadInputMethod=True
 # Allow input method in the password field
@@ -76,3 +79,8 @@ ShowPreeditForPassword=False
 # Interval of saving user data in minutes
 AutoSavePeriod=30
 
+[Behavior/DisabledAddons]
+0=clipboard
+1=quickphrase
+2=spell
+3=xcb
