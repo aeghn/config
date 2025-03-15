@@ -40,7 +40,7 @@ f_pikaur() {
     
     log "$pa pikaur $ea ${ARGS[@]}"
     
-    $pa python ~/Projects/pikaur/pikaur.py $ea "${ARGS[@]}"
+    $pa pikaur $ea "${ARGS[@]}"
 }
 
 for arg in "$@"; do
