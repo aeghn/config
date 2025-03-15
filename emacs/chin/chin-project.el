@@ -40,22 +40,7 @@
             (insert file "\n"))
         (write-file save-path))))
 
-  (defun chin/project-load-session (&optional dirpath)
-    (interactive)
-    (when-let*
-        ((start-dir (md5 (or dirpath chin/start-dir)))
-         (save-dir (expand-file-name "sessions" user-emacs-directory))
-         (save-path (expand-file-name start-dir save-dir)))
-      (when (file-exists-p save-path)
-        (dolist (f (split-string
-                    (with-temp-buffer
-                      (insert-file-contents save-path)
-                      (buffer-substring-no-properties
-                       (point-min)
-                       (point-max)))
-                    "\r?\n" t))
-          (find-file-noselect f)))))
   (add-hook 'kill-emacs-hook 'chin/project-save-session)
-  (add-hook 'emacs-startup-hook 'chin/project-load-session))
+  )
 
 (provide 'chin-project)

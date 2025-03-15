@@ -30,7 +30,7 @@
 
 ;; Toolbar Settings
 (tool-bar-mode -1)
-
+(scroll-bar-mode -1)
 (setq backup-directory-alist `(("." . "~/.emacs-saves")))
 
 ;; Paren Settings
@@ -62,22 +62,40 @@
 
 
 (setq-default mode-line-format
-                '("["
-                  (:eval (cond
-                          (( eq evil-state 'visual) "V")
-                          (( eq evil-state 'normal) "N")
-                          (( eq evil-state 'insert) "I")
-                          (t "?")))
-                  (:eval (when (buffer-modified-p)  " *"))
-                  "] "
-                  (:eval (abbreviate-file-path default-directory))
-                  "%b %l,%cC %p"
-                  mode-line-format-right-align
-                  " "
-                  (flymake-mode
-                   (flymake-mode-line-title
-                    flymake-mode-line-exception
-                    flymake-mode-line-counters))
-                  mode-line-misc-info))
+              '("["
+                (:eval (cond
+                        (( eq evil-state 'visual) "V")
+                        (( eq evil-state 'normal) "N")
+                        (( eq evil-state 'insert) "I")
+                        (t "?")))
+                (:eval (when (buffer-modified-p)  " *"))
+                "] "
+                (:eval (abbreviate-file-path default-directory))
+                "%b %l,%cC %p"
+                mode-line-format-right-align
+                " "
+                (flymake-mode
+                 (flymake-mode-line-title
+                  flymake-mode-line-exception
+                  flymake-mode-line-counters))
+                mode-line-misc-info))
+(when (boundp '+saved-load-path-during-dump)
+  (global-font-lock-mode +1)
+  (transient-mark-mode +1))
+
+(when (display-graphic-p)
+  (modify-all-frames-parameters
+   '((right-divider-width . 0)
+     (internal-border-width . 10)))
+
+  (dolist (face '(window-divider
+                  window-divider-first-pixel
+                  window-divider-last-pixel))
+    (face-spec-reset-face face)
+    (set-face-foreground face (face-attribute 'default :background)))
+  (set-face-background 'fringe (face-attribute 'default :background))
+  (ignore-errors (set-frame-font "Geist Mono"))
+  )
+
 
 (provide 'chin-ui)

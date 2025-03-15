@@ -64,6 +64,7 @@
 
 (defun chin/is-private-file (filename)
   (and filename (string-match-p ".*/private/.*" filename)))
+
 (defun chin/add-visited-file ()
   (let ((filename (buffer-file-name)))
     (unless (chin/is-private-file filename)
@@ -72,20 +73,25 @@
 (use-package recentf
   :config
   (recentf-mode 1)
-  (defconst chin/hist-files-file "~/.hist-files")
-  (defun chin/read-visited-files ()
-    (dolist (f (split-string (with-temp-buffer (insert-file-contents chin/hist-files-file)
-                                               (buffer-substring-no-properties (point-min)
-                                                                               (point-max))) "\r?\n" t))
-      (recentf-add-file f)))
-  (ignore-errors (chin/read-visited-files))
-  (add-hook 'find-file-hook 'chin/add-visited-file))
+  ;; (defconst chin/hist-files-file "~/.hist-files")
+  ;; (defun chin/read-visited-files ()
+  ;;   (dolist (f (split-string
+  ;;               (with-temp-buffer
+  ;;                 (insert-file-contents chin/hist-files-file)
+  ;;                 (buffer-substring-no-properties (point-min)
+  ;;                                                 (point-max)))
+  ;;               "\r?\n" t))
+  ;;     (recentf-add-file f)))
+  ;; ;; (ignore-errors (chin/read-visited-files))
+  ;; (add-hook 'find-file-hook 'chin/add-visited-file)
+  )
 
 ;; Misc settings
 ;; Auto save files after losing focus.
 ;; https://emacs.stackexchange.com/questions/60970/how-to-replace-focus-out-hook-with-after-focus-change-function-in-emacs-27
-(add-function :after after-focus-change-function (lambda ()
-                                                   (save-some-buffers t)))
+(add-function :after after-focus-change-function
+              (lambda ()
+                (save-some-buffers t)))
 
 (defun chin/today-file (directory)
   (interactive)

@@ -41,16 +41,17 @@
   (require 'evil-org-agenda)
   (evil-org-agenda-set-keys))
 
-;;; Quit corfu on Escape
+;; Quit corfu on Escape
 (with-eval-after-load 'corfu
   (keymap-set corfu-map "C-j" 'corfu-next)
   (keymap-set corfu-map "C-k" 'corfu-previous)
   (evil-define-key 'insert corfu-map (kbd "<escape>") 'corfu-quit))
 
-;;; Leader key
+;; Leader key
 (use-package evil-leader
   :demand t
   :init
+  (setq evil-want-keybinding nil)
   (setq evil-leader/in-all-states 1)
   (global-evil-leader-mode)
   :config

@@ -1,10 +1,19 @@
+(when (boundp '+saved-load-path-during-dump)
+  (message "Starting from a dump file...")
+  (setq evil-want-keybinding nil)
+  (setq load-path +saved-load-path-during-dump))
+
+;; Restore dumped load-path
 (menu-bar-mode -1)
+(scroll-bar-mode -1 ) 
+(tool-bar-mode -1)
+
 (setq-default truncate-lines nil)
 (setq truncate-partial-width-windows nil)
 
 (setq byte-compile-warnings nil)
 
-
+(setq package-quickstart t)
 (add-hook 'emacs-startup-hook
           (lambda ()
             (let ((threshold (* 100 gc-cons-threshold))
@@ -78,9 +87,8 @@
 ;;                         ("images/gud/recstop" . "n:emacs-media-stop")))
 
 
-(setq package-enable-at-startup nil
+(setq 
       file-name-handler-alist nil
       message-log-max 16384
-      gc-cons-threshold (* 1000 gc-cons-threshold)
-      gc-cons-percentage 0.6
+      gc-cons-threshold (* 1024 1024 1024)
       auto-window-vscroll nil)

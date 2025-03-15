@@ -4,19 +4,22 @@
 (setq custom-file "~/.emacs.d/custom.el")
 (load custom-file 'noerror)
 
+(setq evil-want-keybinding nil)
+
 ;;; Loading Tools
 ;;; Platform Settings
 (defconst chin/is-linux   (eq system-type 'gnu/linux))
 (defconst chin/is-windows (memq system-type '(cygwin windows-nt ms-dos)))
 (defconst chin/is-android (string-match-p "-linux-android$" system-configuration))
 
-(require 'package)
 (setq-default tsinghua-mirror
               '(("gnu"   . "https://mirrors.bfsu.edu.cn/elpa/gnu/")
                 ("melpa" . "https://mirrors.bfsu.edu.cn/elpa/melpa/")))
 
+
+
 (setq package-archives tsinghua-mirror)
-(package-initialize)
+;; (package-quickstart-refresh )
 
 (add-to-list 'load-path (expand-file-name "lisp" user-emacs-directory))
 (add-to-list 'load-path (expand-file-name "chin" user-emacs-directory))
@@ -45,16 +48,16 @@
   (save-some-buffers)
   (kill-emacs))
 
-(require 'chin-chinese)
+(require 'chin-ui)
 (require 'chin-completion)
 (require 'chin-edit)
 (require 'chin-evil)
 (require 'chin-file)
+(require 'chin-window-and-buffer)
+(require 'chin-lang-web)
+(require 'chin-chinese)
 (require 'chin-lsp)
 (require 'chin-org)
 (require 'chin-project)
-(require 'chin-ui)
 (require 'chin-vc)
-(require 'chin-window-and-buffer)
-(require 'chin-lang-web)
 (require 'chin-lang-rust)

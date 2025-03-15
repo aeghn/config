@@ -17,7 +17,22 @@
                           (remove #'flymake-eldoc-function eldoc-documentation-functions)))
               ;; Show all eldoc feedback.
               (setq eldoc-documentation-strategy #'eldoc-documentation-compose)))
+  (add-to-list 'eglot-stay-out-of 'eldoc)
   :bind
   ("M-RET" . 'eglot-code-actions))
+
+(use-package eldoc
+  :config
+  (setq
+   eldoc-echo-area-prefer-doc-buffer t
+   eldoc-echo-area-use-multiline-p nil) )
+
+(use-package flymake
+  :config
+  (setq flymake-show-diagnostics-at-end-of-line t))
+
+(use-package eglot-booster
+  :after eglot
+  :config   (eglot-booster-mode))
 
 (provide 'chin-lsp)
