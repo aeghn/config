@@ -69,9 +69,19 @@ alias rm="printf 'Avoid using rm, use rmi instead.\n'"
 alias mpa='mpv --no-video'
 alias aria2n='aria2c --no-conf=true -j4 -x4 -s4'
 alias pc='proxychains -q'
-alias hpx='export HTTP_PROXY=http://127.0.0.1:7890; export HTTPS_PROXY=http://127.0.0.1:7890'
 alias fgt="unset HISTFILE"
 alias td='cd "$CHIN_PG_DIR"'
+
+hpx() {
+    if [ -z "$HTTP_PROXY" ]; then
+        export HTTP_PROXY="http://127.0.0.1:7890"
+	echo "set proxy to $HTTP_PROXY"
+    else
+       export HTTP_PROXY=
+	echo "unset proxy"
+    fi
+    export HTTPS_PROXY="$HTTP_PROXY"
+}
 
 cpci() {
     local fn="$(basename "$1")"
