@@ -86,7 +86,7 @@
 (when (display-graphic-p)
   (modify-all-frames-parameters
    '((right-divider-width . 0)
-     (internal-border-width . 10)))
+     (internal-border-width . 25)))
 
   (dolist (face '(window-divider
                   window-divider-first-pixel
