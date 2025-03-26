@@ -1,17 +1,15 @@
 @namespace url(http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul);
 
 :root {
-    --transition: all var(--trans-dur) ease-out;
-    --bg-color: transparent;
     --toolbar-item-height: 40px;
-
     --buttonbox-left-width: 0px;
     --sdbr-wdt: 300px;
     --left-margin: 40px;
+    --cbg: #eee;
 }
 
 #browser {
-    background: #fff;
+    background: #eee !important;
 }
 
 #navigator-toolbox {
@@ -23,6 +21,7 @@
 }
 
 #sidebar-box {
+    background: #eee !important;
     max-width: 320px !important;
     min-width: 320px !important;
 }
@@ -46,6 +45,7 @@
 
 #nav-bar,
 #urlbar-container {
+    background: #eee !important;
     width: 305px !important;
     left: 9px;
 }
@@ -56,7 +56,9 @@
     top: -1px;
     margin: -1px;
 }
+
 #PersonalToolbar {
+    background: #eee !important;
     width: 320px !important;
 }
 
@@ -98,7 +100,6 @@
     font-size: 12px;
 }
 
-#identity-box,
 #tracking-protection-icon-container {
     display: none;
 }
