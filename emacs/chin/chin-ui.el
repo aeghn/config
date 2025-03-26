@@ -62,14 +62,14 @@
 
 
 (setq-default mode-line-format
-              '("["
+              '(" <"
                 (:eval (cond
                         (( eq evil-state 'visual) "V")
                         (( eq evil-state 'normal) "N")
                         (( eq evil-state 'insert) "I")
                         (t "?")))
                 (:eval (when (buffer-modified-p)  " *"))
-                "] "
+                "> "
                 (:eval (abbreviate-file-path default-directory))
                 "%b %l,%cC %p"
                 mode-line-format-right-align
@@ -86,7 +86,7 @@
 (when (display-graphic-p)
   (modify-all-frames-parameters
    '((right-divider-width . 0)
-     (internal-border-width . 25)))
+     (internal-border-width . 15)))
 
   (dolist (face '(window-divider
                   window-divider-first-pixel
