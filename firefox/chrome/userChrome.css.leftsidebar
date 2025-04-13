@@ -12,10 +12,6 @@
     background: #eee !important;
 }
 
-#navigator-toolbox {
-    max-height: 0px;
-}
-
 #sidebar-header {
     display: none;
 }
@@ -24,6 +20,17 @@
     background: #eee !important;
     max-width: 320px !important;
     min-width: 320px !important;
+    margin-top: 150px;
+    z-index: 1 !important;
+}
+
+#sidebar-splitter {
+    display: none !important;
+}
+
+#navigator-toolbox {
+    z-index: 1 !important;
+    max-height: 0px;
 }
 
 #TabsToolbar {
@@ -43,11 +50,13 @@
     display: none !important;
 }
 
+
 #nav-bar,
 #urlbar-container {
     background: #eee !important;
     width: 305px !important;
     left: 9px;
+    z-index: 999 !important;
 }
 
 #tabbrowser-tabbox {
@@ -70,38 +79,6 @@
     top: 6px !important;
     overflow: visible !important;
     height: 40px !important;
-}
-
-#urlbar-container {
-    display: flex;
-    position: absolute !important;
-    left: -6px;
-    height: 30px !important;
-    top: 50px !important;
-}
-
-#urlbar[breakout][breakout-extend] {
-    width: 240% !important;
-    box-shadow: none !important;
-    transition: 0.2s all;
-}
-
-#urlbar-input {
-    padding-left: 10px !important;
-}
-
-
-#urlbar #urlbar-background,
-#urlbar,
-#urlbar-input-container,
-#searchbar,
-.searchbar-textbox {
-    box-shadow: none !important;
-    font-size: 12px;
-}
-
-#tracking-protection-icon-container {
-    display: none;
 }
 
 #PersonalToolbar {
@@ -134,18 +111,41 @@
     flex: 1;
 }
 
-#sidebar-splitter {
-    display: none !important;
-}
-
-#sidebar-box {
-    margin-top: 150px;
-}
-
 #customization-content-container {
     margin-left: 320px;
 }
 
 #customization-header {
     width: 100vw !important;
+}
+#urlbar-container {
+    display: flex;
+    position: absolute !important;
+    left: -6px;
+    height: 30px !important;
+    top: 50px !important;
+}
+
+#urlbar[breakout][breakout-extend] {
+    width: 240% !important;
+    box-shadow: none !important;
+    transition: 0.2s all;
+}
+
+#urlbar-input {
+    padding-left: 10px !important;
+}
+
+
+#urlbar #urlbar-background,
+#urlbar,
+#urlbar-input-container,
+#searchbar,
+.searchbar-textbox {
+    box-shadow: none !important;
+    font-size: 12px;
+}
+
+#tracking-protection-icon-container {
+    display: none;
 }
