@@ -89,12 +89,12 @@ output "eDP-1" {
     // so to put another output directly adjacent to it on the right, set its x to 1920.
     // If the position is unset or results in an overlap, the output is instead placed
     // automatically.
-    // position x=2560 y=0
+    position x=2560 y=0
         variable-refresh-rate
 }
 
 
-output "HDMI-A-1" {
+output "DP-1" {
     // Uncomment this line to disable this output.
     // off
 
