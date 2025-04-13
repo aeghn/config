@@ -61,3 +61,4 @@
 (require 'chin-project)
 (require 'chin-vc)
 (require 'chin-lang-rust)
+(require 'chin-write)
