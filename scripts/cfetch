@@ -154,7 +154,7 @@ echo_line "32" "Uptime" "$(get_os_uptime)"
 echo
 echo_title "Tools"
 
-echo_line "32" "Hyprland" "$(hyprctl version | grep Tag)"
+echo_line "32" "Niri" "$(niri --version)"
 echo_line "32" "Pacman Pkgs" "$(get_pacman_package_num)"
 echo_line "32" "Cargo Pkgs" "$(cargo install --list | grep "^[^ ]"  | wc -l)"
 echo_line "34" Firefox "$(firefox --version)"

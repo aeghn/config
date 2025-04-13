@@ -1,67 +1,7 @@
-#!/usr/bin/env python
+#!/usr/bin/env bash
 
-import subprocess
-import pprint
-import time
-import signal
-
-processes = []
-
-def prienv(key):
-    output = subprocess.check_output(['prienv', key])
-    return output.decode('utf-8')
-
-def start_commands(commands):
-    for command in commands:
-        print(f"=> start {command}")
-        process = subprocess.Popen(command, shell=True)
-        processes.append(process)
-        print(f"  => pid: {process.pid}")
-
-    for p in processes:
-        p.wait()
-    print("=> all finished")
-
-def start_commands_fast(commands):
-    for command in commands:
-        print(f"=> start {command}")
-        process = subprocess.Popen(command, shell=True)
-        print(f"  => pid: {process.pid}")
-
-    
-def sigint_handler(*args):
-    print()
-    for process in processes:
-        print(f"killing {process.pid}, {process.args}")
-        process.terminate()
-    start_commands_fast(["brightnessctl s 200"])
-
-def start_sudo_commands(command):
-    import getpass
-    sudo_password = getpass.getpass(prompt='sudo password: ')
-    command = ['sudo', '-S'] + command
-    print(f"=> start {command}")
-    p = subprocess.Popen(command, stderr=subprocess.PIPE, stdout=subprocess.PIPE,  stdin=subprocess.PIPE)
-    processes.append(p)
-    print(f"=> pid {p.pid}")
-
-    try:
-        out, err = p.communicate(input=(sudo_password+'\n').encode(),timeout=5)
-    except subprocess.TimeoutExpired:
-        p.kill()
-        
-if __name__ == '__main__':
-    signal.signal(signal.SIGINT, sigint_handler)
-    signal.signal(signal.SIGHUP, sigint_handler) 
-    signal.signal(signal.SIGTERM, sigint_handler)
-
-# create AP
-# AP_NAME="$(prienv CHIN_AP_NAME)"
-# AP_PASS="$(prienv CHIN_AP_PASS)"
-# sudo create_ap wlan0 wlan0 "$AP_NAME" "$AP_PASS" &> /tmp/create_ap.log
-    # start_sudo_commands(["create_ap", "wlan0", "wlan0", "MyAccessPoint", "909090.."])
-    start_commands_fast(["brightnessctl s 0"])
-    start_commands(["systemd-inhibit --what=handle-lid-switch sleep 928800"])
-    
-
-    
+podman pod start pod_postgres
+podman pod start pod_mariadb
+chnots --config ~/.config/chnots/config.toml &>/dev/null &!
+lettura --config ~/Projects/lettura/data/config.example.toml &>/dev/null &!
+code-server &> /tmp/code-server.log &!

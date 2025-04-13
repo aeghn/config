@@ -4,10 +4,6 @@ set -eu
 
 LOG_DIR="${CHIN_HTTPX_DIR}/logs"
 
-#!/usr/bin/env bash
-
-set -eu
-
 msg() { echo -e "\033[32m==> \033[0m$(date +%H:%M:%S) ~ $*" >&2; }
 msg2() { echo -e "\033[32m -> \033[0m$(date +%H:%M:%S) ~ $*" >&2; }
 warn() { echo -e "\033[33m==> \033[0m$(date +%H:%M:%S) ~ $*" >&2; }
@@ -25,7 +21,7 @@ die2() {
 indent() { awk "{print \"$1\", strftime(\"%H:%M:%S\", systime()), \"-\", \$0}"; }
 
 _create() {
-    local req_file
+    local req_file method 
 
     req_file="$1"
     mkdir -p "${CHIN_HTTPX_DIR}"
@@ -33,44 +29,26 @@ _create() {
     cat >"$req_file" <<EOF
 set -eu
 
-# ###################################
-# Final Environments
-# ###################################
+# Available Variables
+# SDIR: Script dir
 
-# is script mode, set it is to 1, then this file is going to be executed as finanl request script.
-SCRIPT_MODE=0
-
-# request method: GET POST PUT DELETE
-METHOD=""
-
-# request url
-REQ_URL=""
-
-# headers
-HEADERS=(
-
-)
-
-# body
-BODY="\$(cat <<EOB
-
-EOB
-)"
+curl -X 
 
 EOF
 }
 
 _edit() {
-    local title req_file
+    local title req_file method
     title="$1"
+    method="$2"
 
     if test -f "$title"; then
         req_file="$(realpath "$title")"
     else
-        if echo "$title" | grep -E '^httpx-.*.sh$'; then
+        if echo "$title" | grep -E '^htp-.*.sh$'; then
             req_file="$(realpath "$title")"
         else
-            req_file="${CHIN_HTTPX_DIR}/httpx-$(date +%y%m-%d)-${title}.sh"
+            req_file="${CHIN_HTTPX_DIR}/htp-$(date +%y%m-%d)-${method}-${title}.sh"
         fi
         if ! test -f "$req_file"; then
             _create "$req_file"
@@ -133,17 +111,21 @@ fi
 
 while [ $# -gt 0 ]; do
     case "$1" in
-    e | edit)
-        _edit "$2"
-        shift
-        ;;
-    x | exec)
-        _exec_wrapper "$2"
-        shift
-        ;;
-    l | ls | list)
-        _list
-        ;;
+	    ep)
+		    _edit "$2" POST
+		    shift
+		    ;;
+	    eg)
+		    _edit "$2" GET
+		    shift
+		    ;;
+	    x | exec)
+		    _exec_wrapper "$2"
+		    shift
+		    ;;
+	    l | ls | list)
+		    _list
+		    ;;
     esac
     shift
 done

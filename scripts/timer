@@ -1,0 +1,31 @@
+#!/usr/bin/env bash
+
+set -eu
+
+TOTAL_DURATION=$1
+
+ELAPSED_TIME=0
+
+if ! command -v notify-send &> /dev/null
+then
+    echo "notify-send could not be found, please install it first."
+    exit
+fi
+
+timer() {
+    while [ $ELAPSED_TIME -lt $TOTAL_DURATION ]; do
+        sleep 180
+
+        ELAPSED_TIME=$((ELAPSED_TIME + 3))
+
+        REMAINING_TIME=$((TOTAL_DURATION - ELAPSED_TIME))
+
+        notify-send "Timer Update" "Elapsed: $ELAPSED_TIME minutes, Remaining: $REMAINING_TIME minutes"
+    done
+
+    notify-send "Timer Finished" "The timer has finished after $TOTAL_DURATION minutes."
+}
+
+
+notify-send "Timer Start" "The timer has started."
+timer

@@ -1,0 +1,22 @@
+#!/usr/bin/env bash
+
+PROJECT_PATH="$(realpath "$1")"
+
+SCRIPT=$(cat <<EOF
+(when-let*
+    ((start-dir (md5 "$PROJECT_PATH"))
+     (save-dir (expand-file-name "sessions" user-emacs-directory))
+     (save-path (expand-file-name start-dir save-dir)))
+  (when (file-exists-p save-path)
+    (dolist (f (split-string
+                (with-temp-buffer
+                  (insert-file-contents save-path)
+                  (buffer-substring-no-properties
+                   (point-min)
+                   (point-max)))
+                "\r?\n" t))
+      (find-file-noselect f))))
+EOF
+         )
+
+emacs -nw --eval "$SCRIPT"
