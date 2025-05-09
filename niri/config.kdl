@@ -211,6 +211,7 @@ spawn-at-startup "wall.sh"
 spawn-at-startup "fcitx5"
 spawn-at-startup "dunst"
 spawn-at-startup "clash"
+spawn-at-startup "/usr/lib/xdg-desktop-portal-gtk --replace"
 
 // Uncomment this line to ask the clients to omit their client-side decorations if possible.
 // If the client will specifically ask for CSD, the request will be honored.
@@ -261,6 +262,12 @@ window-rule {
 window-rule {
     match app-id=r#"^org\.mozilla\.firefox$"#
     match app-id=r#"^firefox$"#
+
+    default-column-width { proportion 1.0; }
+}
+
+window-rule {
+    match app-id=r#"^wlfreerdp$"#
 
     default-column-width { proportion 1.0; }
 }
