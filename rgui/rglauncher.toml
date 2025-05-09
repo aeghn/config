@@ -6,3 +6,6 @@ dir_path="/home/chin/files/others/"
 
 [common]
 icon_paths=["/usr/share/icons/Papirus/64x64/apps", "/usr/share/icons/Papirus/64x64/devices"]
+
+[ui]
+icon_config="icon-config.toml"
