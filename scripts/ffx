@@ -8,9 +8,8 @@ case "$1" in
     f)
         firefox --no-remote &!
         ;;
-    l)
+    c)
 	    export HTTP_PROXY=http://127.0.0.1:7890; export HTTPS_PROXY=http://127.0.0.1:7890
-        /usr/bin/logseq &!
-        #/usr/bin/logseq --enable-features=UseOzonePlatform --ozone-platform=wayland --enable-wayland-ime &!
+	    chromium --enable-features=UseOzonePlatform --ozone-platform=wayland &!
         ;;
 esac
