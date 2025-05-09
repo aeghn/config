@@ -29,7 +29,7 @@
 
 (use-package flymake
   :config
-  (setq flymake-show-diagnostics-at-end-of-line t))
+  (setq flymake-show-diagnostics-at-end-of-line nil))
 
 (use-package eglot-booster
   :after eglot

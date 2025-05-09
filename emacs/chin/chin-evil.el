@@ -17,7 +17,8 @@
          :map evil-visual-state-map
          (("DEL" . delete-region)))
   :config
-  (evil-mode t))
+  (evil-mode t)
+  (setq evil-mode-line-format '(before . mode-line-front-space)))
 
 
 (use-package evil-collection
