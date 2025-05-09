@@ -13,6 +13,7 @@ die()    { error "$*";  exit 1; }
 die2()   { error2 "$*"; exit 1; }
 ask()    { msg "$*"; read -r ""; }
 indent() { sed "s/^/ $(printf "%*s" $1)/g"; }
+bak-mv()    { mv "$1" "${1}.bak-$(date +%y%m%d-%H%M%S)"; }
 
 # https://stackoverflow.com/questions/3466166/how-to-check-if-running-in-cygwin-mac-or-linux
 is_linux() { [ "$KERNEL_NAME" = "Linux" ]; }
