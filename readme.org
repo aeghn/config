@@ -40,6 +40,7 @@
    - =git-filter-repo=, git repo reshape tool.
    - =dufs=, simple file server.
    - [[https://github.com/darkhz/bluetuith][bluetuith]],  A TUI bluetooth manager for Linux.
+   - [[https://github.com/aeghn/restop][restop]], key an eye on the resource, TUI version 
 
    And I have wrote some bash scripts to make life easy, e.g, my dotfiles is orginized by =dfs=, =dfm=.
 
