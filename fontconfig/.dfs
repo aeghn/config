@@ -16,7 +16,7 @@ store() {
 }
 
 restore() {
-	for i in *; do
-		kmap "$WORK_DIR/$i" "$HOME/.config/fcitx5/$i"
-	done	
+	if is_linux; then	
+	    kmap "$WORK_DIR" "$HOME/.config/fontconfig"
+	fi
 }

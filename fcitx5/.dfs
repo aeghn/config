@@ -16,7 +16,7 @@ store() {
 }
 
 restore() {
-    ln_force "./config" "$HOME/.config/fcitx5"
-    ln_force "./share/themes" "$HOME/.local/share/fcitx5/themes"
-    ln_force "../rime" "$HOME/.local/share/fcitx5/rime"
+    kmap "./config" "$HOME/.config/fcitx5"
+    kmap "./share/themes" "$HOME/.local/share/fcitx5/themes"
+    kmap "../rime" "$HOME/.local/share/fcitx5/rime"
 }

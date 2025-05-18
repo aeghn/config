@@ -17,5 +17,5 @@ store() {
 
 restore() {
     bak-mv "$HOME/.config/rgui"
-    ln -sf "$WORK_DIR" "$HOME/.config/rgui"
+    kmap "$WORK_DIR" "$HOME/.config/rgui"
 }

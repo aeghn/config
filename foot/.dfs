@@ -17,6 +17,6 @@ store() {
 
 restore() {
     if is_linux; then
-        ln_force "./foot.ini" "$HOME/.config/foot/foot.ini"
+        kmap "./foot.ini" "$HOME/.config/foot/foot.ini"
     fi
 }
