@@ -1,7 +1,21 @@
 #!/usr/bin/env bash
 
 WORK_MODE="UNKNOWN"
+MAP_MODE=""
+
+# https://stackoverflow.com/questions/3466166/how-to-check-if-running-in-cygwin-mac-or-linux
 KERNEL_NAME=""
+case "$(uname -s)" in
+    Linux*)     KERNEL_NAME=Linux ;;
+    Darwin*)    KERNEL_NAME=Mac ;;
+    CYGWIN*)    KERNEL_NAME=Cygwin ;;
+    MINGW*)     KERNEL_NAME=MinGw ;;
+    MSYS_NT*)   KERNEL_NAME=MSys ;;
+    *)          KERNEL_NAME="UNKNOWN:${unameOut}" ;;
+esac
+is_linux() { [ "$KERNEL_NAME" = "Linux" ]; }
+is_msys() { [ "$KERNEL_NAME" = "MinGw" ] || [ "$KERNEL_NAME" = "MSys" ]; }
+is_windows() { is_msys; }
 
 msg()    { echo -e "\033[32m==> $(date +%H:%M:%S) ~ $*\033[0m"; }
 msg2()   { echo -e "\033[32m -> $(date +%H:%M:%S) ~ $*\033[0m"; }
@@ -13,67 +27,7 @@ die()    { error "$*";  exit 1; }
 die2()   { error2 "$*"; exit 1; }
 ask()    { msg "$*"; read -r ""; }
 indent() { sed "s/^/ $(printf "%*s" $1)/g"; }
-bak-mv()    { mv "$1" "${1}.bak-$(date +%y%m%d-%H%M%S)"; }
-
-# https://stackoverflow.com/questions/3466166/how-to-check-if-running-in-cygwin-mac-or-linux
-is_linux() { [ "$KERNEL_NAME" = "Linux" ]; }
-is_windows() { [ "$KERNEL_NAME" = "MinGw" ] || [ "$KERNEL_NAME" = "MSys" ]; }
-
-ln_force() {
-    local full_filepath
-    full_filepath="$2"
-
-    mkdir -p "${2%/*}"
-    ln -sf "$(realpath "$1")" "$2"
-}
-
-create_dotdfs() {
-    if [ ! -f "./.dfs" ]; then
-        msg "create \`.dfs' file"
-        cat <<EOF > ./.dfs
-#!/usr/bin/env bash
-
-set -eu
-
-# Created by dfs
-
-# WORK_DIR := work dir
-# LINK_MODE := CP | LN | DEF
-# GIT_MANAGED := false | true
-#   GIT_DIRTY := false | true
-
-# File to store and restore.
-
-store() {
-    warn "store not implement, \$PWD"
-}
-
-restore() {
-    warn "restore not implement, \$PWD"
-}
-EOF
-    else
-        warn "\`.dfs' file is created, please update it manually."
-    fi
-}
-
-edit_dotdfs() {
-    create_dotdfs
-    vim "$(realpath ./.dfs)"
-}
-
-help() {
-    cat <<EOF
-dfm --  Dot File Manager
-  s | store     store files
-  r | restore   restore files
-  c | cdfs      create dfs file
-  e | edit      edit dfs file in the current dir
-  --ln          work in symlink mode
-  --cp          work in copy mode
-  --ignore-git  ignore git status
-EOF
-}
+bak-mv() { [ -e "$1" ] && mv "$1" "${1}.bak-$(date +%y%m%d-%H%M%S)" || true; }
 
 git_managed() {
     # https://stackoverflow.com/questions/2044574/determine-if-directory-is-under-git-control
@@ -93,10 +47,90 @@ git_is_dirty() {
     fi
 }
 
+kln() {
+    msg "ln -sT $@"
+    mkdir -p "${2%/*}"
+    ln -sT "$@"
+}
+
+kcp() {
+    msg "cp -rT $@"
+    mkdir -p "${2%/*}"
+    cp -rT "$@"
+}
+
+kmap() {
+    local from to
+    from="$(realpath "$1")"
+    to="$2"
+
+    if [ -e "$to" ]; then
+        warn "DST \`$to' exists."
+    else
+        if [ "$MAP_MODE" = "ln" ]; then
+            kln "$from" "$to"
+        elif  [ "$MAP_MODE" = "cp" ]; then
+            kcp "$from" "$to"
+        else
+            if is_windows; then
+                kcp "$from" "$to"
+            else
+                kln "$from" "$to"
+            fi
+        fi
+
+    fi
+}
+
+create_dotdfs() {
+    if [ ! -f "./.dfs" ]; then
+        msg "create \`.dfs' file"
+        cat <<EOF > ./.dfs
+#!/usr/bin/env bash
+
+set -eu
+
+# Created by dfs
+
+# WORK_DIR := work dir
+# MAP_MODE := CP | LN | DEF
+# GIT_MANAGED := false | true
+#   GIT_DIRTY := false | true
+
+# File to store and restore.
+
+store() {
+    warn "store not implement, \$PWD"
+}
+
+restore() {
+    warn "restore not implement, \$PWD"
+}
+EOF
+    fi
+}
+
+edit_dotdfs() {
+    create_dotdfs
+    vim "$(realpath ./.dfs)"
+}
+
+help() {
+    cat <<EOF
+dfm --  Dot File Manager
+  s | store     store files
+  r | restore   restore files
+  e | edit      edit dfs file in the current dir
+  --ln          work in symlink mode
+  --cp          work in copy mode
+EOF
+}
+
+
 do_work() {
     cd "$WORK_DIR"
 
-    msg "Work on $PWD"
+    msg "CWD $PWD"
     source "$WORK_DIR/.dfs"
 
     if [ "x$WORK_MODE" = "xstore" ]; then
@@ -112,7 +146,7 @@ cycle_and_work() {
     # parse full path
     root_dir="$PWD"
 
-    msg "begin to search $root_dir"
+    msg "SEARCH $root_dir"
     for f in $(find "$root_dir" -name '.dfs' -type f); do
         # https://unix.stackexchange.com/questions/138463/do-parentheses-really-put-the-command-in-a-subshell
         # work in a new sub shell process
@@ -133,22 +167,15 @@ fi
 while [ $# -gt 0 ]; do
     case "$1" in
         -h|--help) help; exit ;;
-        c|cdfs) create_dotdfs; exit ;;
         e|edit) edit_dotdfs; exit ;;
         s|store) WORK_MODE="store" ;;
         r|restore) WORK_MODE="restore" ;;
+        --cp) MAP_MODE="cp" ;;
+        --ln) MAP_MODE="ln" ;;
         -*) die "unknown option \`$1'" ;;
     esac
     shift
 done
 
-case "$(uname -s)" in
-    Linux*)     KERNEL_NAME=Linux ;;
-    Darwin*)    KERNEL_NAME=Mac ;;
-    CYGWIN*)    KERNEL_NAME=Cygwin ;;
-    MINGW*)     KERNEL_NAME=MinGw ;;
-    MSYS_NT*)   KERNEL_NAME=MSys ;;
-    *)          KERNEL_NAME="UNKNOWN:${unameOut}" ;;
-esac
 
 cycle_and_work

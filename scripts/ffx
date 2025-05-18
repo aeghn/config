@@ -3,13 +3,15 @@
 export HOME=$HOME/.fake_home
 
 mkdir -p "$HOME"
+export HTTP_PROXY=http://127.0.0.1:7890; export HTTPS_PROXY=http://127.0.0.1:7890
 
 case "$1" in
     f)
-        firefox --no-remote &!
+        shift
+        firefox --no-remote "$@" &!
         ;;
     c)
-	    export HTTP_PROXY=http://127.0.0.1:7890; export HTTPS_PROXY=http://127.0.0.1:7890
-	    chromium --enable-features=UseOzonePlatform --ozone-platform=wayland &!
+        shift
+        chromium --enable-features=UseOzonePlatform --ozone-platform=wayland "$@" &!
         ;;
 esac

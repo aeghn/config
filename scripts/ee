@@ -1,3 +1,7 @@
 #!/usr/bin/env bash
 
-emacs --dump-file $HOME/.emacs.d/emacs.pdmp -nw "$@"
+if env | grep DISPLAY >/dev/null || env | grep -v SSH_TTY >/dev/null; then
+nohup emacs "$@" &>/dev/null &
+else
+emacs "$@"
+fi

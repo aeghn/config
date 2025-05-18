@@ -1,6 +1,4 @@
 #!/usr/bin/env bash
-#
-#
 
 set -e
 
@@ -12,7 +10,7 @@ export MOZ_ENABLE_WAYLAND=1
 export GRADLE_USER_HOME=$HOME/Supply/gradle
 export ANDROID_SDK_ROOT=$HOME/Supply/Android/Sdk
 export GTK_USE_PORTAL=0
-export  QT_QPA_PLATFORM=wayland 
+export QT_QPA_PLATFORM=wayland
 
 # polkit-gnome
 /usr/lib/polkit-gnome/polkit-gnome-authentication-agent-1 &
@@ -24,6 +22,4 @@ export  QT_QPA_PLATFORM=wayland
 #export NVD_BACKEND=direct
 #export ELECTRON_OZONE_PLATFORM_HINT=auto
 
-
-#Hyprland
-niri
+niri --session
