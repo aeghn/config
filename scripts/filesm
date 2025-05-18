@@ -1,0 +1,87 @@
+#!/usr/bin/env bash
+
+set -eu
+
+# Save `files' list into a temporary file.
+TREE_FILE="$(mktemp -t files-tree-XXXXXXXX)"
+cat <<EOF | sort > "$TREE_FILE"
+./config
+./doc
+./doc/docx
+./doc/html
+./doc/md
+./doc/org
+./doc/pdf
+./doc/pptx
+./doc/xlsx
+./media
+./media/audio
+./media/audio/novel
+./media/audio/music
+./media/audio/podcast
+./media/font
+./media/pic
+./media/video
+./plantform
+./plantform/android/packages
+./plantform/gnu-linux/packages
+./plantform/gnu-linux/system-iso
+./plantform/macos/packages
+./plantform/windows/packages
+./plantform/windows/system-iso
+./plantform/windows/tools
+./private
+./chnots
+./social/qq
+./social/wechat
+./containers
+./containers/immich
+./containers/postgres
+./containers/tgfiles
+./containers/gitea
+EOF
+
+# Find the existed files.
+EXISTED_FILE="$(mktemp -t files-tree-existed-XXXXXXXX)"
+cat "$TREE_FILE" | sed -z 's/\n/ /g' | xargs ls -d 2>/dev/null | sort >"$EXISTED_FILE"
+
+# Find the non existed files
+COMPARE_FILE="$(mktemp -t files-tree-comp-XXXXXXXX)"
+comm "$TREE_FILE" "$EXISTED_FILE" | awk -F'\t' '{ if (length($1) > 0) {printf("\033[31m%s\033[0m\n", $1)} else if (length($2) > 0) {print $2} else if (length($3) > 0) {print $3} }' > "$COMPARE_FILE"
+
+# Max Depth of the files list.
+MAX_DEPTH=$(cat "$TREE_FILE" | sed 's|[^/]||g' | awk '{print length($0)}' | sort -nr | head -1)
+
+create-files() {
+    cat "$COMPARE_FILE" | fzf --ansi --bind 'alt-enter:execute(echo {}; mkdir -p {})'
+}
+
+show-foreign-files() {
+    find -maxdepth "$MAX_DEPTH" -type d | grep -v -f "$TREE_FILE"
+}
+
+show-help() {
+    cat <<EOF
+c -- create files
+f -- foreign files
+EOF
+}
+
+if [ $# -eq 0 ]; then
+    show-help
+    exit
+fi
+
+case "$1" in
+    c)
+        create-files
+        ;;
+    f)
+        show-foreign-files
+        ;;
+    h)
+        show-help
+        ;;
+esac
+
+rm "$TREE_FILE" "$EXISTED_FILE"
