@@ -1,4 +1,4 @@
-;;; point-stack.el --- Back and forward navigation through buffer locations
+;;; point-stack.el --- Back and forward navigation through buffer locations  -*- lexical-binding: t; -*-
 
 ;; Copyright (c) 2010 Matt Harrison
 ;; Copyright (c) 2011-2014 Dmitry Gutov

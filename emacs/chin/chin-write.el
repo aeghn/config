@@ -1,3 +1,5 @@
+;; -*- lexical-binding: t; -*-
+
 (use-package typst-ts-mode
   :load-path (lambda () (expand-file-name "elpa/typst-ts-mode" user-emacs-directory))
   :custom

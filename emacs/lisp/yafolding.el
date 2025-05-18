@@ -1,4 +1,4 @@
-;;; yafolding.el --- Folding code blocks based on indentation
+;;; yafolding.el --- Folding code blocks based on indentation  -*- lexical-binding: t; -*-
 
 ;; Copyright (C) 2013-2017 Zeno Zeng
 

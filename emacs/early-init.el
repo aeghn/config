@@ -1,3 +1,5 @@
+;; -*- lexical-binding: t; -*-
+
 (when (boundp '+saved-load-path-during-dump)
   (message "Starting from a dump file...")
   (setq evil-want-keybinding nil)

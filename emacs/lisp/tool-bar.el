@@ -1,4 +1,4 @@
-;;; Icons
+;;; Icons  -*- lexical-binding: t; -*-
 ;;; stealed from https://github.com/casouri/lunarymacs/blob/f01edd6b148a1ce89e3cbad90a2ed6fd015e8279/star/deprecated/tool-bar.el
 
 (add-to-list

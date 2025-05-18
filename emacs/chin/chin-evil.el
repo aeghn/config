@@ -35,12 +35,12 @@
   :config
   (global-evil-surround-mode 1))
 
-(use-package evil-org
-  :after (evil org)
-  :demand t
-  :config
-  (require 'evil-org-agenda)
-  (evil-org-agenda-set-keys))
+;; (use-package evil-org
+;;   :after (evil org)
+;;   :demand t
+;;   :config
+;;   (require 'evil-org-agenda)
+;;   (evil-org-agenda-set-keys))
 
 ;; Quit corfu on Escape
 (with-eval-after-load 'corfu
