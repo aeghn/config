@@ -80,8 +80,8 @@ prompt_chin_git_status() {
             '# branch.head'*) # Current branch
                 head="$line[3]"
                 [[ $head == "(detached)" ]] && head="$(git rev-parse --short HEAD)"
-                tag="$(git tag --points-at HEAD 2>&-)"
-                [[ -n "$tag" ]] && head+=" $tag"
+                tag="$(git tag --points-at HEAD --column 2>&-)"
+                [[ -n "$tag" ]] && head+=" ${tag/      /|}"
                 ;;
             '# branch.ab'*) # Divergence from upstream
                 ahead="${line[3]/#+}"
