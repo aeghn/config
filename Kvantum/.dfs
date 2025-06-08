@@ -1,0 +1,21 @@
+#!/usr/bin/env bash
+
+set -eu
+
+# Created by dfs
+
+# WORK_DIR := work dir
+# MAP_MODE := CP | LN | DEF
+# GIT_MANAGED := false | true
+#   GIT_DIRTY := false | true
+
+# File to store and restore.
+
+store() {
+    warn "restore not implement, $PWD"
+}
+
+restore() {
+    bak-mv "$HOME/.config/Kvantum"
+    kmap "$WORK_DIR" "$HOME/.config/Kvantum"
+}
