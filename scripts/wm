@@ -11,6 +11,7 @@ export GRADLE_USER_HOME=$HOME/Supply/gradle
 export ANDROID_SDK_ROOT=$HOME/Supply/Android/Sdk
 export GTK_USE_PORTAL=0
 export QT_QPA_PLATFORM=wayland
+export QT_QPA_PLATFORMTHEME=qt6ct
 
 # polkit-gnome
 /usr/lib/polkit-gnome/polkit-gnome-authentication-agent-1 &

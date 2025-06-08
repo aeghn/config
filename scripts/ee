@@ -1,7 +1,6 @@
 #!/usr/bin/env bash
-
-if env | grep DISPLAY >/dev/null || env | grep -v SSH_TTY >/dev/null; then
-nohup emacs "$@" &>/dev/null &
+if env | grep DISPLAY >/dev/null; then
+    nohup emacs "$@" &>/dev/null &
 else
-emacs "$@"
+    emacs -nw "$@"
 fi
