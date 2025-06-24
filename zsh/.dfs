@@ -44,9 +44,16 @@ EOF
 }
 
 restore_msys2() {
-    cat <<EOF
+    cat <<EOF > /d/chin-home/.zshrc
 export CHIN_PG_DIR="/f/playground-data"
 export CHIN_FILES_DIR="/d/files"
+export LANG=en_US.UTF-8
+export LC_CTYPE="en_US.UTF-8"
+export LC_NUMERIC="en_US.UTF-8"
+export LC_TIME="en_US.UTF-8"
+export LC_COLLATE="en_US.UTF-8"
+export LC_MONETARY="en_US.UTF-8"
+export LC_MESSAGES="en_US.UTF-8"
 source "$DFS_DIR/init.zsh"
 source "$DFS_DIR/tools.zsh"
 source "$DFS_DIR/msys2.zsh"

@@ -5,6 +5,7 @@ _yymm-dd() {
     local prefix=$(date +"%y%m-%d" -d "@$(stat -c "%Y" "$fn")")
 
     if [[ ! "$fn" =~ ${prefix}* ]]; then
+        echo "-> $fn ${prefix}-${fn}"
         mv "$fn" "${prefix}-${fn}"
     fi
 }

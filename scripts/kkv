@@ -34,9 +34,9 @@ _copy() {
     content="$(echo "$content" | sed 's/^{{//g;s/}}$//g' | sed -z "s/$NL/\n/g")"
 
     if $IS_MSYS; then
-        echo "$content" >/dev/clipboard
+        echo -n "$content" >/dev/clipboard
     elif $IS_WAYLAND; then
-        echo "$content" | wl-copy
+        echo -n "$content" | wl-copy
     fi
 }
 
