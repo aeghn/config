@@ -4,29 +4,21 @@
 ## Go Settings
 export GOPROXY=https://proxy.golang.com.cn,direct
 
-
 ## Python Settings
 export PIP_CACHE_DIR=$CHIN_CACHE_DIR/.pip-cache
 alias load-conda='[ -f /opt/miniconda3/etc/profile.d/conda.sh ] && source /opt/miniconda3/etc/profile.d/conda.sh'
 
 
 ## Node Settings
-export NODE_PATH=$CHIN_CACHE_DIR/node_modules
-[ -d "$HOME/vendor/node_modules/bin/" ] && export PATH=$HOME/vendor/node_modules/bin:$PATH
-
 # pnpm
 export PNPM_HOME="$HOME/.local/share/pnpm"
-case ":$PATH:" in
-    *":$PNPM_HOME:"*) ;;
-    *) export PATH="$PNPM_HOME:$PATH" ;;
-esac
 # pnpm end
 
 
 ## Rust Settings
 export RUSTUP_DIST_SERVER="https://rsproxy.cn"
 export RUSTUP_UPDATE_ROOT="https://rsproxy.cn/rustup"
-[ -d ~/.cargo/bin ] && export PATH=$HOME/.cargo/bin:$PATH
+[ -d ~/.cargo/bin ] && inspath "$HOME/.cargo/bin"
 
 ########################################
 ### Tool Settings
@@ -68,34 +60,28 @@ alias rmi='/usr/bin/rm -I -r'
 alias rm="printf 'Avoid using rm, use rmi instead.\n'"
 alias mpa='mpv --no-video'
 alias aria2n='aria2c --no-conf=true -j4 -x4 -s4'
-alias pc='proxychains -q'
 alias fgt="unset HISTFILE"
-alias td='cd "$CHIN_PG_DIR"'
+alias pd='cd "$CHIN_PG_DIR"'
 
 hpx() {
     if [ -z "$HTTP_PROXY" ]; then
         export HTTP_PROXY="http://127.0.0.1:7890"
-	echo "set proxy to $HTTP_PROXY"
+        echo "set proxy to $HTTP_PROXY"
     else
-       export HTTP_PROXY=
-	echo "unset proxy"
+        export HTTP_PROXY=
+        echo "unset proxy"
     fi
     export HTTPS_PROXY="$HTTP_PROXY"
 }
 
-cpci() {
-    local fn="$(basename "$1")"
-    cp -r "$1" "$CHIN_PG_DIR/0-$fn"
-}
-
-cptd() {
+cppd() {
     local fn="$(basename "$1")"
 
     cp -r "$1" "$CHIN_PG_DIR/$(date -u +%y%m-%d)-${fn}"
 }
 
-if $_CHIN_IS_MSYS2; then
-    alias rg="rg --path-separator //"
-    alias jdk8='export JAVA_HOME=/D/Tools/cmd/data/corretto-1.8.0/; export PATH=/D/Tools/cmd/data/corretto-1.8.0/bin:$PATH'
-    alias jdk17='export JAVA_HOME=/d/Tools/jdks/corretto-17; export PATH=/d/Tools/jdks/corretto-17/bin:$PATH'
-fi
+# Read Private config
+chin-prvt() {
+    source "$CHIN_PRIVATE_ENV"
+    echo "$1"
+}

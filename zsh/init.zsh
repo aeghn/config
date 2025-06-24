@@ -1,5 +1,14 @@
 #### Pure Zsh Only Configuration
 
+[ -f "$HOME/.profile" ] && source $HOME/.profile
+
+export CHIN_PRIVATE_DIR=$CHIN_FILES_DIR/private
+export CHIN_PRIVATE_ENV=$CHIN_PRIVATE_DIR/private-envs
+
+export CHIN_CACHE_DIR="${XDG_CACHE_HOME:-$HOME/.cache}"
+export CHIN_CONFIG_DIR="${CHIN_FILES_DIR}/config"
+export CHIN_ZSH_CACHE_DIR="${CHIN_CACHE_DIR}/zsh"
+
 autoload -U add-zsh-hook
 
 ########################################
@@ -94,16 +103,16 @@ add-zsh-hook -Uz chpwd osc7
 ########################################
 ### Frame
 ########################################
-fpath=("$ZSH_CONFIG_DIR/functions" "$fpath[@]")
+fpath=("$CHIN_CONFIG_DIR/zsh/functions" "$fpath[@]")
 autoload -Uz promptinit
 promptinit
+prompt chin
 
 ## To list all available prompt themes by: prompt -l
-if [ -f "$ZSH_CONFIG_DIR/functions/prompt_chin_setup" ]; then
-    prompt chin
-else
-    export PROMPT="%(?..%F{red}[%?]%f )%(1j.%F{cyan}(%j)%f .)%B%F{yellow}%n%f%b at %B%F{blue}%m%f%b in %B%F{green}%~%f%b${prompt_newline}> "
-fi
+# if [ -f "$ZSH_CONFIG_DIR/functions/prompt_chin_setup" ]; then
+# else
+#    export PROMPT="%(?..%F{red}[%?]%f )%(1j.%F{cyan}(%j)%f .)%B%F{yellow}%n%f%b at %B%F{blue}%m%f%b in %B%F{green}%~%f%b${prompt_newline}> "
+# fi
 
 # Clear Buffer
 function chin-clear-scrollback-buffer {
@@ -141,12 +150,15 @@ if [[ "$TERM" == (foot*|alacritty|screen*|xterm*|tmux*|putty*|konsole*|gnome*) ]
 fi
 
 
-########################################
-### Title
-########################################
-
-# Read Private config
-chin-prvt() {
-    source "$CHIN_PRIVATE_ENV"
-    echo "$1"
+### PATH Settings
+# insert path
+inspath() {
+    if [ -d "$1" ]; then
+        case ":$PATH:" in
+            *":$1:"*) ;;
+            *) export PATH="$1:$PATH" ;;
+        esac
+    fi
 }
+inspath "$CHIN_CONFIG_DIR/scripts"
+inspath "$CHIN_PRIVATE_DIR/bin"
