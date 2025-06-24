@@ -2,6 +2,7 @@
 
 DOWNLOAD_DIR=/home/chin/Videos/yta
 YTA_FILE=$HOME/.cache/yta_list
+which yt-dlp
 
 # set -x
 
@@ -158,7 +159,7 @@ download_youtube_dl() {
     args+=("$@")
 
     echo "yt-dlp: " "${args[@]}"
-    proxychains -q yt-dlp "${args[@]}"
+    proxychains -q yt-dlp "${args[@]}" --cookies-from-browser chromium:$HOME/.config/chromium
     
 }
 
