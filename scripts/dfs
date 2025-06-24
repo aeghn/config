@@ -1,7 +1,11 @@
 #!/usr/bin/env bash
 
+set -eu
+
 WORK_MODE="UNKNOWN"
 MAP_MODE=""
+
+SCRIPT_FILE="$0"
 
 # https://stackoverflow.com/questions/3466166/how-to-check-if-running-in-cygwin-mac-or-linux
 KERNEL_NAME=""
@@ -13,23 +17,24 @@ case "$(uname -s)" in
     MSYS_NT*)   KERNEL_NAME=MSys ;;
     *)          KERNEL_NAME="UNKNOWN:${unameOut}" ;;
 esac
-is_linux() { [ "$KERNEL_NAME" = "Linux" ]; }
-is_msys() { [ "$KERNEL_NAME" = "MinGw" ] || [ "$KERNEL_NAME" = "MSys" ]; }
+
+is_linux() { [ "$KERNEL_NAME" = "Linux" ]; } # TDOC: check if linux
+is_msys() { [ "$KERNEL_NAME" = "MinGw" ] || [ "$KERNEL_NAME" = "MSys" ]; } # TDOC: check if msys2
 is_windows() { is_msys; }
 
-msg()    { echo -e "\033[32m==> $(date +%H:%M:%S) ~ $*\033[0m"; }
+msg()    { echo -e "\033[32m==> $(date +%H:%M:%S) ~ $*\033[0m"; } # TDOC: msg
 msg2()   { echo -e "\033[32m -> $(date +%H:%M:%S) ~ $*\033[0m"; }
-warn()   { echo -e "\033[33m==> $(date +%H:%M:%S) ~ $*\033[0m"; }
+warn()   { echo -e "\033[33m==> $(date +%H:%M:%S) ~ $*\033[0m"; } # TDOC: warn
 warn2()  { echo -e "\033[33m -> $(date +%H:%M:%S) ~ $*\033[0m"; }
 error()  { echo -e "\033[31m==> $(date +%H:%M:%S) ~ $*\033[0m"; }
 error2() { echo -e "\033[31m -> $(date +%H:%M:%S) ~ $*\033[0m"; }
-die()    { error "$*";  exit 1; }
+die()    { error "$*";  exit 1; } # TDOC: die
 die2()   { error2 "$*"; exit 1; }
-ask()    { msg "$*"; read -r ""; }
+ask()    { msg "$*"; read -r ""; } # TDOC: ask for prompt, and return the value
 indent() { sed "s/^/ $(printf "%*s" $1)/g"; }
-bak-mv() { [ -e "$1" ] && mv "$1" "${1}.bak-$(date +%y%m%d-%H%M%S)" || true; }
+bak-mv() { [ -e "$1" ] && mv "$1" "${1}.bak-$(date +%y%m%d-%H%M%S)" || true; } # TDOC backup something by mv it
 
-git_managed() {
+git_managed() { # TDOC: check if current dir is in git managed
     # https://stackoverflow.com/questions/2044574/determine-if-directory-is-under-git-control
     if git rev-parse --is-inside-work-tree &>/dev/null; then
         echo true
@@ -38,7 +43,7 @@ git_managed() {
     fi
 }
 
-git_is_dirty() {
+git_is_dirty() { # TDOC: check if current git repo is dirty
     # https://unix.stackexchange.com/questions/155046/determine-if-git-working-directory-is-clean-from-a-script
     if [ -z "$(git status --porcelain .)" ]; then
         echo "false"
@@ -47,19 +52,19 @@ git_is_dirty() {
     fi
 }
 
-kln() {
+kln() { # TDOC: ln -sT $1 $2
     msg "ln -sT $@"
     mkdir -p "${2%/*}"
     ln -sT "$@"
 }
 
-kcp() {
+kcp() { # TDOC: cp -rT $1 $2
     msg "cp -rT $@"
     mkdir -p "${2%/*}"
     cp -rT "$@"
 }
 
-kmap() {
+kmap() { # TDOC: try to map by using kcp or kln
     local from to
     from="$(realpath "$1")"
     to="$2"
@@ -82,20 +87,26 @@ kmap() {
     fi
 }
 
+
+get_tdoc() {
+    awk '{if ($0 ~ "# TDOC: " && $0 ~ /^[a-z]/) {sub(/\(.*?TDOC: /, ": "); print "#", $0}}' "$SCRIPT_FILE"
+    sed -z 's/\\\n/ /g' "$SCRIPT_FILE" | grep do_work | grep -Eo '[A-Z_]+=' | sed 's/^/# /g;s/=//g'
+}
+
+TDOC_BEGIN="######### TDOC_BEGIN"
+TDOC_END="######## TDOC_END"
 create_dotdfs() {
-    if [ ! -f "./.dfs" ]; then
-        msg "create \`.dfs' file"
-        cat <<EOF > ./.dfs
+    msg "create \`.dfs' file"
+    cat <<EOF > ./.dfs
 #!/usr/bin/env bash
 
 set -eu
 
 # Created by dfs
 
-# WORK_DIR := work dir
-# MAP_MODE := CP | LN | DEF
-# GIT_MANAGED := false | true
-#   GIT_DIRTY := false | true
+${TDOC_BEGIN}
+$(get_tdoc)
+${TDOC_END}
 
 # File to store and restore.
 
@@ -107,11 +118,14 @@ restore() {
     warn "restore not implement, \$PWD"
 }
 EOF
-    fi
 }
 
 edit_dotdfs() {
-    create_dotdfs
+    if [ ! -f "./.dfs" ]; then
+        create_dotdfs
+    else
+        sed -z -i "s|$TDOC_BEGIN.*$TDOC_END|$TDOC_BEGIN\n$(get_tdoc|sed -z 's/\n/::newline::/g')$TDOC_END|g;s/::newline::/\n/g" "./.dfs"
+    fi
     vim "$(realpath ./.dfs)"
 }
 
@@ -121,6 +135,7 @@ dfm --  Dot File Manager
   s | store     store files
   r | restore   restore files
   e | edit      edit dfs file in the current dir
+  tdoc          show available tools
   --ln          work in symlink mode
   --cp          work in copy mode
 EOF
@@ -128,14 +143,16 @@ EOF
 
 
 do_work() {
-    cd "$WORK_DIR"
+    cd "$DFS_DIR"
 
     msg "CWD $PWD"
-    source "$WORK_DIR/.dfs"
+    source "$DFS_DIR/.dfs"
 
     if [ "x$WORK_MODE" = "xstore" ]; then
+        msg2 "Store"
         store
     else
+        msg2 "Restore"
         restore
     fi
 }
@@ -151,9 +168,7 @@ cycle_and_work() {
         # https://unix.stackexchange.com/questions/138463/do-parentheses-really-put-the-command-in-a-subshell
         # work in a new sub shell process
         (
-            WORK_DIR="$(realpath "${f%/.dfs}")" \
-                    GIT_MANAGED="$(git_managed)" \
-                    GIT_DIRTY="$(git_is_dirty)" \
+            DFS_DIR="$(realpath "${f%/.dfs}")" \
                     do_work
         )
     done
@@ -170,6 +185,7 @@ while [ $# -gt 0 ]; do
         e|edit) edit_dotdfs; exit ;;
         s|store) WORK_MODE="store" ;;
         r|restore) WORK_MODE="restore" ;;
+        tdoc) get_tdoc; exit ;;
         --cp) MAP_MODE="cp" ;;
         --ln) MAP_MODE="ln" ;;
         -*) die "unknown option \`$1'" ;;
