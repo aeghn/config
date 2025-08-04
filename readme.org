@@ -56,6 +56,7 @@
    - *SingleFile*: SingleFile helps you to save a complete page (with CSS, images, etc.) into a single HTML file.
    - *block-images*: Blocks all images on webpage.
    - *[[https://github.com/fishjar/kiss-translator][kiss-translator]]*: A simple, open source bilingual translation extension & Greasemonkey script
+   - *[[https://github.com/simov/markdown-viewer#table-of-contents][markdown-viewer]]*:  Markdown Viewer / Browser Extension 
 
 ** Emacs
    [[file:_data/preview/emacs.png]]
