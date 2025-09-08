@@ -16,6 +16,14 @@ store() {
 }
 
 restore() {
+  if is_msys; then
+    local helix_dir="/c/Users/$USER/AppData/Roaming/helix/"
+    for i in *; do
+      cp  -r "$i" "$helix_dir"
+    done
+  donot_touch "$helix_dir"
+  else
     rm -rf "$HOME/.config/helix"
-    ln -sfT "$WORK_DIR" "$HOME/.config/helix"
+    ln -sfT "$DFS_DIR" "$HOME/.config/helix"
+  fi
 }
