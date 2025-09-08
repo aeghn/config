@@ -49,6 +49,7 @@ j() {
 [ -f /usr/share/fzf/key-bindings.zsh ] && . /usr/share/fzf/key-bindings.zsh
 
 
+
 ########################################
 ### Alias Settings
 ########################################

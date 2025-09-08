@@ -1,5 +1,8 @@
 #### Pure Zsh Only Configuration
 
+# zprof#1
+# zmodload zsh/zprof
+
 [ -f "$HOME/.profile" ] && source $HOME/.profile
 
 export CHIN_PRIVATE_DIR=$CHIN_FILES_DIR/private
@@ -38,10 +41,24 @@ WORDCHARS='*?_-[]~&;!#$%^(){}<>|'
 ########################################
 ### Completion
 ########################################
-autoload -Uz compinit bashcompinit
+# https://gist.github.com/ctechols/ca1035271ad134841284
+() {
+    # http://zsh.sourceforge.net/Doc/Release/Options.html#Scripts-and-Functions
+    setopt LOCAL_OPTIONS extendedglob nullglob
+    autoload -Uz compinit
+    # http://zsh.sourceforge.net/Doc/Release/Expansion.html#Glob-Qualifiers
+    # http://zsh.sourceforge.net/Doc/Release/Conditional-Expressions.html#Conditional-Expressions
+    ZSH_COMPDUMP="$CHIN_ZSH_CACHE_DIR/zcompdump"
+    if [[ ! -e "${ZSH_COMPDUMP}" || -n ${~"${ZSH_COMPDUMP}"}(#qmh+24) ]]; then
+	    echo "${ZSH_COMPDUMP}" 
+	    rm -f "$ZSH_COMPDUMP"
+	    compinit -d "${ZSH_COMPDUMP}" 
+    else
+	    compinit -C -d "${ZSH_COMPDUMP}"
+    fi
 
-compinit
-bashcompinit
+}
+
 
 export EDITOR=vim
 
@@ -162,3 +179,6 @@ inspath() {
 }
 inspath "$CHIN_CONFIG_DIR/scripts"
 inspath "$CHIN_PRIVATE_DIR/bin"
+
+# zprof#2
+# zprof
