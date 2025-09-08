@@ -20,9 +20,16 @@ export RUSTUP_DIST_SERVER="https://rsproxy.cn"
 export RUSTUP_UPDATE_ROOT="https://rsproxy.cn/rustup"
 [ -d ~/.cargo/bin ] && inspath "$HOME/.cargo/bin"
 
+## Android
+export ANDROID_HOME="$HOME/Android/Sdk" 
+export NDK_HOME="$ANDROID_HOME/ndk/$(ls -1 $ANDROID_HOME/ndk)"
+export JAVA_HOME=/opt/android-studio/jbr
+
 ########################################
 ### Tool Settings
 ########################################
+inspath "$HOME/.local/bin"
+
 ## Fzf Utils
 j() {
     local folder option
