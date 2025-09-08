@@ -1,24 +1,102 @@
-[include]
-path = ~/files/private/git/gitconfig
+# https://blog.gitbutler.com/how-git-core-devs-configure-git
+
+[core]
+excludesfile = ~/.gitignore
+
+[init]
+defaultBranch = main
+
+[diff]
+algorithm = histogram
+colorMoved = plain
+# The diff.renames option will detect if a file has been renamed, which is generally good (if slightly more expensive) and diff.mnemonicPrefix will replace the a/ and b/ in your diff header output with where the diff is coming from, so i/ (index), w/ (working directory) or c/ commit.
+mnemonicPrefix = true
+renames = true
+
+tool = kdiff3
+
+[difftool]
+prompt = false
+keepBackup = false
+trustExitCode = false
+
+[merge]
+tool = kdiff3
+conflictstyle = diff3
+
+[mergetool]
+prompt = false
+keepBackup = false
+keepTemporaries = false
+
+[branch]
+sort = -committerdate
+
+[tag]
+# treating dotted version numbers as a series of integer values for sorting purposes
+sort = version:refname
+
+[push]
+default = simple
+#  If the upstream is not set, it will automatically set it.
+autoSetupRemote = true
+# push all tags that you have locally that aren’t on the server, every time you push anything.
+followTags = true
+
+[fetch]
+# Really all that this does is make sure we delete origin/blah if blah is deleted on the server, and also do it automatically for all the remotes that we have configured.
+prune = true
+pruneTags = true
+all = true
+
+[help]
+autocorrect = prompt
+
+[commit]
+verbose = true
+
+[rerere]
+enabled = true
+autoupdate = true
+
+
+[rebase]
+autoSquash = true
+autoStash = true
+updateRefs = true
+
 [filter "lfs"]
 clean = git-lfs clean -- %f
 smudge = git-lfs smudge -- %f
 process = git-lfs filter-process
 required = true
 
-[core]
-pager = delta
+[alias]
+lg = log --all --graph --pretty=format:'%C(auto)%h%Creset %C(cyan)%an%Creset %C(green)%ad%Creset %C(yellow)%d%Creset%n%s%n' --date=format:'%Y-%m-%d'
+  # `git log` with patches shown with difftastic.
+  dl = -c diff.external=difft log -p --ext-diff
 
-[interactive]
-diffFilter = delta --color-only
+  # Show the most recent commit with difftastic.
+  ds = -c diff.external=difft show --ext-diff
 
-[delta]
-navigate = true
-light = true
-side-by-side = true
+  # `git diff` with difftastic.
+  dft = -c diff.external=difft diff
+  ignored = !git ls-files -v | grep '^[[:lower:]]'
+  conflict = !git ls-files -u | awk '{print $4}' | sort -u
+  untrack = rm -r --cached
+  dupes = !git ls-tree -r HEAD | cut -c 13- | sort | uniq -D -w 40
 
-[merge]
-conflictstyle = diff3
-
-[diff]
-colorMoved = default
+[color]
+  ui = true
+  diff = auto
+  status = auto
+  grep = auto
+[color "branch"]
+  current = yellow reverse
+  local = yellow
+  remote = green
+[color "diff"]
+  meta = yellow bold
+  old = red bold
+  new = green bold
+  frag = magenta bold
