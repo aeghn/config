@@ -1,0 +1,20 @@
+#!/usr/bin/env bash
+
+set -u
+
+HTML_DIR="${CHIN_FILES_DIR}/doc/html"
+CUR_TIME="$(date +%y%m%d-%H%M%S)"
+TMP_FILE="$CUR_TIME-$(uuidgen).html"
+
+
+mkdir -p "$HTML_DIR"
+cd "$HTML_DIR" || exit 1
+
+# https://github.com/Y2Z/monolith#dynamic-content
+chromium --headless --window-size=1920,1080 --run-all-compositor-stages-before-draw --virtual-time-budget=9000 --incognito --dump-dom "$1" |  monolith - -I -b "$1" -o "$TMP_FILE"
+
+TITLE=$(cat "$TMP_FILE" | grep -Eio -e '<title>.*</title>' -e '<h1>.*</h1>' | sed -r 's/<.*>//g' | head -1 | sed 's/ /_/g')
+if [ "x$TITLE" != "x" ]; then
+	mv "$TMP_FILE" "$CUR_TIME-$TITLE"
+	exit
+fi

@@ -4,53 +4,15 @@
 
 set -eu
 
-# Save `files' list into a temporary file.
-TREE_FILE="$(mktemp -t files-tree-XXXXXXXX)"
-cat <<EOF | sort > "$TREE_FILE"
-./ai
-./ai/models
-./config
-./doc
-./doc/docx
-./doc/html
-./doc/md
-./doc/org
-./doc/pdf
-./doc/pptx
-./doc/xlsx
-./media
-./media/audio
-./media/audio/novel
-./media/audio/music
-./media/audio/podcast
-./media/font
-./media/pic
-./media/video
-./plantform
-./plantform/android/packages
-./plantform/gnu-linux/packages
-./plantform/gnu-linux/system-iso
-./plantform/macos/packages
-./plantform/windows/packages
-./plantform/windows/system-iso
-./plantform/windows/tools
-./private
-./chnots
-./social/qq
-./social/wechat
-./containers
-./containers/immich
-./containers/postgres
-./containers/tgfiles
-./containers/gitea
-EOF
-
+TREE_FILE="${CHIN_PRIVATE_DIR}/files-tree"
 
 create-files() {
     local existed_file compare_file
     # Find the existed files.
     existed_file="$(mktemp -t files-tree-existed-XXXXXXXX)"
     cat "$TREE_FILE" | sed -z 's/\n/ /g' | xargs ls -d 2>/dev/null | sort >"$existed_file"
+
+    cd "$CHIN_FILES_DIR"
 
     comm "$TREE_FILE" "$existed_file" \
         | awk -F'\t' '
@@ -69,7 +31,7 @@ create-files() {
 show-foreign-files() {
     local max_depth
     max_depth=$(cat "$TREE_FILE" | sed 's|[^/]||g' | awk '{print length($0)}' | sort -nr | head -1)
-    find -maxdepth "$max_depth" -mindepth 1 -type d \
+    find "$CHIN_FILES_DIR" -maxdepth "$max_depth" -mindepth 1 -type d \
         | grep -v -f "$TREE_FILE" \
         | sort \
         | awk 'NR==1{prev=$0;next} index($0,prev)!=1{print prev; prev=$0} END{print prev}' \
