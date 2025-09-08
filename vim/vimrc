@@ -14,29 +14,65 @@ filetype indent on
 " :help 'backspace'
 set backspace=2
 
-" Emacs like indent key
-function IndentLine()
-  let ofpos = match(getline(line(".")),'\S')
-  if ofpos == -1
-   call setline(line("."), "_")
-   execute "normal! ==Di  "
-   return
-  endif
-
-  let diff = col(".") - ofpos
-  let diff = diff < 1 ? 0 : (diff - 1)
-
-  if diff == 0
-    let command = "normal! =="
-  else
-    let command = "normal! ==" . diff . "l"
-  endif
-  execute command
-endfunction
-
-inoremap <tab> <C-O>:call IndentLine()<CR>
-nnoremap <tab> :call IndentLine()<CR>
-vmap <tab> ==
-
 set laststatus=2
 set statusline=%m%r%w\ %F\ \ %y\ %=\ \ %l/%L,\ %c\ %{&ff}
+
+" kfmt.vim - Format buffer or selection using kfmt
+" Author: Senior DevOps Engineer
+
+" Main formatting function
+function! s:Kfmt(type, ...) range
+    " a:type is the buffer type passed by the user (can be empty)
+    " a:1, a:2, etc. are additional arguments (not used here)
+    
+    " Determine the format type to use
+    " Priority: 1. Explicit argument 2. Buffer filetype 3. Default to 'text'
+    let l:fmt_type = !empty(a:type) ? a:type : &filetype
+    if empty(l:fmt_type)
+        let l:fmt_type = 'text'
+        echo 'No filetype detected, using default format: text'
+    endif
+
+    " Store the selected lines in a temporary variable
+    let l:selected_lines = getline(a:firstline, a:lastline)
+    let l:selected_text = join(l:selected_lines, "\n")
+
+    " Create a temporary file to hold the selection (kfmt supports filename)
+    let l:temp_file = tempname() . '.' . l:fmt_type
+    call writefile(l:selected_lines, l:temp_file)
+
+    " Build the kfmt command
+    let l:cmd = 'kfmt -t ' . shellescape(l:fmt_type) . ' ' . shellescape(l:temp_file)
+
+    " Execute the command and capture output + error
+    let l:formatted_text = systemlist(l:cmd)
+    let l:exit_status = v:shell_error
+
+    " Clean up the temporary file
+    call delete(l:temp_file)
+
+    " Check if kfmt executed successfully
+    if l:exit_status != 0
+        echoerr 'kfmt failed with exit code: ' . l:exit_status
+        echo 'Command: ' . l:cmd
+        echo 'Error output: ' . join(l:formatted_text, "\n")
+        return
+    endif
+
+    " If we get empty output, kfmt might have failed silently
+    if empty(l:formatted_text)
+        echoerr 'kfmt produced no output. Please check if the tool is installed and working.'
+        return
+    endif
+
+    " Replace the selected range with the formatted output
+    execute a:firstline . ',' . a:lastline . 'delete'
+    call append(a:firstline - 1, l:formatted_text)
+
+    echo 'Formatted with kfmt using type: ' . l:fmt_type
+endfunction
+
+" Define the user command
+command! -range -nargs=? Fmt <line1>,<line2>call s:Kfmt(<f-args>)
+" Create a shorter alias as per your request
+" command! -range -nargs=? fmt <line1>,<line2>call s:Kfmt(<f-args>)
