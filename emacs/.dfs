@@ -4,7 +4,7 @@ set -eu
 
 # Created by dfs
 
-# WORK_DIR := work dir
+# DFS_DIR := work dir
 # LINK_MODE := CP | LN | DEF
 # GIT_MANAGED := false | true
 #   GIT_DIRTY := false | true
@@ -19,6 +19,6 @@ store() {
 restore() {
     mkdir -p "$HOME/.emacs.d"
     for i in *; do
-        ln -sf "$WORK_DIR/$i" "$HOME/.emacs.d/$i"
+        ln -sf "$DFS_DIR/$i" "$HOME/.emacs.d/$i"
     done
 }

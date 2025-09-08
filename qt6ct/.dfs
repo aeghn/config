@@ -4,7 +4,7 @@ set -eu
 
 # Created by dfs
 
-# WORK_DIR := work dir
+# DFS_DIR := work dir
 # MAP_MODE := CP | LN | DEF
 # GIT_MANAGED := false | true
 #   GIT_DIRTY := false | true
@@ -17,5 +17,5 @@ store() {
 
 restore() {
     bak-mv "$HOME/.config/qt6ct"
-    kmap "$WORK_DIR" "$HOME/.config/qt6ct"
+    kmap "$DFS_DIR" "$HOME/.config/qt6ct"
 }

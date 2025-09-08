@@ -4,7 +4,7 @@ set -eu
 
 # Created by dfs
 
-# WORK_DIR := work dir
+# DFS_DIR := work dir
 # LINK_MODE := CP | LN | DEF
 # GIT_MANAGED := false | true
 #   GIT_DIRTY := false | true
@@ -17,6 +17,6 @@ store() {
 
 restore() {
 	if is_linux; then	
-	    kmap "$WORK_DIR" "$HOME/.config/fontconfig"
+	    kmap "$DFS_DIR" "$HOME/.config/fontconfig"
 	fi
 }
