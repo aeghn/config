@@ -52,6 +52,10 @@ git_is_dirty() { # TDOC: check if current git repo is dirty
     fi
 }
 
+donot_touch() {
+  echo "" > "$1/donot-touch-this-dir-is-owned-by-dfs"
+}
+
 kln() { # TDOC: ln -sT $1 $2
     msg "ln -sT $@"
     mkdir -p "${2%/*}"

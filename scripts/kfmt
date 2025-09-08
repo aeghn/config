@@ -1,0 +1,109 @@
+#!/usr/bin/env bash
+
+set -eu
+
+env
+exit
+
+declare -a DSTS=()
+WRITE_FLAG=false
+
+ff_sh() {
+    local filepath="$1"
+    if $WRITE_FLAG; then
+        shfmt -w -i 4 "$filepath"
+    else
+        shfmt -i 4 "$filepath"
+    fi
+}
+
+ff_py() {
+    local filepath="$1"
+    if $WRITE_FLAG; then
+        ruff format --no-cache "$filepath"
+    else
+        ruff format --preview --no-cache "$filepath"
+    fi
+}
+
+ff_json() {
+    local filepath="$1"
+    if $WRITE_FLAG; then
+        yq -P -o json -i "$filepath"
+    else
+        yq -P -o json "$filepath"
+    fi
+}
+
+ff_yaml() {
+    local filepath="$1"
+    if $WRITE_FLAG; then
+        yq -P -o yaml -i "$filepath"
+    else
+        yq -P -o yaml "$filepath"
+    fi
+}
+
+ff_xml() {
+    local filepath="$1"
+    if $WRITE_FLAG; then
+        yq -P -o xml -i "$filepath"
+    else
+        yq -P -o xml "$filepath"
+    fi
+}
+
+ff_toml() {
+    local filepath="$1"
+    if $WRITE_FLAG; then
+        yq -P -o toml -i "$filepath"
+    else
+        yq -P -o toml "$filepath"
+    fi
+}
+
+kfmt_ext_path() {
+    local ext="$1" filepath="$2"
+    case "$ext" in
+    sh) ff_sh "$filepath" ;;
+    py) ff_py "$filepath" ;;
+    json) ff_json "$filepath" ;;
+    toml) ff_toml "$filepath" ;;
+    xml) ff_xml "$filepath" ;;
+    esac
+}
+
+format_file() {
+    local ext="$(echo "$1" | awk -F'.' '{if ($0 != $NF) {print $NF}}')"
+
+    if [ -n "$ext" ]; then
+        kfmt_ext_path "$ext" "$1"
+    elif cat "$1" | head -1 | grep -e "^#!/.*sh$" >/dev/null; then
+        kfmt_ext_path "sh" "$1"
+    fi
+}
+
+while [ $# -gt 0 ]; do
+    case "$1" in
+    '-w') WRITE_FLAG=true ;;
+    '-t')
+        shift
+        FILE_TYPE="$1"
+        ;;
+    -*)
+        echo "Unknown Option $1"
+        exit 1
+        ;;
+    *) DSTS=("${DSTS[@]}" "$1") ;;
+    esac
+    shift
+done
+
+if [ "x$FILE_TYPE" != "x" ]; then
+    kfmt_ext_path "$FILE_TYPE" "${DSTS[0]}"
+    exit
+fi
+
+for dst in "${DSTS[@]}"; do
+    format_file "$dst"
+done
