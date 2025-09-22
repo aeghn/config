@@ -26,7 +26,13 @@ store() {
 }
 
 restore() {
-    local dst="$HOME/.gitconfig2"
+    local dst="$HOME/.gitconfig-pub"
     rm -f "$dst"
     kmap "config" "$dst"
+    cat <<EOF >> $HOME/.gitconfig
+
+[include]
+path = ~/.gitconfig-pub
+
+EOF
 }
