@@ -76,19 +76,22 @@
     (set-face-foreground face (face-attribute 'default :background)))
   (set-face-background 'fringe (face-attribute 'default :background))
   (custom-set-faces
-   '(mode-line ((t (:background "#c8c8c8" :foreground "#000000" :box (:line-width 5 :color "#c8c8c8")))))
-   '(mode-line-inactive ((t (:background "#e6e6e6" :foreground "#000000" :box (:line-width 5 :color 
-   "#e6e6e6"))))))
-  (ignore-errors (set-frame-font "Courier Prime 12")))
+   '(mode-line ((t (:background "#c8c8c8" :foreground "#000000" :slant italic :box (:line-width 5 :color "#c8c8c8")))))
+   '(mode-line-inactive ((t (:background "#e6e6e6" :foreground "#000000" :slant italic :box (:line-width 5 :color
+                                                                                                         "#e6e6e6"))))))
+  (ignore-errors (set-frame-font "Courier Prime 12"))
+  )
 
 ;; mode-line settings
 (use-package minions
   :config
   (minions-mode))
 
+(global-display-line-numbers-mode)
+
 (setq column-number-mode t) ; Show column number in the mode-line
 
-(setq-default frame-title-format "%b (%f)")
+(setq-default frame-title-format "%b [ %f ]")
 
 (global-visual-line-mode t)
 
