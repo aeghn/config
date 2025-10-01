@@ -1,15 +1,17 @@
-paths= [
-    "/usr/share/icons/Papirus/64x64/apps",
-    "/usr/share/icons/Papirus/64x64/devices"
-  ]
+paths = [
+  "/usr/share/icons/Papirus/64x64/apps",
+  "/usr/share/icons/Papirus/64x64/devices",
+]
 
 [alias]
-app-launcher=[
-      "org.codeberg.wangzh.rglauncher"
+app-launcher = ["org.codeberg.wangzh.rglauncher"]
+
+code = [
+  "chrome-obcppbejhdfcplncjdlmagmpfjhmipii-Default",
+  "chrome-nnlippelgfbglbhiccffmnmlnhmbjjpe-default",
+  "code-server",
 ]
 
-code= [
-      "chrome-obcppbejhdfcplncjdlmagmpfjhmipii-Default",
-      "chrome-nnlippelgfbglbhiccffmnmlnhmbjjpe-default",
-      "code-server"
-]
+idea = ["jetbrains-idea-ce"]
+
+"io.dbeaver.DBeaverCommunity" = ["Dbeaver"]
