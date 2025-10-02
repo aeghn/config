@@ -38,8 +38,8 @@ restore_nix() {
 export CHIN_PG_DIR="$HOME/playground"
 export CHIN_FILES_DIR="$HOME/files"
 source "$DFS_DIR/init.zsh"
-source "$DFS_DIR/tools.zsh"
 source "$DFS_DIR/nix.zsh"
+source "$DFS_DIR/tools.zsh"
 EOF
 }
 
@@ -62,7 +62,7 @@ EOF
     echo "" >>"$ZSHRC"
     cat "$DFS_DIR/init.zsh" >>"$ZSHRC"
     echo >>"$ZSHRC"
-    cat "$DFS_DIR/tools.zsh" >>"$ZSHRC"
-    echo >>"$ZSHRC"
     cat "$DFS_DIR/msys2.zsh" >>"$ZSHRC"
+    echo >>"$ZSHRC"
+    cat "$DFS_DIR/tools.zsh" >>"$ZSHRC"
 }
