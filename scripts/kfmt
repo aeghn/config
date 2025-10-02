@@ -2,11 +2,9 @@
 
 set -eu
 
-env
-exit
-
 declare -a DSTS=()
 WRITE_FLAG=false
+FILE_TYPE=""
 
 ff_sh() {
     local filepath="$1"
@@ -54,16 +52,16 @@ ff_xml() {
 }
 
 ff_toml() {
-    local filepath="$1"
+    local f="$1"
     if $WRITE_FLAG; then
-        yq -P -o toml -i "$filepath"
+        topiary format "$f"
     else
-        yq -P -o toml "$filepath"
+        cat "$f" | topiary format --language toml
     fi
 }
 
-kfmt_ext_path() {
-    local ext="$1" filepath="$2"
+kfmt_path_ext() {
+    local ext="${2:-}" filepath="$1"
     case "$ext" in
     sh) ff_sh "$filepath" ;;
     py) ff_py "$filepath" ;;
@@ -74,12 +72,22 @@ kfmt_ext_path() {
 }
 
 format_file() {
-    local ext="$(echo "$1" | awk -F'.' '{if ($0 != $NF) {print $NF}}')"
+    local f mime ext
+    f="$1"
+    ext="$(echo "$f" | awk -F'.' '{if ($0 != $NF) {print $NF}}')"
 
     if [ -n "$ext" ]; then
-        kfmt_ext_path "$ext" "$1"
-    elif cat "$1" | head -1 | grep -e "^#!/.*sh$" >/dev/null; then
-        kfmt_ext_path "sh" "$1"
+        kfmt_path_ext "$f" "$ext"
+    else
+        mime="$(file --mime "$f")"
+        case "$mime" in
+        *text/x-shellscript*)
+            kfmt_path_ext "$1" "sh"
+            ;;
+        *text/x-script.python*)
+            kfmt_path_ext "$1" "py"
+            ;;
+        esac
     fi
 }
 
@@ -100,7 +108,7 @@ while [ $# -gt 0 ]; do
 done
 
 if [ "x$FILE_TYPE" != "x" ]; then
-    kfmt_ext_path "$FILE_TYPE" "${DSTS[0]}"
+    kfmt_path_ext "${DSTS[0]}" "$FILE_TYPE"
     exit
 fi
 
