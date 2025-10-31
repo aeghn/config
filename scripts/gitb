@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-branch="$(git branch | fzf | sed -e 's/^[[:space:]]*//g' -e 's/[[:space:]]*$//g')"
+branch="$(git branch -a | sort | fzf | sed -e 's/^[[:space:]]*//g' -e 's/[[:space:]]*$//g' -e 's|remotes/origin/||g')"
 
 if [ x = "x${branch}" ]; then
     echo 'empty branch name'
