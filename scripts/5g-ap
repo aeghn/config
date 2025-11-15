@@ -1,0 +1,11 @@
+#!/usr/bin/env bash
+
+set -eu
+
+# all variables are in private file
+# we should both enable ac and n to get full speed
+# the channel is same as which channel is connected now 
+# : iwlist  wlp0s20f3 channel | grep Current | grep -Eo '[0-9.]*' | sed 's/\.//g' | xargs -I % sh -c 'iw list | grep %'
+# : * 5785.0 MHz [157] (22.0 dBm)
+# : so 157 is the need channel value
+create_ap --ieee80211ac --ieee80211n -c $AP_5G_CHANNEL --freq-band 5 $AP_5G_INTERFACE $AP_5G_INTERFACE $AP_5G_NAME $AP_5G_PASS
