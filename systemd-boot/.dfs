@@ -1,0 +1,30 @@
+#!/usr/bin/env bash
+
+set -eu
+
+# Created by dfs
+
+######### TDOC_BEGIN
+# is_linux: check if linux
+# is_msys: check if msys2
+# msg: msg
+# warn: warn
+# die: die
+# ask: ask for prompt, and return the value
+# git_managed: check if current dir is in git managed
+# git_is_dirty: check if current git repo is dirty
+# kln: ln -sT $1 $2
+# kcp: cp -rT $1 $2
+# kmap: try to map by using kcp or kln
+# DFS_DIR
+######## TDOC_END
+
+# File to store and restore.
+
+store() {
+    warn "store not implement, $PWD"
+}
+
+restore() {
+	kcp "arch-15iah7.conf" /boot/loader/entries/arch-15iah7.conf 
+}
