@@ -4,21 +4,33 @@
 // documentation: https://zed.dev/docs/configuring-zed
 //
 // To see all of Zed's default settings without changing your
-// custom settings, run the `open default settings` command
-// from the command palette or from `Zed` application menu.
+// custom settings, run `zed: open default settings` from the
+// command palette (cmd-shift-p / ctrl-shift-p)
 {
-  "ssh_connections": [
-    {
-      "host": "localhost",
-      "username": "chin",
-      "projects": []
+  "auto_update": false,
+  "autosave": {
+    "after_delay": {
+      "milliseconds": 1000
     }
-  ],
-  "theme": "Atelier Forest Light",
+  },
+  "base_keymap": "Emacs",
+  "ui_font_family": "Roboto",
+  "buffer_font_family": "Courier Prime",
+  "icon_theme": {
+    "mode": "system",
+    "light": "Zed (Default)",
+    "dark": "Zed (Default)"
+  },
+  "vim_mode": true,
   "ui_font_size": 16,
   "buffer_font_size": 16,
-  "buffer_font_family": "Sarasa Mono SC",
-  "tabs": {
-    "close_position": "left"
+  "theme": {
+    "mode": "light",
+    "light": "Gruvbox Light Soft",
+    "dark": "One Dark"
+  },
+  "toolbar": {
+    "breadcrumbs": false,
+    "quick_actions": false
   }
 }
