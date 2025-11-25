@@ -4,6 +4,7 @@ acpi_call
 acpi_pad
 acpi_tad
 acpi_thermal_rel
+act_csum
 aesni_intel
 af_alg
 algif_hash
@@ -26,6 +27,7 @@ btusb
 ccm
 cec
 cfg80211
+cls_u32
 cmac
 cmdlinepart
 CONFIG_NF_NAT_REDIRECT
@@ -218,6 +220,7 @@ rfkill
 rng_core
 roles
 sch_fq_codel
+sch_htb
 selftests
 serio
 serio_raw
