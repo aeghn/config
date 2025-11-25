@@ -171,6 +171,7 @@ nfnetlink
 nf_reject_ipv4
 nf_tables
 nft_chain_nat
+nft_compat
 nft_ct
 nft_masq
 nft_reject
