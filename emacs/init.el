@@ -51,7 +51,7 @@
 (require 'chin-ui)
 (require 'chin-completion)
 (require 'chin-edit)
-(require 'chin-evil)
+;; (require 'chin-evil)
 (require 'chin-file)
 (require 'chin-window-and-buffer)
 (require 'chin-lang-web)

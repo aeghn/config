@@ -21,7 +21,9 @@
   ;; Consult Settings
   (global-set-key (kbd "M-3") 'consult-ripgrep)
   (global-set-key (kbd "M-4") 'consult-buffer)
-  (global-set-key (kbd "M-s l") 'consult-line))
+  
+  (global-set-key (kbd "M-s l") 'consult-line)
+  )
 
 (use-package corfu
   :config
@@ -35,6 +37,7 @@
   :config
   ;; Manual preview key for `affe-grep'
   (consult-customize affe-grep :preview-key "M-.")
+  (global-set-key (kbd "M-s f") 'affe-find)
   )
 
 (use-package consult-xref
