@@ -41,6 +41,7 @@
 (setq word-wrap-by-category t)
 
 (use-package git-gutter
+  :ensure t
   :config
   (global-git-gutter-mode +1))
 
@@ -84,6 +85,7 @@
 
 ;; mode-line settings
 (use-package minions
+  :ensure t
   :config
   (minions-mode))
 
@@ -92,7 +94,5 @@
 (setq column-number-mode t) ; Show column number in the mode-line
 
 (setq-default frame-title-format "%b [ %f ]")
-
-(global-visual-line-mode t)
 
 (provide 'chin-ui)

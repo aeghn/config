@@ -1,14 +1,17 @@
 ;;; -*- lexical-binding: t; -*-
 
 (use-package comment-dwim-2
+  :ensure t
   :config
   (global-set-key (kbd "M-;") 'comment-dwim-2))
 
 (use-package yafolding
+  :ensure t
 	     :config
   (add-hook 'prog-mode-hook 'yafolding-mode))
 
 (use-package expand-region
+  :ensure t
   :config
   (define-advice set-mark-command (:before-while (arg))
     "Repeat C-SPC to expand region."

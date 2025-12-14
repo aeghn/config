@@ -21,6 +21,7 @@
 
 
 (use-package dired
+  :defer 5
   :config
   (defadvice dired-find-file (around dired-find-file-single-buffer activate) "Replace current buffer if file is a directory." (interactive)
              (let ((orig (current-buffer))
@@ -28,10 +29,15 @@
                                                                               (not (eq (current-buffer) orig)))
                    (kill-buffer orig)))))
 (use-package dired-subtree
-  ;; :load-path "lisp/dired-subtree.el"
-  )
+  :after 'dired
+  :ensure t)
+
+(use-package dash
+  :ensure t)
 
 (use-package dired-hacks-utils
+  :after 'dired
+  :after dash
   :config
   (defun chin/once-dired-subtree ()
     (interactive)

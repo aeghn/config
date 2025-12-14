@@ -1,6 +1,7 @@
 ;;; -*- lexical-binding: t; -*-
 
 (use-package magit
+  :ensure t
   :config
   (setq magit-display-buffer-function
         (lambda (buffer)

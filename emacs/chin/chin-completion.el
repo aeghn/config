@@ -1,10 +1,12 @@
 ;;; -*- lexical-binding: t; -*-
 
 (use-package vertico
+  :ensure t
   :config
   (vertico-mode))
 
 (use-package consult
+  :ensure t
   :config
   (setq read-file-name-completion-ignore-case t
         read-buffer-completion-ignore-case t
@@ -21,11 +23,12 @@
   ;; Consult Settings
   (global-set-key (kbd "M-3") 'consult-ripgrep)
   (global-set-key (kbd "M-4") 'consult-buffer)
-  
+
   (global-set-key (kbd "M-s l") 'consult-line)
   )
 
 (use-package corfu
+  :ensure t
   :config
   (setq corfu-auto t)
   (setq corfu-quit-at-boundary t)
@@ -34,6 +37,7 @@
   (setq text-mode-ispell-word-completion nil))
 
 (use-package affe
+  :ensure t
   :config
   ;; Manual preview key for `affe-grep'
   (consult-customize affe-grep :preview-key "M-.")
@@ -48,6 +52,7 @@
 
 
 (use-package embark
+  :ensure t
   :bind
   (("C-," . embark-act)
    ("C-." . embark-dwim)
@@ -62,6 +67,7 @@
                  (window-parameters (mode-line-format . none)))))
 
 (use-package embark-consult
+  :ensure t
   :after (embark consult)
   :hook
   (embark-consult-mode . consult-preview-at-point-mode))

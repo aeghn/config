@@ -71,15 +71,15 @@
 
 (setq org-plantuml-exec-mode 'plantuml)
 ;; https://orgmode.org/worg/org-contrib/babel/languages/ob-doc-plantuml.html
-(org-babel-do-load-languages
- 'org-babel-load-languages
- '((plantuml . t)
-   (python . t)
-   (rust . t)
-   (dot . t)))
+;; (org-babel-do-load-languages
+;;  'org-babel-load-languages
+;;  '((plantuml . t)
+;;    (python . t)
+;;    (rust . t)
+;;    (dot . t)))
 
-(add-to-list
- 'org-src-lang-modes '("plantuml" . plantuml))
+;; (add-to-list
+;;  'org-src-lang-modes '("plantuml" . plantuml))
 
 (defvar chin/org-dir (expand-file-name "org" chin/docs-dir))
 (defun chin/org-file-open ()

@@ -1,6 +1,7 @@
 ;;; -*- lexical-binding: t; -*-
 
 (use-package evil
+  :ensure t
   :demand t
   :init
   (setq evil-respect-visual-line-mode t)
@@ -22,6 +23,7 @@
 
 
 (use-package evil-collection
+  :ensure t
   :after evil
   :demand t
   :config
@@ -30,6 +32,7 @@
   (evil-collection-which-key-setup))
 
 (use-package evil-surround
+  :ensure t
   :after evil
   :demand t
   :config
@@ -42,15 +45,11 @@
 ;;   (require 'evil-org-agenda)
 ;;   (evil-org-agenda-set-keys))
 
-;; Quit corfu on Escape
-(with-eval-after-load 'corfu
-  (keymap-set corfu-map "C-j" 'corfu-next)
-  (keymap-set corfu-map "C-k" 'corfu-previous)
-  (evil-define-key 'insert corfu-map (kbd "<escape>") 'corfu-quit))
 
 ;; Leader key
 (use-package evil-leader
   :demand t
+  :ensure t
   :init
   (setq evil-want-keybinding nil)
   (setq evil-leader/in-all-states 1)
@@ -58,19 +57,19 @@
   :config
   (evil-leader/set-leader "<SPC>")
   (evil-leader/set-key
-    "e" 'find-file
-    "b" 'consult-buffer
-    "k" 'kill-buffer
-    "f" 'affe-find
-    "d" (lambda () (interactive) (consult-flymake t)) 
-    "a" 'eglot-code-actions
-    "wh" 'windmove-left
-    "wj" 'windmove-down
-    "wk" 'windmove-up
-    "wl" 'windmove-right
-    "wx" 'delete-window
-    "/" 'consult-ripgrep
-    "l" 'consult-line
-    ))
+   "e" 'find-file
+   "b" 'consult-buffer
+   "k" 'kill-buffer
+   "f" 'affe-find
+   "d" (lambda () (interactive) (consult-flymake t))
+   "a" 'eglot-code-actions
+   "wh" 'windmove-left
+   "wj" 'windmove-down
+   "wk" 'windmove-up
+   "wl" 'windmove-right
+   "wx" 'delete-window
+   "/" 'consult-ripgrep
+   "l" 'consult-line
+   ))
 
 (provide 'chin-evil)

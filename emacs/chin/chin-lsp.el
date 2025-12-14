@@ -32,6 +32,7 @@
   (setq flymake-show-diagnostics-at-end-of-line nil))
 
 (use-package eglot-booster
+  :vc (:url "https://github.com/jdtsmith/eglot-booster")
   :after eglot
   :config   (eglot-booster-mode))
 
