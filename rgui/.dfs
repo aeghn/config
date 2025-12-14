@@ -16,6 +16,7 @@ store() {
 }
 
 restore() {
+  mkdir -p "$HOME/.cache/rglauncher"
     bak-mv "$HOME/.config/rgui"
     kmap "$DFS_DIR" "$HOME/.config/rgui"
 }
