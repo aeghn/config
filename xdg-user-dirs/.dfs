@@ -25,8 +25,21 @@ store() {
     warn "store not implement, $PWD"
 }
 
+create_dirs() {
+mkdir -p $HOME/docs
+mkdir -p $HOME/docs/music
+mkdir -p $HOME/docs/videos
+mkdir -p $HOME/docs/pics
+mkdir -p $HOME/inbox
+mkdir -p $HOME/pg
+mkdir -p $HOME/projs
+mkdir -p $HOME/files
+mkdir -p $HOME/libs
+}
+
 restore() {
+  create_dirs
 	for i in *; do
-		kln "$DFS_DIR/$i" "$XDG_CONFIG_HOME/$i"
+		kmap "$DFS_DIR/$i" "$XDG_CONFIG_HOME/$i"
 	done
 }
