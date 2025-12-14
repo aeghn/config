@@ -16,6 +16,7 @@ set -eu
 # kln: ln -sT $1 $2
 # kcp: cp -rT $1 $2
 # kmap: try to map by using kcp or kln
+# kmapp: kmap "$1" "$2/${1##*/}"
 # DFS_DIR
 ######## TDOC_END
 
@@ -26,11 +27,12 @@ store() {
 	if [ -d "$CONFIG_DIR" ]; then
 		rm -f "$DFS_DIR/settings.json"
 		kcp "$CONFIG_DIR/settings.json" "$DFS_DIR/settings.json"
-		rm -f "$DFS_DIR/kmap.json"
+		rm -f "$DFS_DIR/keymap.json"
 		kcp "$CONFIG_DIR/keymap.json" "$DFS_DIR/keymap.json"
 	fi
 }
 
 restore() {
-    warn "restore not implement, $PWD"
+  kmapp settings.json "$CONFIG_DIR"
+  kmapp keymap.json "$CONFIG_DIR"
 }

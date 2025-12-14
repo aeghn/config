@@ -1,12 +1,7 @@
-// Zed settings
-//
-// For information on how to configure Zed, see the Zed
-// documentation: https://zed.dev/docs/configuring-zed
-//
-// To see all of Zed's default settings without changing your
-// custom settings, run `zed: open default settings` from the
-// command palette (cmd-shift-p / ctrl-shift-p)
 {
+  "tabs": {
+    "close_position": "left"
+  },
   "auto_update": false,
   "autosave": {
     "after_delay": {
@@ -21,16 +16,31 @@
     "light": "Zed (Default)",
     "dark": "Zed (Default)"
   },
-  "vim_mode": true,
+  "vim_mode": false,
   "ui_font_size": 16,
   "buffer_font_size": 16,
   "theme": {
     "mode": "light",
-    "light": "Gruvbox Light Soft",
+    "light": "Fleet Light",
     "dark": "One Dark"
   },
   "toolbar": {
     "breadcrumbs": false,
     "quick_actions": false
+  },
+  "title_bar": {
+    "show_onboarding_banner": false,
+    "show_user_picture": false,
+    "show_sign_in": false
+  },
+  "agent": { "enabled": false, "button": false },
+  "chat_panel": { "button": "never" },
+  "collaboration_panel": { "button": false },
+  "lsp": {
+    "rust-analyzer": {
+      "binary": {
+        "path": "/usr/lib/rustup/bin/rust-analyzer"
+      }
+    }
   }
 }
