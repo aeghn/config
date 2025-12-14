@@ -13,7 +13,7 @@
 ** Launcher And Status Bar
    *On GNU/Linux*, I wrote my own launcher and status bar based on Rust + GTK3/4.
 
-   [[file:_data/preview/rglauncher.png]]
+   [[file:_docs/preview/rglauncher.png]]
 
    _link_: [[https://github.com/aeghn/rglauncher][RGLauncher]] [[https://github.com/aeghn/rgbar][RGBar]]
 
@@ -25,7 +25,7 @@
 ** Terminal
    *On GNU/Linux*, I use foot as my main terminal emulator, because it is fast, lightweight and /without/ GPU acceleration.
 
-   [[file:_data/preview/terminal.png]]
+   [[file:_docs/preview/terminal.png]]
 
    *On Windows*, I prefer to use WezTerm with Msys2 + UCRT.
 
@@ -45,7 +45,7 @@
    And I have wrote some bash scripts to make life easy, e.g, my dotfiles is orginized by =dfs=, =dfm=.
 
 ** Browser
-   [[file:_data/preview/browser.png]]
+   [[file:_docs/preview/browser.png]]
 
    I'd like to use firefox with some modification.
 
@@ -59,7 +59,7 @@
    - *[[https://github.com/simov/markdown-viewer#table-of-contents][markdown-viewer]]*:  Markdown Viewer / Browser Extension 
 
 ** Emacs
-   [[file:_data/preview/emacs.png]]
+   [[file:_docs/preview/emacs.png]]
 
    I use emacs for some text writing and script editing. (I alse like vim, but I'm not evil).
 
