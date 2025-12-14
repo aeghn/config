@@ -26,6 +26,8 @@ store() {
 }
 
 restore() {
+  msg "restore zsh"
+	mkdir -p $HOME/.cache/zsh
     if is_msys; then
         restore_msys2
     else

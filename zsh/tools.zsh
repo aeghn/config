@@ -72,6 +72,19 @@ alias mpa='mpv --no-video'
 alias aria2n='aria2c --no-conf=true -j4 -x4 -s4'
 alias fgt="unset HISTFILE"
 alias pd='cd "$CHIN_PG_DIR"'
+alias mkp='mkdir -p'
+mkpp() {
+  local -a args 
+    while [ "$#" -gt 0 ]; do
+      case "$1" in
+        -*) args=("${args[@]}" "$1") ;;
+        *) args=("${args[@]}" "${1%/*}") ;;
+      esac
+      shift
+    done
+mkdir -p "${args[@]}"
+
+}
 
 hpx() {
     if [ -z "$HTTP_PROXY" ]; then
@@ -82,12 +95,6 @@ hpx() {
         echo "unset proxy"
     fi
     export HTTPS_PROXY="$HTTP_PROXY"
-}
-
-cppd() {
-    local fn="$(basename "$1")"
-
-    cp -r "$1" "$CHIN_PG_DIR/$(date -u +%y%m-%d)-${fn}"
 }
 
 # Read Private config
