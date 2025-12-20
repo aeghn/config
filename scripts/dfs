@@ -7,6 +7,8 @@ MAP_MODE=""
 
 SCRIPT_FILE="$0"
 
+export XDG_CONFIG_HOME="${HOME}/.config"
+
 # https://stackoverflow.com/questions/3466166/how-to-check-if-running-in-cygwin-mac-or-linux
 KERNEL_NAME=""
 case "$(uname -s)" in
@@ -57,15 +59,31 @@ donot_touch() {
 }
 
 kln() { # TDOC: ln -sT $1 $2
-    msg "ln -sT $@"
+    msg "ln -sT $1 $2"
+    if [ -e "$2" ]; then
+      if [ -L "$2" ] && [ "$(realpath "$(readlink "$2")")" = "$1" ]; then
+        msg2 "DST \`$to' is correct."
+      else
+        warn2 "DST \`$to' exists."
+      fi
+    else
     mkdir -p "${2%/*}"
-    ln -sT "$@"
+    ln -sT "$1" "$2"
+    fi
 }
 
 kcp() { # TDOC: cp -rT $1 $2
     msg "cp -rT $@"
+    if [ -e "$2" ]; then
+      if [ -L "$2" ] && [ "$(realpath "$(readlink "$2")")" = "$1" ]; then
+        msg2 "DST \`$2' is linked, but we want a copy."
+      else
+        warn2 "DST \`$2' exists."
+      fi
+    else
     mkdir -p "${2%/*}"
     cp -rT "$@"
+    fi
 }
 
 kmap() { # TDOC: try to map by using kcp or kln
@@ -73,9 +91,11 @@ kmap() { # TDOC: try to map by using kcp or kln
     from="$(realpath "$1")"
     to="$2"
 
-    if [ -e "$to" ]; then
-        warn "DST \`$to' exists."
-    else
+    if [ -z "$to" ]; then
+      warn "DST is empty"
+      return
+    fi
+
         if [ "$MAP_MODE" = "ln" ]; then
             kln "$from" "$to"
         elif  [ "$MAP_MODE" = "cp" ]; then
@@ -88,9 +108,11 @@ kmap() { # TDOC: try to map by using kcp or kln
             fi
         fi
 
-    fi
 }
 
+kmapp() { # TDOC: kmap "$1" "$2/${1##*/}"
+  kmap "$1" "${2%/}/${1##*/}"
+}
 
 get_tdoc() {
     awk '{if ($0 ~ "# TDOC: " && $0 ~ /^[a-z]/) {sub(/\(.*?TDOC: /, ": "); print "#", $0}}' "$SCRIPT_FILE"
@@ -169,12 +191,14 @@ cycle_and_work() {
 
     msg "SEARCH $root_dir"
     for f in $(find "$root_dir" -name '.dfs' -type f); do
+		set +e
         # https://unix.stackexchange.com/questions/138463/do-parentheses-really-put-the-command-in-a-subshell
         # work in a new sub shell process
         (
             DFS_DIR="$(realpath "${f%/.dfs}")" \
                     do_work
         )
+	    set -e
     done
 }
 
