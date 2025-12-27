@@ -1,0 +1,30 @@
+* Usage
+** extract dsdt binary files
+#+begin_src shell
+  ../scripts/extract.sh
+#+end_src
+** decompile binary file to text
+#+begin_src shell
+  ../scripts/dec.sh
+#+end_src
+** apply patch
+*** modify the systemd-boot boot config
+#+begin_src conf
+  title Arch Linux
+  linux /vmlinuz-linux
+  # keep this order.
+  initrd /amd-ucode.img
+  initrd /acpi-patch.img
+  initrd /initramfs-linux.img
+  options root=LABEL=chinslt rw rootflags=subvol=@ amd_iommu=off resume=UUID=<part-uuid> resume_offset=<offset>
+#+end_src
+*** edit the config
+*** apply the patch
+#+begin_src shell
+  ../scripts/install.sh dsdt.dsl ssdt1.dsl
+#+end_src
+** useful commands:
+*** to get some logs.
+#+begin_src shell
+  journalctl -S 19:30 | grep -iE -e "acpi.*exception|error|failed" -e '\-- Boot' -e 'suspend'
+#+end_src
