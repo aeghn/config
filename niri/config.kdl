@@ -275,10 +275,6 @@ window-rule {
     default-column-width { proportion 1.0; }
 }
 
-window-rule {
-    match app-id=r#"^emacs$"#
-    default-column-width { proportion 1.2; }
-}
 
 // Example: block out two password managers from screen capture.
 // (This example rule is commented out with a "/-" in front.)
@@ -311,7 +307,6 @@ binds {
     // Suggested binds for running programs: terminal, app launcher, screen locker.
     Mod+Return { spawn "foot"; }
     Mod+D { spawn "rglauncher"; }
-    Mod+X { spawn "emacs"; }
     Super+Alt+L { spawn "swaylock"; }
 
     // You can also use a shell. Do this if you need pipes, multiple commands, etc.
