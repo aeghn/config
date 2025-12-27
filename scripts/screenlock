@@ -1,0 +1,27 @@
+#!/usr/bin/env bash
+
+set -eu
+
+ARGS=(
+#    --image $TMP_FILE 
+    --scaling fill 
+    --font "Noto Sans" 
+    --font-size 24 
+    --text-color ffffff 
+    --inside-color 00000088
+    --ring-color 000000ff
+    --key-hl-color ff0000
+    --line-color 00000000 
+    --inside-wrong-color ff0000
+    --ring-wrong-color ff0000
+    --inside-ver-color 00ff00
+    --ring-ver-color 00ff00
+    --separator-color 00000000 
+#    --clock 
+#    --datestr "%Y-%m-%d"
+#    --timestr "%H:%M:%S" 
+#    --indicator 
+#    --show-failed-attempts
+)
+
+swaylock "${ARGS[@]}"

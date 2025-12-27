@@ -1,6 +1,12 @@
 #!/usr/bin/env bash
-if env | grep DISPLAY >/dev/null; then
-    nohup emacs "$@" &>/dev/null &
-else
-    emacs -nw "$@"
+
+IDX=$(git rev-parse --show-toplevel | md5sum | awk NF=1)
+
+if [ "$1" = '-k' ]; then
+    emacsclient -s "$IDX" -e '(save-buffers-kill-emacs)'
+    exit
 fi
+
+emacsclient -nw -c -s "$IDX" "$@" || {
+    emacs --bg-daemon="$IDX" && emacsclient -nw -c -s "$IDX" "$@"
+}
