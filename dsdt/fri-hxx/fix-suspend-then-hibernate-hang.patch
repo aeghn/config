@@ -1,0 +1,25 @@
+diff --git c/dsls/ssdt20.dsl w/dsls/ssdt20.dsl
+index 4e268d8..06dc5b5 100644
+--- c/dsls/ssdt20.dsl
++++ w/dsls/ssdt20.dsl
+@@ -18,7 +18,7 @@
+  *     Compiler ID      "ACPI"
+  *     Compiler Version 0x00040000 (262144)
+  */
+-DefinitionBlock ("", "SSDT", 2, "HONOR", "EDK2    ", 0x00000001)
++DefinitionBlock ("", "SSDT", 2, "HONOR", "EDK2    ", 0x0000000A)
+ {
+     External (_ADR, IntObj)
+     External (_SB_.PCI0.DADR, IntObj)
+@@ -3102,7 +3102,10 @@ DefinitionBlock ("", "SSDT", 2, "HONOR", "EDK2    ", 0x00000001)
+             Local1 = \_SB.PCI0.GP17.XHC0.RPRM ((\_SB.PCI0.GP17.XHC0.DADR + 0x54), 0x02)
+             Local1 = \_SB.PCI0.GP17.XHC1.RPRM ((\_SB.PCI0.GP17.XHC1.DADR + 0x54), 0x02)
+             Local1 = \_SB.PCI0.GP17.ACP.RPRM ((\_SB.PCI0.GP17.ACP.DADR + 0x54), 0x02)
+-            Local1 = \_SB.PCI0.GP17.AZAL.RPRM ((\_SB.PCI0.GP17.AZAL.DADR + 0x54), 0x02)
++            If (CondRefOf (\_SB.PCI0.GP17.AZAL.RPRM))
++            {
++              Local1 = \_SB.PCI0.GP17.AZAL.RPRM ((\_SB.PCI0.GP17.AZAL.DADR + 0x54), 0x02)
++            }
+             \_SB.PCI0.GP17.WPRM ((\_SB.PCI0.GP17.DADR + 0x54), 0x02, (Local0 & 0x7FFF))
+         }
+     }
