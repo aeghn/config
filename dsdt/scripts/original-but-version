@@ -1,0 +1,6 @@
+#!/usr/bin/env bash
+
+rm -rf workdir kernel
+git checkout d1b6905 workdir
+./clean-files
+
