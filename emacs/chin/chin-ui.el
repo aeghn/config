@@ -80,7 +80,7 @@
    '(mode-line ((t (:background "#c8c8c8" :foreground "#000000" :slant italic :box (:line-width 5 :color "#c8c8c8")))))
    '(mode-line-inactive ((t (:background "#e6e6e6" :foreground "#000000" :slant italic :box (:line-width 5 :color
                                                                                                          "#e6e6e6"))))))
-  (ignore-errors (set-frame-font "Courier Prime 12"))
+  (ignore-errors (set-frame-font "Sarasa Mono SC 12"))
   )
 
 ;; mode-line settings

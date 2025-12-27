@@ -53,6 +53,7 @@
 (require 'chin-edit)
 (require 'chin-evil)
 (require 'chin-file)
+(require 'chin-langs)
 (require 'chin-window-and-buffer)
 (require 'chin-lang-web)
 (require 'chin-chinese)

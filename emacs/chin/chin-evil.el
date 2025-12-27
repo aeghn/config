@@ -58,6 +58,7 @@
   (evil-leader/set-leader "<SPC>")
   (evil-leader/set-key
    "e" 'find-file
+   "e" 'affe-find
    "b" 'consult-buffer
    "k" 'kill-buffer
    "f" 'affe-find
@@ -70,6 +71,6 @@
    "wx" 'delete-window
    "/" 'consult-ripgrep
    "l" 'consult-line
-   ))
+   )) 
 
 (provide 'chin-evil)
