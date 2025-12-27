@@ -91,6 +91,8 @@ conflict = !git ls-files -u | awk '{print $4}' | sort -u
 untrack = rm -r --cached
 dupes = !git ls-tree -r HEAD | cut -c 13- | sort | uniq -D -w 40
 a = add
+b = !gitb
+bak-branch = !gitbak
 
 [color]
 ui = true
