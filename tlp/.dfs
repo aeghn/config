@@ -12,7 +12,7 @@ set -eu
 # die: die
 # ask: ask for prompt, and return the value
 # git_managed: check if current dir is in git managed
-# git_is_dirty: check if current directory is dirty
+# git_is_dirty: check if current git repo is dirty
 # kln: ln -sT $1 $2
 # kcp: cp -rT $1 $2
 # kmap: try to map by using kcp or kln
@@ -30,5 +30,5 @@ store() {
 }
 
 restore() {
-    kcp ./tlp.conf "/etc/tlp.conf"
+    sudo cp -T ./tlp.conf "/etc/tlp.conf"
 }
